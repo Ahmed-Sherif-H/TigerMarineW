@@ -78,11 +78,11 @@ const Navbar = () => {
             </button>
 
             {/* Logo - Center */}
-            <Link to="/" className="absolute left-[54%] transform -translate-x-1/2 flex items-center" >
+            <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 flex items-center" >
               <img 
                 src="/images/LOGO.png" 
                 alt="Tiger Marine" 
-                className="h-24 w-auto"
+                className="h-16 sm:h-24 w-auto"
               />
             </Link>
 

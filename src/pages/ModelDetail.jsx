@@ -133,7 +133,7 @@ const ModelDetail = () => {
       </section>
 
       {/* 3) Video Section */}
-      <section className="relative h-screen">
+      <section className="relative h-[60vh] sm:h-[70vh] md:h-screen">
         {videoFiles.length > 0 && videoFiles[0] ? (
           <>
             <video

@@ -161,7 +161,7 @@ export const allCategories = [
         fabricRightImageFile: "IMG_3213.jpg",         // Fabric section right image (optional)
         // ===== SECTION 2 TEXT - Customize the centered title and description =====
         // section2Title: "MaxLine 38",              // Custom title (optional, auto-generated if not provided)
-        // section2Description: "Your custom paragraph text here...", // Custom description (optional)
+        section2Description: "The flagship of Tiger Marine — a true statement of luxury and performance. The ML38 combines spacious deck design, premium materials, and twin-engine power to deliver an unmatched cruising experience.",
         specs: {
           Length: "11.65 m" ,
           Beam : "3.70 m" ,
@@ -263,6 +263,7 @@ export const allCategories = [
         shortDescription: "Premium inflatable designed for the discerning mariner.",
         imageFile: "DJI_0150.jpg",
         heroImageFile: "DJI_0247.jpg",
+        section2Description: "Designed for those who demand both comfort and capability. The TL950 offers exceptional offshore performance, generous seating, and refined detailing for family or sport adventures alike.",
         specs: {
       
           Length: "9.60 m" ,
@@ -359,6 +360,7 @@ export const allCategories = [
         imageFile: "TL850.jpg",
         heroImageFile: "850TL - 1.jpg",
         videoFiles: ["TopLine850-Opt.mp4"],
+        section2Description: "A perfect balance between sporty handling and practical luxury. The TL850 features a sleek hull design and optimized deck layout, making it ideal for day trips or weekend escapes.",
         specs: {
           Length: " 8.60 m" ,
           Beam : "3.15 m" ,
@@ -446,6 +448,7 @@ export const allCategories = [
         imageFile: "DJI_0007.jpg",
         heroImageFile: "DJI_0521.jpg",
         videoFiles: ["TopLine750.mp4"],
+        section2Description: "Compact yet powerful, the TL750 offers exceptional versatility. Its advanced hull shape ensures smooth rides, while its layout provides comfort for both leisure and water sports.",
         specs: {
           Length: "7.50 m",
           Beam : "2.90 m" ,
@@ -516,6 +519,7 @@ export const allCategories = [
         imageFile: "650TL-2(1).jpg",
         heroImageFile: "DJI_0185.jpg",
         videoFiles: ["25 - 650 Topline- 2021.mov"],
+        section2Description: "An agile and stylish RIB built for pure enjoyment on the water. The TL650 combines efficient performance with Tiger Marine's signature craftsmanship and attention to detail.",
         specs: {
             Length: "6.50 m",
             Beam: "2.80 m",
@@ -587,6 +591,7 @@ export const allCategories = [
         imageFile: "DJI_0339.jpg",
         heroImageFile: "DJI_0510.jpg",
         videoFiles: ["ProLine620.mp4"],
+        section2Description: "Built for professionals and enthusiasts who value reliability and strength. The PL620 offers durable construction, excellent stability, and practical design for fishing, diving, or patrol use.",
         specs: {
           Length: "6.25 m",
           Beam: "2.65 m",
@@ -644,6 +649,7 @@ export const allCategories = [
         imageFile: "DJI_0529.jpg",
         heroImageFile: "DJI_0689.jpg",
         videoFiles: ["ProLine520.mp4"],
+        section2Description: "Compact and efficient, the PL550 is designed for versatility and endurance. It's a trusted companion for both recreational users and professional operators.",
         specs: {
           Length: "5.65 m",
           Beam: "2.30 m",
@@ -714,6 +720,7 @@ export const allCategories = [
         imageFile: "520SL(1).jpg",
         heroImageFile: "DJI_0170.JPG",
         videoFiles: ["SportLine520.mp4"],
+        section2Description: "Dynamic, lightweight, and full of energy — the SL520 embodies the spirit of fun on the water. Perfect for sports, family outings, or tender use.",
         specs: {
           Length: "5.25 m",  
           Beam: "2.25 m",
@@ -773,6 +780,7 @@ export const allCategories = [
         imageFile: "480SL1.jpg",
         heroImageFile: "IMG_9553.jpg",
         videoFiles: ["SportLine480.mp4"],
+        section2Description: "A small but capable performer. The SL480 offers easy handling, durability, and the same premium feel as Tiger Marine's larger models — in a compact form.",
         specs: {
           Length: "4.85 m",
           Beam: "2.25 m",
@@ -898,6 +906,7 @@ export const allCategories = [
         imageFile: "1.jpg",
         heroImageFile: "DJI_0035.jpg",
         videoFiles: [],
+        section2Description: "A versatile mid-size RIB combining comfort, functionality, and sleek design. Ideal for cruising, diving, or family day trips.",
         specs: {
           Length: "7.50 m ",
           Beam: "2.80 m",
@@ -957,6 +966,7 @@ export const allCategories = [
         imageFile: "_072_Itai_2022.jpg",
         heroImageFile: "DJI_0746.jpg",
         videoFiles: ["Open650.mp4"],
+        section2Description: "Compact yet capable, the OP650 provides excellent stability, responsive control, and modern aesthetics — perfect for those seeking accessible adventure.",
         specs: {
           Length: "6.50 m",
           Beam: "2.55 m",
