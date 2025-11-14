@@ -36,12 +36,3 @@ Thumbs.db
 # Added automatically by exclude-large-files.ps1
 
 
-# Exclude all video files
-public/images/**/*.mp4
-public/images/**/*.mov
-public/images/**/*.MP4
-public/images/**/*.MOV
-*.mp4
-*.mov
-*.MP4
-*.MOV
