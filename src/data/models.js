@@ -358,6 +358,7 @@ export const allCategories = [
         shortDescription: "Premium design and comfort.",
         imageFile: "TL850.jpg",
         heroImageFile: "850TL - 1.jpg",
+        videoFiles: ["TopLine850-Opt.mp4"],
         specs: {
           Length: " 8.60 m" ,
           Beam : "3.15 m" ,
@@ -444,6 +445,7 @@ export const allCategories = [
         shortDescription: "Comfort and performance combined.",
         imageFile: "DJI_0007.jpg",
         heroImageFile: "DJI_0521.jpg",
+        videoFiles: ["TopLine750.mp4"],
         specs: {
           Length: "7.50 m",
           Beam : "2.90 m" ,
@@ -513,6 +515,7 @@ export const allCategories = [
         shortDescription: "Discerning owner's choice.",
         imageFile: "650TL-2(1).jpg",
         heroImageFile: "DJI_0185.jpg",
+        videoFiles: ["25 - 650 Topline- 2021.mov"],
         specs: {
             Length: "6.50 m",
             Beam: "2.80 m",
@@ -583,6 +586,7 @@ export const allCategories = [
         shortDescription: "Professional charter inflatable.",
         imageFile: "DJI_0339.jpg",
         heroImageFile: "DJI_0510.jpg",
+        videoFiles: ["ProLine620.mp4"],
         specs: {
           Length: "6.25 m",
           Beam: "2.65 m",
@@ -639,6 +643,7 @@ export const allCategories = [
         shortDescription: "Commercial-grade performance.",
         imageFile: "DJI_0529.jpg",
         heroImageFile: "DJI_0689.jpg",
+        videoFiles: ["ProLine520.mp4"],
         specs: {
           Length: "5.65 m",
           Beam: "2.30 m",
@@ -708,6 +713,7 @@ export const allCategories = [
         shortDescription: "Sport inflatable for the active lifestyle.",
         imageFile: "520SL(1).jpg",
         heroImageFile: "DJI_0170.JPG",
+        videoFiles: ["SportLine520.mp4"],
         specs: {
           Length: "5.25 m",  
           Beam: "2.25 m",
@@ -766,6 +772,7 @@ export const allCategories = [
         shortDescription: "Performance meets comfort.",
         imageFile: "480SL1.jpg",
         heroImageFile: "IMG_9553.jpg",
+        videoFiles: ["SportLine480.mp4"],
         specs: {
           Length: "4.85 m",
           Beam: "2.25 m",
@@ -832,8 +839,8 @@ export const allCategories = [
         shortDescription: "Ultimate open deck experience.",
         imageFile: "850OP.jpg",
         heroImageFile: "DJI_0140.jpg",
-        videoFiles: ["03-850OP.mp4"], 
-        section2Description: "Spacious, open, and built for adventure. The OP850 delivers remarkable performance and freedom on the sea with its open-deck concept and powerful engine options.",                   // Video files (optional)
+        videoFiles: ["Open850.mp4"],
+        section2Description: "Spacious, open, and built for adventure. The OP850 delivers remarkable performance and freedom on the sea with its open-deck concept and powerful engine options.",
         specs: {
           Length: "8.40 m",
           Beam: "3.00 X 2 m",
@@ -890,6 +897,7 @@ export const allCategories = [
         shortDescription: "Large open deck design.",
         imageFile: "1.jpg",
         heroImageFile: "DJI_0035.jpg",
+        videoFiles: [],
         specs: {
           Length: "7.50 m ",
           Beam: "2.80 m",
@@ -948,6 +956,7 @@ export const allCategories = [
         shortDescription: "Enhanced open deck experience.",
         imageFile: "_072_Itai_2022.jpg",
         heroImageFile: "DJI_0746.jpg",
+        videoFiles: ["Open650.mp4"],
         specs: {
           Length: "6.50 m",
           Beam: "2.55 m",
