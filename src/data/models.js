@@ -1361,3 +1361,4 @@ export const fabricOptions = [
   { id: 5, name: "Carbon Fiber", category: "Accents", description: "Lightweight carbon fiber trim" },
   { id: 6, name: "Stainless Steel", category: "Hardware", description: "Marine-grade stainless steel fixtures" }
 ];
+

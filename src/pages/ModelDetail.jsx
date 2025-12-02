@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
 import { inflatableBoats } from '../data/models';
 import { getModelImageFolder, encodeFilename } from '../data/imageHelpers';
+import { getCustomizerFolder } from '../data/customizerConfig';
 
 const ModelDetail = () => {
   const { id } = useParams();
@@ -67,11 +68,40 @@ const ModelDetail = () => {
   const goPrev = () => setCurrentSlide((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
   const goNext = () => setCurrentSlide((prev) => (prev + 1) % galleryImages.length);
 
-  // Get first 3 optional features for "Elevate Your Experience" section
+  // Get first 4 optional features for "Elevate Your Experience" section
   const optionalFeaturesForElevate = useMemo(() => {
     if (!model.optionalFeatures || model.optionalFeatures.length === 0) return [];
-    return model.optionalFeatures.slice(0, 3);
+    return model.optionalFeatures.slice(0, 4);
   }, [model.optionalFeatures]);
+
+  // Check if there are more optional features
+  const hasMoreOptionalFeatures = useMemo(() => {
+    return model.optionalFeatures && model.optionalFeatures.length > 4;
+  }, [model.optionalFeatures]);
+
+  // Get interior images from the interior subfolder
+  const interiorImages = useMemo(() => {
+    if (model.interiorFiles && Array.isArray(model.interiorFiles) && model.interiorFiles.length > 0) {
+      const interiorFolder = modelFolder + 'Interior/';
+      return model.interiorFiles.map(file => interiorFolder + encodeFilename(file));
+    }
+    return [];
+  }, [modelFolder, model.interiorFiles]);
+
+  const [interiorSlide, setInteriorSlide] = useState(0);
+  const goInteriorPrev = () => {
+    if (interiorImages.length <= 1) return;
+    const maxIndex = interiorImages.length - 2; // -2 because we skip the first image (shown on left)
+    setInteriorSlide((prev) => {
+      const newIndex = prev - 1;
+      return newIndex < 0 ? maxIndex : newIndex;
+    });
+  };
+  const goInteriorNext = () => {
+    if (interiorImages.length <= 1) return;
+    const maxIndex = interiorImages.length - 2; // -2 because we skip the first image (shown on left)
+    setInteriorSlide((prev) => (prev + 1) % (maxIndex + 1));
+  };
 
   // Get full model name (e.g., "TopLine 850" instead of "TL850")
   const fullModelName = useMemo(() => {
@@ -105,9 +135,29 @@ const ModelDetail = () => {
             {model.name}
           </h1>
           {model.shortDescription && (
-            <p className="text-lg md:text-xl text-gray-200 leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+            <p className="text-lg md:text-xl text-gray-200 leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] mb-6">
               {model.shortDescription}
             </p>
+          )}
+          {getCustomizerFolder(model.name) && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+            >
+              <Link
+                to={`/models/${model.id}/customize`}
+                className="inline-flex items-center gap-3 bg-smoked-saffron hover:bg-smoked-saffron/90 text-white px-8 py-4 rounded-lg font-medium text-lg shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 transform group"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                </svg>
+                <span>Customize Your Boat</span>
+                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </motion.div>
           )}
         </motion.div>
       </section>
@@ -190,21 +240,11 @@ const ModelDetail = () => {
               <h3 className="text-3xl md:text-4xl font-light text-midnight-slate mb-6">
                 Exceptional Features
               </h3>
-              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                {model.description || `The ${model.name} combines cutting-edge technology with refined craftsmanship. 
-                Every detail has been meticulously designed to deliver an unparalleled boating experience, 
-                from its advanced hull design to its premium interior finishes.`}
+              <p className="text-lg text-gray-600 leading-relaxed">
+                Experience the perfect fusion of innovation and luxury. Our commitment to excellence shines through 
+                in every detail, from the sleek exterior design to the meticulously crafted interior. Discover 
+                why discerning boaters choose Tiger Marine for their most memorable adventures on the water.
               </p>
-              <div className="max-h-[400px] overflow-y-auto pr-2">
-                <ul className="space-y-3 text-gray-700">
-                  {(model.standardFeatures || model.features || []).map((f, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <span className="mt-2 w-2 h-2 bg-smoked-saffron rounded-full flex-shrink-0" />
-                      <span className="text-base">{f}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
             </motion.div>
 
             <motion.div
@@ -303,29 +343,59 @@ const ModelDetail = () => {
               <h3 className="text-3xl md:text-4xl font-light text-midnight-slate mb-6">
                 Precision Engineering
               </h3>
-              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                Built with uncompromising attention to detail, the {model.name} represents the pinnacle of 
-                marine engineering. Its advanced construction techniques and premium materials ensure 
-                exceptional performance, durability, and comfort in all conditions.
+              <p className="text-lg text-gray-600 leading-relaxed">
+                Where cutting-edge technology meets timeless craftsmanship. Each vessel is a masterpiece of 
+                engineering excellence, designed to exceed expectations and deliver unparalleled performance. 
+                Join the elite community of boaters who demand nothing but the best.
               </p>
-              {(model.standardFeatures || model.features || []).length > 5 && (
-                <ul className="space-y-3 text-gray-700">
-                  {(model.standardFeatures || model.features || []).slice(5).map((f, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <span className="mt-2 w-2 h-2 bg-smoked-saffron rounded-full flex-shrink-0" />
-                      <span className="text-base">{f}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* 7) Elevate Your Experience - 3 Optional Features */}
+      {/* 6.5) Key Features Grid Section */}
+      <section className="section-padding bg-gray-50">
+        <div className="container-custom">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h3 className="text-3xl md:text-4xl font-light text-midnight-slate mb-4">
+              Key Features
+            </h3>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Discover what makes the {fullModelName} exceptional
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {(model.standardFeatures || model.features || []).map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                viewport={{ once: true }}
+                className="bg-white rounded-lg p-4 border border-gray-200 hover:border-smoked-saffron/50 hover:shadow-md transition-all duration-300"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 w-2 h-2 bg-smoked-saffron rounded-full"></div>
+                  <span className="text-base text-midnight-slate font-medium">
+                    {feature}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 7) Elevate Your Experience - Optional Features */}
       {optionalFeaturesForElevate.length > 0 && (
-        <section className="section-padding bg-gray-50">
+        <section className="section-padding bg-white">
           <div className="container-custom">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -338,130 +408,207 @@ const ModelDetail = () => {
                 Elevate Your Experience
               </h3>
               <p className="text-gray-600 max-w-3xl mx-auto">
-                Enhance your {model.name} with these optional upgrades and customizations.
+                Enhance your {fullModelName} with these optional upgrades and customizations.
               </p>
             </motion.div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto mb-8">
               {optionalFeaturesForElevate.map((feature, idx) => {
                 const featureName = typeof feature === 'string' ? feature : feature.name;
                 const featureDesc = typeof feature === 'object' && feature.description ? feature.description : 
-                  `Enhance your ${model.name} with this premium option.`;
-                // Support full paths, URLs, or just filenames for feature images
-                const featureImage = typeof feature === 'object' && feature.image ? 
-                  (feature.image.startsWith('/') || feature.image.startsWith('http') 
-                    ? feature.image 
-                    : modelFolder + encodeFilename(feature.image)) : 
-                  defaultHero;
+                  `Enhance your ${fullModelName} with this premium option.`;
                 
                 return (
                   <motion.div
                     key={idx}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: idx * 0.1 }}
+                    transition={{ duration: 0.4, delay: idx * 0.05 }}
                     viewport={{ once: true }}
-                    className="bg-white rounded-2xl shadow-md hover:shadow-lg transition overflow-hidden"
+                    className="bg-gradient-to-br from-gray-50 to-white rounded-lg p-5 border border-gray-200 hover:border-smoked-saffron/50 hover:shadow-md transition-all duration-300"
                   >
-                    <div className="h-64 overflow-hidden">
-                      <img 
-                        src={featureImage} 
-                        alt={featureName} 
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" 
-                      />
-                    </div>
-                    <div className="p-6">
-                      <h4 className="text-xl font-semibold text-midnight-slate mb-3">
-                        {featureName}
-                      </h4>
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        {featureDesc}
-                      </p>
-                      {typeof feature === 'object' && feature.price && (
-                        <p className="text-sm text-smoked-saffron font-medium mt-3">
-                          {feature.price}
-                        </p>
-                      )}
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 bg-smoked-saffron/10 rounded-full flex items-center justify-center mt-0.5">
+                        <svg className="w-4 h-4 text-smoked-saffron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-lg font-semibold text-midnight-slate mb-2">
+                          {featureName}
+                        </h4>
+                        {featureDesc && (
+                          <p className="text-sm text-gray-600 leading-relaxed">
+                            {featureDesc}
+                          </p>
+                        )}
+                        {typeof feature === 'object' && feature.price && (
+                          <p className="text-sm text-smoked-saffron font-medium mt-2">
+                            {feature.price}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </motion.div>
                 );
               })}
             </div>
+            {hasMoreOptionalFeatures && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                viewport={{ once: true }}
+                className="text-center"
+              >
+                <Link
+                  to={`/models/${model.id}/customize`}
+                  className="inline-flex items-center gap-2 bg-smoked-saffron hover:bg-smoked-saffron/90 text-white px-8 py-3 rounded-lg font-medium text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 transform"
+                >
+                  See More Options
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </motion.div>
+            )}
           </div>
         </section>
       )}
 
-      {/* 8) High Marine Quality Fabrics */}
-      <section className="section-padding bg-gray-50">
+      {/* 8) Interior Section */}
+      <section className="section-padding bg-white">
         <div className="container-custom">
-          <motion.h3
-            initial={{ opacity: 0, y: 20 }}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-light text-midnight-slate mb-8 text-center"
+            className="text-center mb-12"
           >
-            High Marine Quality Fabrics
-          </motion.h3>
+            <h3 className="text-3xl md:text-4xl font-light text-midnight-slate mb-4">
+              Interior Excellence
+            </h3>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Step inside and discover the refined interior of the {fullModelName}, where comfort meets craftsmanship.
+            </p>
+          </motion.div>
           {/* Two images 30/70 - Small image same height, big one is carousel */}
-          <div className="flex gap-4 mb-10">
-            <div className="w-[30%] hidden lg:block" style={{ height: '600px' }}>
-              <div className="h-full bg-gray-200 rounded-2xl overflow-hidden">
-                <img 
-                  src={model.fabricLeftImage || defaultHero} 
-                  alt="Interior Left" 
-                  className="w-full h-full object-cover" 
-                />
+          {interiorImages.length > 0 ? (
+            <div className="flex gap-4">
+              {/* Left image - first interior image */}
+              <div className="w-[30%] hidden lg:block" style={{ height: '600px' }}>
+                <div className="h-full bg-gray-200 rounded-2xl overflow-hidden shadow-lg">
+                  <img 
+                    src={interiorImages[0]} 
+                    alt="Interior" 
+                    className="w-full h-full object-cover" 
+                  />
+                </div>
+              </div>
+              {/* Right carousel - rest of interior images */}
+              <div className="w-full lg:w-[70%] relative" style={{ height: '600px' }}>
+                <div className="relative h-full w-full bg-gray-200 rounded-2xl overflow-hidden shadow-lg">
+                  {interiorImages.length > 1 ? (
+                    <>
+                      <img 
+                        src={interiorImages[interiorSlide + 1] || interiorImages[0]} 
+                        alt={`Interior ${interiorSlide + 2}`} 
+                        className="w-full h-full object-cover" 
+                      />
+                      {/* Carousel controls */}
+                      {interiorImages.length > 2 && (
+                        <>
+                          <button
+                            onClick={goInteriorPrev}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 text-midnight-slate rounded-full p-3 hover:bg-white transition shadow-lg"
+                            aria-label="Previous image"
+                          >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={goInteriorNext}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 text-midnight-slate rounded-full p-3 hover:bg-white transition shadow-lg"
+                            aria-label="Next image"
+                          >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        </>
+                      )}
+                      {/* Carousel indicators */}
+                      {interiorImages.length > 2 && (
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2 bg-black/30 backdrop-blur-sm rounded-full px-3 py-2">
+                          {Array.from({ length: interiorImages.length - 1 }).map((_, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setInteriorSlide(idx)}
+                              className={`w-2.5 h-2.5 rounded-full transition ${
+                                interiorSlide === idx ? 'bg-smoked-saffron' : 'bg-white/60'
+                              }`}
+                              aria-label={`Go to image ${idx + 2}`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <img 
+                      src={interiorImages[0]} 
+                      alt="Interior" 
+                      className="w-full h-full object-cover" 
+                    />
+                  )}
+                </div>
               </div>
             </div>
-            <div className="w-full lg:w-[70%] relative" style={{ height: '600px' }}>
-              <div className="relative h-full w-full bg-gray-200 rounded-2xl overflow-hidden">
-                <img 
-                  src={galleryImages[currentSlide] || model.fabricRightImage || model.contentImage || model.image || defaultHero} 
-                  alt="Interior Right" 
-                  className="w-full h-full object-cover" 
-                />
-                {/* Carousel controls for big image */}
-                {galleryImages.length > 1 && (
-                  <>
-                    <button
-                      onClick={goPrev}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 text-midnight-slate rounded-full p-2 hover:bg-white transition"
-                      aria-label="Previous image"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={goNext}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 text-midnight-slate rounded-full p-2 hover:bg-white transition"
-                      aria-label="Next image"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </>
-                )}
-              </div>
+          ) : (
+            <div className="text-center py-20">
+              <p className="text-gray-500 text-lg">Interior images coming soon</p>
             </div>
-          </div>
-          {/* Fabric choices grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {(model.fabrics || [
-              'Sahara Sand','Marble','Florida Blue','Nougat','Cognac Shot','Honey'
-            ]).map((name) => (
-              <div key={name} className="border border-gray-200 rounded-xl p-4 text-center bg-white">
-                <div className="h-16 bg-gray-100 rounded mb-3"></div>
-                <div className="text-sm font-medium text-midnight-slate">{name}</div>
-              </div>
-            ))}
-          </div>
+          )}
         </div>
       </section>
 
-      {/* 9) Specifications Section */}
+      {/* 9) Customization CTA */}
+      {getCustomizerFolder(model.name) && (
+        <section className="section-padding bg-gradient-to-br from-midnight-slate to-gray-800 text-white">
+          <div className="container-custom">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+              className="text-center max-w-3xl mx-auto"
+            >
+              <h3 className="text-3xl md:text-4xl font-light mb-4">
+                Ready to Customize Your {fullModelName}?
+              </h3>
+              <p className="text-lg text-gray-300 mb-8">
+                Design your perfect boat with our interactive customizer. Choose colors, select optional features, 
+                and create a vessel that's uniquely yours.
+              </p>
+              <Link
+                to={`/models/${model.id}/customize`}
+                className="inline-flex items-center gap-3 bg-smoked-saffron hover:bg-smoked-saffron/90 text-white px-10 py-4 rounded-lg font-medium text-lg shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 transform group"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                </svg>
+                <span>Start Customization</span>
+                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </motion.div>
+          </div>
+        </section>
+      )}
+
+      {/* 10) Specifications Section */}
       <section className="section-padding bg-white">
         <div className="container-custom">
           <motion.div
