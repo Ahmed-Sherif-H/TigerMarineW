@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import HeroSection from '../components/HeroSection';
-import { inflatableBoats } from '../data/models';
+import { inflatableBoats, upcomingModels } from '../data/models';
 import { getLatestNews, formatNewsDate } from '../data/news';
 
 const Home = () => {
@@ -47,26 +47,54 @@ const Home = () => {
       {/* 1. Upcoming Model Section */}
       <section className="section-padding bg-white">
         <div className="container-custom">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center"
-          >
-            <h2 className="text-4xl md:text-5xl font-light text-midnight-slate mb-6">
-              Upcoming Model
-            </h2>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Discover our latest innovation in marine excellence
-            </p>
-            <Link
-              to="/models/upcoming"
-              className="btn-primary text-lg px-10 py-4 hover:scale-105 transform transition-all duration-300"
-            >
-              Learn More
-            </Link>
-          </motion.div>
+          {(() => {
+            const upcomingModel = upcomingModels[0]; // Get first upcoming model (Infinity 280)
+            if (!upcomingModel) return null;
+            
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                viewport={{ once: true }}
+                className="text-center"
+              >
+                {/* Title */}
+                <h2 className="text-4xl md:text-5xl font-light text-midnight-slate mb-8">
+                  Our Upcoming Model
+                </h2>
+                
+                {/* Image */}
+                <div className="mb-8 max-w-4xl mx-auto">
+                  <div className="relative rounded-2xl overflow-hidden shadow-xl">
+                    <img
+                      src={upcomingModel.image || upcomingModel.heroImage}
+                      alt={upcomingModel.name}
+                      className="w-full h-auto object-cover"
+                    />
+                  </div>
+                </div>
+                
+                {/* Model Name */}
+                <h3 className="text-3xl md:text-4xl font-light text-midnight-slate mb-4">
+                  {upcomingModel.name}
+                </h3>
+                
+                {/* Description Text */}
+                <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+                  {upcomingModel.shortDescription || upcomingModel.description}
+                </p>
+                
+                {/* Learn More Button */}
+                <Link
+                  to="/models/upcoming"
+                  className="btn-primary text-lg px-10 py-4 hover:scale-105 transform transition-all duration-300 inline-block"
+                >
+                  Learn More
+                </Link>
+              </motion.div>
+            );
+          })()}
         </div>
       </section>
 
@@ -224,7 +252,90 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 4. Dealers Section */}
+      {/* 4. Categories Section */}
+      <section className="section-padding bg-gradient-to-b from-white to-gray-50">
+        <div className="container-custom">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-4xl md:text-5xl font-light text-midnight-slate mb-4">
+              Complete Collection
+            </h2>
+            <div className="w-24 h-1 bg-smoked-saffron mx-auto mb-6"></div>
+            <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              From compact sport boats to flagship luxury vessels, our range offers 
+              the perfect inflatable boat for every mariner's needs.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            {inflatableBoats.map((category, index) => (
+              <motion.div
+                key={category.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <Link to={`/categories/${category.id}`} className="block group h-full">
+                  <div className="relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden h-full flex flex-col border border-gray-100">
+                    {/* Category Image */}
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={category.image}
+                        alt={category.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      />
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      
+                      {/* Model Count Badge */}
+                      <div className="absolute top-4 right-4">
+                        <div className="bg-smoked-saffron text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-lg">
+                          {category.models.length} Model{category.models.length !== 1 ? 's' : ''}
+                        </div>
+                      </div>
+                      
+                      {/* Category Name */}
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <h3 className="text-xl md:text-2xl font-light text-white tracking-tight line-clamp-2">
+                          {category.name}
+                        </h3>
+                      </div>
+                    </div>
+                    
+                    {/* Category Info */}
+                    <div className="p-5 flex-1 flex flex-col">
+                      <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2 flex-1">
+                        {category.shortDescription || category.description}
+                      </p>
+                      
+                      {/* CTA Button */}
+                      <div className="flex items-center text-smoked-saffron group-hover:text-midnight-slate transition-colors duration-300 pt-3 border-t border-gray-100">
+                        <span className="text-sm font-medium mr-2">View Models</span>
+                        <svg 
+                          className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Dealers Section */}
       <section className="section-padding bg-gray-50">
         <div className="container-custom">
           <div className="text-center max-w-3xl mx-auto">
@@ -265,7 +376,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 5. Latest News Section */}
+      {/* 6. Latest News Section */}
       <section className="section-padding bg-white">
         <div className="container-custom">
           <motion.div
@@ -358,7 +469,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 6. Video Section */}
+      {/* 7. Video Section */}
       <section className="relative h-screen">
         <div className="absolute inset-0">
           <img
@@ -379,10 +490,10 @@ const Home = () => {
               Experience Our Models
             </h2>
             <Link
-              to="/models"
-              className="btn-primary text-lg px-10 py-4 hover:scale-105 transform transition-all duration-300"
+              to="/categories"
+              className="btn-primary text-lg px-10 py-4 hover:scale-105 transform transition-all duration-300 inline-block"
             >
-              Visit Models
+              View All Categories
             </Link>
           </motion.div>
         </div>

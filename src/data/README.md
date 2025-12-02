@@ -118,6 +118,6 @@ All boats use the same structure:
 
 ## 📚 **See Also**
 
-- `README_BOAT_DATA.md` - Detailed guide for adding boats from Excel
-- `boatDataExample.js` - Complete examples
-- `boatDataTemplate.js` - Data structure template
+- `HOW_TO_MANAGE_IMAGES.md` - Complete guide for managing model and category images
+- `HOW_TO_ADD_OPTIONAL_FEATURES.md` - Guide for adding optional features to models
+- `NEWS_README.md` - Guide for managing news items

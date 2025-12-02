@@ -11,8 +11,8 @@ const ModelCard = ({ model, index = 0 }) => {
       whileHover={{ y: -10 }}
       className="group"
     >
-      <Link to={`/models/${model.id}`} className="block">
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500">
+      <Link to={`/models/${model.id}`} className="block h-full">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 h-full flex flex-col">
           {/* Image Container */}
           <div className="relative overflow-hidden">
             <div className="aspect-[4/3] bg-gray-200">
@@ -28,7 +28,7 @@ const ModelCard = ({ model, index = 0 }) => {
           </div>
 
           {/* Content */}
-          <div className="p-6">
+          <div className="p-6 flex-1 flex flex-col">
             <h3 className="text-2xl font-semibold text-midnight-slate mb-2 group-hover:text-gold transition-colors duration-300">
               {model.name}
             </h3>
@@ -50,7 +50,7 @@ const ModelCard = ({ model, index = 0 }) => {
             </div>
 
             {/* CTA Button */}
-            <div className="text-center">
+            <div className="text-center mt-auto">
               <span className="inline-flex items-center text-gold font-medium group-hover:text-midnight-slate transition-colors duration-300">
                 View Details
                 <svg

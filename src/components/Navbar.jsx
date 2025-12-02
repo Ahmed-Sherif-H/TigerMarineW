@@ -35,7 +35,7 @@ const Navbar = () => {
   const menuItems = [
     { name: 'Home', path: '/' },
     { name: 'Inflatable Boats', path: '/categories', hasSubmenu: true, submenuType: 'inflatable' },
-    { name: 'Boats', path: '/models', hasSubmenu: true, submenuType: 'boats' },
+    { name: 'Boats', path: '/categories', hasSubmenu: true, submenuType: 'boats' },
     { name: 'Upcoming Models', path: '/models/upcoming' },
     { name: 'Boat Shows', path: '/boat-shows' },
     { name: 'Dealers', path: '/dealers' },

@@ -63,7 +63,7 @@ export const sideMenuImages = {
   'OP850': 'Open-850.png',
   'OP750': 'Open-750.png',
   'OP650': 'Open-650.png',
-  'Infinity 280': 'sideMenu-NoBG.png',
+  'Infinity 280': 'Infinity-280.png',
   'Striker 330': 'sideMenu-NoBG.png',
   
   // Add new models here:

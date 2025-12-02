@@ -519,12 +519,12 @@ const ModelDetail = () => {
             </Link>
             <div className="text-center">
               <p className="text-gray-600 mb-2">Ready to customize your {model.name}?</p>
-              <a
-                href="/color-fabric"
-                className="btn-primary"
+              <Link
+                to={`/models/${model.id}/customize`}
+                className="btn-primary inline-block"
               >
                 Start Customization
-              </a>
+              </Link>
             </div>
           </div>
         </div>

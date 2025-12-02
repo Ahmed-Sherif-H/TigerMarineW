@@ -21,7 +21,7 @@ const Footer = () => {
     services: [
       { name: 'Dealers', path: '/dealers' },
       { name: 'Color & Fabric Selection', path: '/color-fabric' },
-      { name: 'Customization', path: '/models' }
+      { name: 'Customization', path: '/categories' }
     ]
   };
 

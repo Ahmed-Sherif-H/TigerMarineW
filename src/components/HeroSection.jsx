@@ -100,7 +100,7 @@ const HeroSection = ({
             className="flex flex-col sm:flex-row gap-6 items-start"
           >
             <Link
-              to="/models"
+              to="/categories"
               className="group relative px-8 py-4 bg-white text-midnight-slate font-semibold text-base rounded-full hover:bg-gray-100 hover:text-midnight-slate transform hover:scale-105 transition-all duration-500 shadow-2xl hover:shadow-white/30 border-2 border-white/20"
             >
               <span className="relative z-10 tracking-wide">Explore Models</span>

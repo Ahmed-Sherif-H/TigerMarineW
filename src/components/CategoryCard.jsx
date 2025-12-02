@@ -9,7 +9,7 @@ const CategoryCard = ({ category, index = 0 }) => {
       transition={{ duration: 0.6, delay: index * 0.1 }}
       viewport={{ once: true }}
       whileHover={{ y: -10, scale: 1.02 }}
-      className="group relative overflow-hidden rounded-3xl shadow-2xl"
+      className="group relative overflow-hidden rounded-3xl shadow-2xl h-full"
     >
       <Link to={`/categories/${category.id}`} className="block">
         {/* Background Image */}

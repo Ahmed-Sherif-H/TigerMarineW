@@ -1,11 +1,94 @@
 import { motion } from 'framer-motion';
+import { useState, useMemo } from 'react';
 import { dealers } from '../data/models';
 
+// Map Component - Interactive map showing dealer locations
+const DealersMap = ({ dealers }) => {
+  // Create a list of all dealer addresses for the map
+  const dealerAddresses = dealers
+    .filter(d => d.address)
+    .map(d => `${d.address}, ${d.country}`);
+
+  // Create Google Maps search URL (works without API key)
+  const firstDealer = dealerAddresses[0] || '';
+  const mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(firstDealer)}`;
+
+  return (
+    <div className="w-full h-full relative bg-gray-100">
+      {/* Map iframe - Using OpenStreetMap which is free */}
+      <iframe
+        src="https://www.openstreetmap.org/export/embed.html?bbox=-180,-90,180,90&layer=mapnik&zoom=2"
+        width="100%"
+        height="100%"
+        style={{ border: 0 }}
+        allowFullScreen
+        loading="lazy"
+        className="w-full h-full"
+        title="Dealers Map"
+      />
+      
+      {/* Overlay with dealer count and link */}
+      <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg max-w-xs">
+        <h3 className="font-semibold text-midnight-slate mb-2">Dealer Locations</h3>
+        <p className="text-sm text-gray-600 mb-3">
+          {dealers.length} dealer{dealers.length !== 1 ? 's' : ''} worldwide
+        </p>
+        <a
+          href={mapSearchUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-sm text-smoked-saffron hover:text-midnight-slate transition-colors font-medium"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+          View all locations in Google Maps
+        </a>
+      </div>
+    </div>
+  );
+};
+
 const Dealers = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('All');
+
+  // Get unique countries
+  const countries = useMemo(() => {
+    const uniqueCountries = [...new Set(dealers.map(d => d.country))].sort();
+    return ['All', ...uniqueCountries];
+  }, []);
+
+  // Filter dealers
+  const filteredDealers = useMemo(() => {
+    return dealers.filter(dealer => {
+      const matchesSearch = 
+        dealer.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dealer.country?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dealer.address?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesCountry = selectedCountry === 'All' || dealer.country === selectedCountry;
+      
+      return matchesSearch && matchesCountry;
+    });
+  }, [searchTerm, selectedCountry]);
+
+  // Group dealers by country
+  const dealersByCountry = useMemo(() => {
+    const grouped = {};
+    filteredDealers.forEach(dealer => {
+      if (!grouped[dealer.country]) {
+        grouped[dealer.country] = [];
+      }
+      grouped[dealer.country].push(dealer);
+    });
+    return grouped;
+  }, [filteredDealers]);
+
   return (
     <div className="pt-20">
       {/* Hero Section */}
-      <section className="relative h-96 flex items-center justify-center bg-gradient-to-r from-navy to-navy-dark">
+      <section className="relative h-96 flex items-center justify-center bg-gradient-to-r from-midnight-slate to-gray-700">
         <div className="absolute inset-0 bg-black/30"></div>
         <div className="relative z-10 text-center text-white px-4">
           <motion.h1
@@ -28,77 +111,160 @@ const Dealers = () => {
         </div>
       </section>
 
-      {/* Dealers List */}
-      <section className="section-padding">
+      {/* Search and Filter Section */}
+      <section className="section-padding bg-gray-50">
         <div className="container-custom">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-light text-midnight-slate mb-6">
-              Our Dealer Network
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              With dealers across five continents, we bring Tiger Marine's luxury 
-              and service to mariners worldwide.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {dealers.map((dealer, index) => (
-              <motion.div
-                key={dealer.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300"
+          <div className="flex flex-col md:flex-row gap-4 mb-8">
+            {/* Search Input */}
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Search by company, country, or address..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-6 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-smoked-saffron focus:border-transparent"
+              />
+            </div>
+            
+            {/* Country Filter */}
+            <div className="md:w-64">
+              <select
+                value={selectedCountry}
+                onChange={(e) => setSelectedCountry(e.target.value)}
+                className="w-full px-6 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-smoked-saffron focus:border-transparent bg-white"
               >
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-semibold text-midnight-slate mb-2">{dealer.name}</h3>
-                  <p className="text-gold font-medium">{dealer.location}</p>
-                </div>
-
-                <div className="space-y-4 mb-6">
-                  <div className="flex items-start space-x-3">
-                    <svg className="w-5 h-5 text-gold mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span className="text-gray-600 text-sm">{dealer.address}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <svg className="w-5 h-5 text-gold flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    <span className="text-gray-600 text-sm">{dealer.phone}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <svg className="w-5 h-5 text-gold flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-gray-600 text-sm">{dealer.email}</span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col space-y-3">
-                  <button className="btn-primary text-sm py-3 hover:scale-105 transform transition-all duration-300">
-                    Visit Showroom
-                  </button>
-                  <button className="btn-outline text-sm py-3 hover:scale-105 transform transition-all duration-300">
-                    Schedule Appointment
-                  </button>
-                </div>
-              </motion.div>
-            ))}
+                {countries.map(country => (
+                  <option key={country} value={country}>{country}</option>
+                ))}
+              </select>
+            </div>
           </div>
+
+          {/* Results Count */}
+          <p className="text-gray-600 mb-8">
+            Showing {filteredDealers.length} dealer{filteredDealers.length !== 1 ? 's' : ''}
+          </p>
         </div>
       </section>
+
+      {/* Dealers List - New Compact Design */}
+      <section className="section-padding bg-white">
+        <div className="container-custom">
+          {Object.keys(dealersByCountry).length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-xl text-gray-600">No dealers found matching your search.</p>
+            </div>
+          ) : (
+            <div className="space-y-10">
+              {Object.entries(dealersByCountry).map(([country, countryDealers], countryIndex) => (
+                <motion.div
+                  key={country}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: countryIndex * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <h2 className="text-3xl md:text-4xl font-light text-midnight-slate mb-6 pb-3 border-b-2 border-smoked-saffron">
+                    {country}
+                  </h2>
+                  
+                  {/* New Grid Layout - Using CSS Grid explicitly */}
+                  <div 
+                    className="dealers-grid"
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                      gap: '1.5rem',
+                      width: '100%'
+                    }}
+                  >
+                    {countryDealers.map((dealer, index) => (
+                      <motion.div
+                        key={dealer.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: index * 0.05 }}
+                        viewport={{ once: true }}
+                        className="bg-white border-2 border-gray-200 rounded-lg p-5 hover:border-smoked-saffron hover:shadow-md transition-all duration-300"
+                        style={{ width: '100%', maxWidth: '100%' }}
+                      >
+                        <div className="mb-4">
+                          <h3 className="text-lg font-semibold text-midnight-slate mb-2">
+                            {dealer.company}
+                          </h3>
+                          <div className="inline-block px-2 py-1 bg-smoked-saffron/10 text-smoked-saffron rounded text-xs font-medium">
+                            {dealer.country}
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 text-sm">
+                          {dealer.address && (
+                            <div className="flex items-start gap-2">
+                              <svg className="w-4 h-4 text-smoked-saffron mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              <span className="text-gray-700 leading-snug">{dealer.address}</span>
+                            </div>
+                          )}
+                          
+                          {dealer.telephone && (
+                            <div className="flex items-center gap-2">
+                              <svg className="w-4 h-4 text-smoked-saffron flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                              </svg>
+                              <a href={`tel:${dealer.telephone}`} className="text-gray-700 hover:text-smoked-saffron transition-colors">
+                                {dealer.telephone}
+                              </a>
+                            </div>
+                          )}
+
+                          {dealer.fax && (
+                            <div className="flex items-center gap-2">
+                              <svg className="w-4 h-4 text-smoked-saffron flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                              </svg>
+                              <span className="text-gray-700">{dealer.fax}</span>
+                            </div>
+                          )}
+                          
+                          {dealer.email && (
+                            <div className="flex items-center gap-2">
+                              <svg className="w-4 h-4 text-smoked-saffron flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                              </svg>
+                              <a href={`mailto:${dealer.email}`} className="text-gray-700 hover:text-smoked-saffron transition-colors break-all">
+                                {dealer.email}
+                              </a>
+                            </div>
+                          )}
+
+                          {dealer.website && (
+                            <div className="flex items-center gap-2">
+                              <svg className="w-4 h-4 text-smoked-saffron flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                              </svg>
+                              <a 
+                                href={dealer.website} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-gray-700 hover:text-smoked-saffron transition-colors break-all"
+                              >
+                                {dealer.website.replace(/^https?:\/\//, '')}
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
 
       {/* Map Section */}
       <section className="section-padding bg-gray-50">
@@ -126,16 +292,16 @@ const Dealers = () => {
             viewport={{ once: true }}
             className="bg-white rounded-2xl shadow-lg overflow-hidden"
           >
-            <div className="aspect-video bg-gray-200 flex items-center justify-center">
-              <div className="text-center">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-gray-500">Interactive Map Coming Soon</p>
-                <p className="text-sm text-gray-400">Use the dealer list above to find locations</p>
-              </div>
+            <div className="aspect-video bg-gray-100 relative">
+              <DealersMap dealers={dealers} />
             </div>
           </motion.div>
+          
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-500">
+              Click on the map markers to see dealer locations. Use the search and filter above to find specific dealers.
+            </p>
+          </div>
         </div>
       </section>
 

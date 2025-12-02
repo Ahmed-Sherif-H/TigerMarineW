@@ -142,7 +142,7 @@ export const allCategories = [
   createCategory({
     id: 1,
     name: "MaxLine",
-    description: "Our flagship series representing the pinnacle of luxury and performance",
+    description: "Our signature series, crafted to embody the highest standards of luxury, performance, and refinement.",
     shortDescription: "Ultimate luxury and performance",
     color: "#1e3a8a",
     // Image automatically synced from imageConfig.js
@@ -1122,151 +1122,223 @@ export const allBoats = allCategories;
 export const upcomingModels = [
   {
     id: 1,
-    name: "TL1050",
-    description: "Coming soon",
-    shortDescription: "TL1050 - Coming soon",
-    image: "/images/740PL.jpg",
-    heroImage: "/images/740-12.jpg",
+    name: "Infinity 280",
+    description: "The Infinity 280 - premium rigid boat combining exceptional performance with refined luxury. Experience the perfect balance of power, comfort, and style.",
+    shortDescription: "Premium rigid boat with exceptional performance and luxury",
+    image: "/images/Infinity 280/Infinity 280-1.jpg",
+    heroImage: "/images/Infinity 280/Infinity 280-1.jpg",
     specs: {
-      length: "10.5 m",
-      beam: "3.5 m",
-      draft: "0.5 m",
-      engine: "Outboard 350HP",
-      fuelCapacity: "250L",
-      waterCapacity: "60L",
-      maxSpeed: "52 knots",
-      cruisingSpeed: "38 knots",
-      capacity: "14 passengers"
-    },
-    features: []
-  },
-  {
-    id: 2,
-    name: "Striker 225",
-    description: "Coming soon",
-    shortDescription: "Striker 225 - Coming soon",
-    image: "/images/740PL.jpg",
-    heroImage: "/images/740-12.jpg",
-    specs: {
-      length: "6.9 m",
-      beam: "2.4 m",
-      draft: "0.76 m",
-      engine: "TBD",
-      fuelCapacity: "80L",
-      waterCapacity: "20L",
-      maxSpeed: "28 knots",
-      cruisingSpeed: "20 knots",
-      capacity: "6 passengers"
-    },
-    features: []
-  },
-  {
-    id: 3,
-    name: "Striker 265",
-    description: "Coming soon",
-    shortDescription: "Striker 265 - Coming soon",
-    image: "/images/740PL.jpg",
-    heroImage: "/images/740-12.jpg",
-    specs: {
-      length: "8.1 m",
+      length: "8.5 m",
       beam: "2.7 m",
-      draft: "0.91 m",
-      engine: "TBD",
-      fuelCapacity: "100L",
-      waterCapacity: "25L",
-      maxSpeed: "30 knots",
-      cruisingSpeed: "22 knots",
+      draft: "0.9 m",
+      engine: "Outboard 300HP",
+      fuelCapacity: "200L",
+      waterCapacity: "50L",
+      maxSpeed: "50 knots",
+      cruisingSpeed: "35 knots",
       capacity: "8 passengers"
     },
-    features: []
-  },
-  {
-    id: 4,
-    name: "Striker 295",
-    description: "Coming soon",
-    shortDescription: "Striker 295 - Coming soon",
-    image: "/images/740PL.jpg",
-    heroImage: "/images/740-12.jpg",
-    specs: {
-      length: "9.0 m",
-      beam: "3.0 m",
-      draft: "0.98 m",
-      engine: "TBD",
-      fuelCapacity: "120L",
-      waterCapacity: "30L",
-      maxSpeed: "32 knots",
-      cruisingSpeed: "24 knots",
-      capacity: "10 passengers"
-    },
-    features: []
-  },
-  {
-    id: 5,
-    name: "Striker 335",
-    description: "Coming soon",
-    shortDescription: "Striker 335 - Coming soon",
-    image: "/images/740PL.jpg",
-    heroImage: "/images/740-12.jpg",
-    specs: {
-      length: "10.2 m",
-      beam: "3.4 m",
-      draft: "1.07 m",
-      engine: "TBD",
-      fuelCapacity: "150L",
-      waterCapacity: "35L",
-      maxSpeed: "35 knots",
-      cruisingSpeed: "25 knots",
-      capacity: "12 passengers"
-    },
-    features: []
+    features: [
+      "Rigid hull construction",
+      "Premium materials",
+      "Advanced navigation",
+      "Comfortable seating",
+      "Safety equipment",
+      "Storage compartments"
+    ]
   }
 ];
 
 export const dealers = [
   {
     id: 1,
-    name: "Tiger Marine Miami",
-    location: "Miami, FL, USA",
-    address: "1234 Biscayne Blvd, Miami, FL 33132",
-    phone: "+1 (305) 555-0123",
-    email: "miami@tigermarine.com",
-    coordinates: { lat: 25.7617, lng: -80.1918 }
+    country: "Croatia",
+    company: "Donar Boats",
+    address: "Riva 1, 52100 Pula, Croatia",
+    telephone: "+385 98 802 328",
+    fax: "+385 52 350 822",
+    email: "donarboats@gmail.com",
+    website: "http://www.donarboats.hr/hr"
   },
   {
     id: 2,
-    name: "Tiger Marine Monaco",
-    location: "Monaco",
-    address: "Port Hercules, 98000 Monaco",
-    phone: "+377 93 15 88 88",
-    email: "monaco@tigermarine.com",
-    coordinates: { lat: 43.7384, lng: 7.4246 }
+    country: "Portugal",
+    company: "Portugal Boats",
+    address: "Edificio Vilamarina, Loja 38, 8125-406 Vilamoura, Portugal",
+    telephone: null,
+    fax: null,
+    email: "frank@portugal-boats.com",
+    website: "http://www.portugal-boats.com"
   },
   {
     id: 3,
-    name: "Tiger Marine Sydney",
-    location: "Sydney, Australia",
-    address: "456 Darling Harbour, Sydney NSW 2000",
-    phone: "+61 2 9876 5432",
-    email: "sydney@tigermarine.com",
-    coordinates: { lat: -33.8688, lng: 151.2093 }
+    country: "France",
+    company: "Boats Distribution",
+    address: "27 Route du Cap, 83230 Bormes-les-Mimosas, France",
+    telephone: null,
+    fax: null,
+    email: null,
+    website: "http://www.boats-diffusion.com"
   },
   {
     id: 4,
-    name: "Tiger Marine Dubai",
-    location: "Dubai, UAE",
-    address: "Marina Walk, Dubai Marina, UAE",
-    phone: "+971 4 123 4567",
-    email: "dubai@tigermarine.com",
-    coordinates: { lat: 25.2048, lng: 55.2708 }
+    country: "Serbia",
+    company: "Donar Boats",
+    address: "Runjačica 16, Premantura, 52100 Pula, Croatia",
+    telephone: "+385 98 802 328",
+    fax: "+385 52 350 822",
+    email: "donarboats@gmail.com",
+    website: "http://www.donarboats.hr/index.php/en/"
   },
   {
     id: 5,
-    name: "Tiger Marine Singapore",
-    location: "Singapore",
-    address: "Sentosa Cove, Singapore 098269",
-    phone: "+65 6123 4567",
-    email: "singapore@tigermarine.com",
-    coordinates: { lat: 1.2434, lng: 103.8303 }
+    country: "Germany",
+    company: "Tiger Marine Center",
+    address: "Delftweg 129, 3043 NH Rotterdam, Netherlands (Serving Germany)",
+    telephone: null,
+    fax: null,
+    email: null,
+    website: "http://www.tigermarinecenter.nl"
+  },
+  {
+    id: 6,
+    country: "Germany",
+    company: "Bootszentrum",
+    address: "Tükeslih 13, 24887 Silberstedt, Germany",
+    telephone: null,
+    fax: null,
+    email: null,
+    website: "http://www.bootszentrum.de"
+  },
+  {
+    id: 7,
+    country: "Spain",
+    company: "Kings Boats RIBS S.L",
+    address: "Barcelona, Spain",
+    telephone: "+34 653 683 678 / +34 620 899 997",
+    fax: null,
+    email: "comercial@kingsboatsribs.com",
+    website: "https://kingsboatsribs.com/"
+  },
+  {
+    id: 8,
+    country: "Greece",
+    company: "Biskinis Bros S.A.",
+    address: "Oinoi 320 09, Greece",
+    telephone: null,
+    fax: null,
+    email: null,
+    website: "https://protagonyachts.com/company/"
+  },
+  {
+    id: 9,
+    country: "Kuwait",
+    company: "Alghanim Marine Co.",
+    address: "P.O. Box 30, Souk AlDakhili 15251, Kuwait",
+    telephone: "+965 2 4729377",
+    fax: "+965 2 4729344 Ext:117",
+    email: "info@alghanimmarine.com",
+    website: null
+  },
+  {
+    id: 10,
+    country: "Egypt",
+    company: "Coastal Marine",
+    address: "MB16-01-2 Abu Tig Marina, Ext 75522, El Gouna, Egypt",
+    telephone: "+20 122 211 2844",
+    fax: null,
+    email: "info@coastalmarineegypt.com",
+    website: "https://www.coastalmarineegypt.com/"
+  },
+  {
+    id: 11,
+    country: "Egypt",
+    company: "Tiger Marine Factory",
+    address: "100 Fadan Industrial Zone, Badr City, Cairo, Egypt",
+    telephone: "+202 23108045 / +202 23108046",
+    fax: "+202 23108047",
+    email: "info@tigermarine.com",
+    website: null
+  },
+  {
+    id: 12,
+    country: "Norway",
+    company: "Holmen Marine AS",
+    address: "Fekjan 80, 1394 Nesbru, Norway",
+    telephone: "+47 481 15 481",
+    fax: null,
+    email: "post@tigermarine.no",
+    website: "https://tigermarine.no"
+  },
+  {
+    id: 13,
+    country: "Cyprus",
+    company: "MD Pro Line Boat Sales",
+    address: "Ayias Kyriakis, Geri, Cyprus",
+    telephone: null,
+    fax: null,
+    email: null,
+    website: "https://www.facebook.com/tigermarinecy/"
+  },
+  {
+    id: 14,
+    country: "Sweden",
+    company: "Olympic Boats Sweden AB",
+    address: "Smedbergsvägen 27, 455 35 Munkedal, Sweden",
+    telephone: null,
+    fax: null,
+    email: null,
+    website: "http://www.tiger-marine.se"
+  },
+  {
+    id: 15,
+    country: "Netherlands & Belgium",
+    company: "Tiger Marine Center",
+    address: "Delftweg 129, 3043 NH Rotterdam, Netherlands",
+    telephone: null,
+    fax: null,
+    email: null,
+    website: "http://www.tigermarinecenter.nl"
+  },
+  {
+    id: 16,
+    country: "USA",
+    company: "MS Marine USA",
+    address: "Riverview, FL 33578, USA",
+    telephone: null,
+    fax: null,
+    email: null,
+    website: "https://www.tigermarineboats.com/"
+  },
+  {
+    id: 17,
+    country: "Ireland",
+    company: "Outdoor Hub Limited",
+    address: "Lisnaskea Business Centre, Lisnaskea, Enniskillen BT92 0PE, UK",
+    telephone: null,
+    fax: null,
+    email: null,
+    website: "http://www.outdoor-hub.ie"
+  },
+  {
+    id: 18,
+    country: "Ireland",
+    company: "Malahide Marina",
+    address: "The Marina, Malahide, Co. Dublin, Ireland",
+    telephone: null,
+    fax: null,
+    email: null,
+    website: "http://www.malahidemarina.net"
+  },
+  {
+    id: 19,
+    country: "Canada",
+    company: "Tobermory Marine Ltd",
+    address: "7032 Hwy 6, Tobermory, ON N0H 2R0, Canada",
+    telephone: null,
+    fax: null,
+    email: null,
+    website: "http://www.tobermorymarine.com"
   }
 ];
 

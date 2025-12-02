@@ -109,7 +109,7 @@ const Models = () => {
                 viewport={{ once: true }}
               >
                 <Link to={`/categories/${category.id}`} className="block group">
-                  <div className="relative bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 overflow-hidden h-full border border-gray-100">
+                  <div className="relative bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 overflow-hidden h-full border border-gray-100 flex flex-col">
                     {/* Large Category Image */}
                     <div className="relative h-80 lg:h-96 overflow-hidden">
                       <img
@@ -142,36 +142,26 @@ const Models = () => {
                     </div>
                     
                     {/* Category Info Section */}
-                    <div className="p-8">
-                      <p className="text-gray-600 mb-6 leading-relaxed text-lg font-light line-clamp-3">
+                    <div className="p-8 flex-1 flex flex-col">
+                      <p className="text-gray-600 mb-6 leading-relaxed text-lg font-light line-clamp-3 flex-1">
                         {category.description}
                       </p>
                       
                       {/* Explore Button */}
-                      <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+                      <div className="flex items-center justify-between pt-6 border-t border-gray-200 mt-auto">
                         <div className="flex items-center space-x-2">
                           <span className="text-sm font-medium text-gray-500">Explore Collection</span>
                         </div>
                         <div className="flex items-center text-smoked-saffron group-hover:text-midnight-slate transition-colors duration-300">
                           <span className="mr-3 font-medium text-lg">View Models</span>
-                          <div className="relative">
-                            <svg 
-                              className="w-6 h-6 transform group-hover:translate-x-2 transition-transform duration-300" 
-                              fill="none" 
-                              stroke="currentColor" 
-                              viewBox="0 0 24 24"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                            </svg>
-                            <svg 
-                              className="w-6 h-6 absolute left-0 opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-300" 
-                              fill="none" 
-                              stroke="currentColor" 
-                              viewBox="0 0 24 24"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </div>
+                          <svg 
+                            className="w-6 h-6 transform group-hover:translate-x-2 transition-transform duration-300" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                          </svg>
                         </div>
                       </div>
                     </div>
