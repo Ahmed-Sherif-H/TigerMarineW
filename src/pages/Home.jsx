@@ -1,27 +1,22 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import HeroSection from '../components/HeroSection';
-import { inflatableBoats, upcomingModels } from '../data/models';
+import { useModels } from '../context/ModelsContext';
+import { upcomingModels } from '../data/models';
 import { getLatestNews, formatNewsDate } from '../data/news';
 
 const Home = () => {
-  // Get all models from all categories and pick 7 random ones
-  const allModels = inflatableBoats.flatMap(category => 
-    category.models.map(model => ({
-      ...model,
-      categoryName: category.name,
-      categoryId: category.id
-    }))
-  );
+  const { categories, models, loading } = useModels();
+  const [selectedModels, setSelectedModels] = useState([]);
   
-  // Get 7 random models (or all if less than 7)
-  const getRandomModels = () => {
-    const shuffled = [...allModels].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, Math.min(7, shuffled.length));
-  };
-  
-  const [selectedModels] = useState(() => getRandomModels());
+  // Get 7 random models when data loads
+  useEffect(() => {
+    if (models.length > 0) {
+      const shuffled = [...models].sort(() => 0.5 - Math.random());
+      setSelectedModels(shuffled.slice(0, Math.min(7, shuffled.length)));
+    }
+  }, [models]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const totalSlides = selectedModels.length;
   
@@ -253,7 +248,7 @@ const Home = () => {
       </section>
 
       {/* 4. Categories Section */}
-      <section className="section-padding bg-gradient-to-b from-white to-gray-50">
+      <section id="complete-collection" className="section-padding bg-gradient-to-b from-white to-gray-50">
         <div className="container-custom">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -272,8 +267,14 @@ const Home = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-            {inflatableBoats.map((category, index) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            {categories
+              .filter(category => {
+                // Remove Infinity and Striker from complete collection
+                const name = category.name?.toLowerCase() || '';
+                return !name.includes('infinity') && !name.includes('striker');
+              })
+              .map((category, index) => (
               <motion.div
                 key={category.id}
                 initial={{ opacity: 0, y: 30 }}
@@ -489,12 +490,16 @@ const Home = () => {
             <h2 className="text-5xl md:text-6xl font-light mb-6">
               Experience Our Models
             </h2>
-            <Link
-              to="/categories"
-              className="btn-primary text-lg px-10 py-4 hover:scale-105 transform transition-all duration-300 inline-block"
-            >
-              View All Categories
-            </Link>
+              <a
+                href="#complete-collection"
+                className="btn-primary text-lg px-10 py-4 hover:scale-105 transform transition-all duration-300 inline-block"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('complete-collection')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                View All Categories
+              </a>
           </motion.div>
         </div>
       </section>

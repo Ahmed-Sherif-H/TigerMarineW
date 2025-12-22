@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import api from '../services/api';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -17,11 +18,34 @@ const Contact = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState({ type: '', text: '' });
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted:', formData);
-    alert('Thank you for your message! We will contact you soon.');
+    setIsSubmitting(true);
+    setSubmitMessage({ type: '', text: '' });
+
+    try {
+      const response = await api.submitContactForm(formData);
+      if (response.success) {
+        setSubmitMessage({ type: 'success', text: 'Thank you for your message! We will contact you soon.' });
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: ''
+        });
+      } else {
+        setSubmitMessage({ type: 'error', text: response.error || 'Failed to send message. Please try again.' });
+      }
+    } catch (error) {
+      console.error('Contact form error:', error);
+      setSubmitMessage({ type: 'error', text: 'Failed to send message. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const contactInfo = [
@@ -31,18 +55,7 @@ const Contact = () => {
       phone: "+377 93 15 88 88",
       email: "info@tigermarine.com"
     },
-    {
-      title: "North America",
-      address: "456 Biscayne Blvd, Miami, FL 33132",
-      phone: "+1 (305) 555-0123",
-      email: "americas@tigermarine.com"
-    },
-    {
-      title: "Asia Pacific",
-      address: "789 Marina Bay, Singapore 018956",
-      phone: "+65 6123 4567",
-      email: "asia@tigermarine.com"
-    }
+
   ];
 
   return (
@@ -82,9 +95,19 @@ const Contact = () => {
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-4xl font-light text-midnight-slate mb-8">Send us a Message</h2>
-              
-              <form onSubmit={handleSubmit} className="space-y-6">
+                <h2 className="text-4xl font-light text-midnight-slate mb-8">Send us a Message</h2>
+
+                {submitMessage.text && (
+                  <div className={`mb-6 p-4 rounded-lg ${
+                    submitMessage.type === 'success' 
+                      ? 'bg-green-50 text-green-800 border border-green-200' 
+                      : 'bg-red-50 text-red-800 border border-red-200'
+                  }`}>
+                    {submitMessage.text}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -172,12 +195,13 @@ const Contact = () => {
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full btn-primary text-lg py-4 hover:scale-105 transform transition-all duration-300"
-                >
-                  Send Message
-                </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full btn-primary text-lg py-4 hover:scale-105 transform transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? 'Sending...' : 'Send Message'}
+                  </button>
               </form>
             </motion.div>
 

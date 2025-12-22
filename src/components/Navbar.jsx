@@ -77,8 +77,8 @@ const Navbar = () => {
               />
             </button>
 
-            {/* Logo - Center */}
-            <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 flex items-center" >
+            {/* Logo - Center (slightly to the right) */}
+            <Link to="/" className="absolute left-[52%] transform -translate-x-1/2 flex items-center" >
               <img 
                 src="/images/LOGO.png" 
                 alt="Tiger Marine" 

@@ -1,46 +1,78 @@
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useMemo, useState } from 'react';
-import { inflatableBoats } from '../data/models';
+import { useMemo, useState, useEffect } from 'react';
+import { useModels } from '../context/ModelsContext';
+import api from '../services/api';
 import { getModelImageFolder, encodeFilename } from '../data/imageHelpers';
 import { getCustomizerFolder } from '../data/customizerConfig';
 
 const ModelDetail = () => {
   const { id } = useParams();
+  const { categories } = useModels();
+  const [model, setModel] = useState(null);
+  const [loading, setLoading] = useState(true);
   
-  // Find the model across all categories
-  let model = null;
-  let category = null;
-  
-  for (const cat of inflatableBoats) {
-    const foundModel = cat.models.find(m => m.id === parseInt(id));
-    if (foundModel) {
-      model = foundModel;
-      category = cat;
-      break;
+  // Find category
+  const category = useMemo(() => {
+    if (!model) return null;
+    return categories.find(c => c.id === model.categoryId);
+  }, [model, categories]);
+
+  // Fetch model data
+  useEffect(() => {
+    const loadModel = async () => {
+      try {
+        setLoading(true);
+        const modelData = await api.getModelById(id);
+        console.log('Raw model data from API:', modelData);
+        // Transform model data to include proper image paths
+        const { transformModel } = await import('../utils/transformModelData');
+        const transformed = transformModel(modelData);
+        console.log('Transformed model:', transformed);
+        console.log('Image paths:', {
+          image: transformed?.image,
+          heroImage: transformed?.heroImage,
+          contentImage: transformed?.contentImage,
+          imageFile: transformed?.imageFile,
+          heroImageFile: transformed?.heroImageFile,
+          defaultHero: transformed?.heroImage || transformed?.image
+        });
+        setModel(transformed);
+      } catch (error) {
+        console.error('Error loading model:', error);
+        // Fallback: try to find in static data
+        const { inflatableBoats } = await import('../data/models');
+        for (const cat of inflatableBoats) {
+          const foundModel = cat.models.find(m => m.id === parseInt(id));
+          if (foundModel) {
+            setModel(foundModel);
+            break;
+          }
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (id) {
+      loadModel();
     }
-  }
+  }, [id]);
 
-  if (!model) {
-    return (
-      <div className="pt-20 min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-light text-midnight-slate mb-4">Model Not Found</h1>
-          <p className="text-gray-600 mb-8">The requested model could not be found.</p>
-          <Link to="/models" className="btn-primary">
-            Back to Models
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // Build dynamic media paths - ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
+  const modelFolder = useMemo(() => {
+    if (!model || !model.name) return '';
+    return getModelImageFolder(model.name);
+  }, [model?.name]);
 
-  // Build dynamic media paths
-  const modelFolder = useMemo(() => getModelImageFolder(model.name), [model.name]);
-  const defaultHero = model.heroImage || model.image;
+  const defaultHero = useMemo(() => {
+    if (!model) return null;
+    return model.heroImage || model.image;
+  }, [model?.heroImage, model?.image]);
   
   // Videos: support array model.videoFiles or single model.video fallback then default 'video.mp4'
   const videoFiles = useMemo(() => {
+    if (!model) return [];
     if (Array.isArray(model.videoFiles) && model.videoFiles.length > 0) {
       return model.videoFiles.map((f) => {
         // Support full paths, URLs, or just filenames
@@ -51,18 +83,20 @@ const ModelDetail = () => {
     if (model.video) return [model.video];
     // Try common video filenames as fallback
     return [modelFolder + 'video.mp4'];
-  }, [model.videoFiles, model.video, modelFolder]);
+  }, [model?.videoFiles, model?.video, modelFolder]);
+  
   const [activeVideo, setActiveVideo] = useState(0);
 
   // Build gallery images from model folder (all images in folder or from galleryFiles)
   const galleryImages = useMemo(() => {
+    if (!model) return [];
     if (Array.isArray(model.galleryFiles) && model.galleryFiles.length > 0) {
       return model.galleryFiles.map((file) => modelFolder + encodeFilename(file));
     }
     // Fallback to available images
     const set = new Set([defaultHero, model.image].filter(Boolean));
     return Array.from(set);
-  }, [model.galleryFiles, modelFolder, defaultHero, model.image]);
+  }, [model?.galleryFiles, modelFolder, defaultHero, model?.image]);
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const goPrev = () => setCurrentSlide((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
@@ -70,23 +104,25 @@ const ModelDetail = () => {
 
   // Get first 4 optional features for "Elevate Your Experience" section
   const optionalFeaturesForElevate = useMemo(() => {
-    if (!model.optionalFeatures || model.optionalFeatures.length === 0) return [];
+    if (!model || !model.optionalFeatures || model.optionalFeatures.length === 0) return [];
     return model.optionalFeatures.slice(0, 4);
-  }, [model.optionalFeatures]);
+  }, [model?.optionalFeatures]);
 
   // Check if there are more optional features
   const hasMoreOptionalFeatures = useMemo(() => {
+    if (!model) return false;
     return model.optionalFeatures && model.optionalFeatures.length > 4;
-  }, [model.optionalFeatures]);
+  }, [model?.optionalFeatures]);
 
   // Get interior images from the interior subfolder
   const interiorImages = useMemo(() => {
+    if (!model) return [];
     if (model.interiorFiles && Array.isArray(model.interiorFiles) && model.interiorFiles.length > 0) {
       const interiorFolder = modelFolder + 'Interior/';
       return model.interiorFiles.map(file => interiorFolder + encodeFilename(file));
     }
     return [];
-  }, [modelFolder, model.interiorFiles]);
+  }, [modelFolder, model?.interiorFiles]);
 
   const [interiorSlide, setInteriorSlide] = useState(0);
   const goInteriorPrev = () => {
@@ -105,15 +141,39 @@ const ModelDetail = () => {
 
   // Get full model name (e.g., "TopLine 850" instead of "TL850")
   const fullModelName = useMemo(() => {
-    if (category) {
-      // Extract number from model name (e.g., "TL850" -> "850")
-      const numberMatch = model.name.match(/\d+/);
-      const number = numberMatch ? numberMatch[0] : '';
-      // Combine category name with number
-      return number ? `${category.name} ${number}` : `${category.name} ${model.name}`;
-    }
-    return model.name;
-  }, [model.name, category]);
+    if (!model || !category) return model?.name || '';
+    // Extract number from model name (e.g., "TL850" -> "850")
+    const numberMatch = model.name.match(/\d+/);
+    const number = numberMatch ? numberMatch[0] : '';
+    // Combine category name with number
+    return number ? `${category.name} ${number}` : `${category.name} ${model.name}`;
+  }, [category, model?.name]);
+
+  // NOW we can do early returns - ALL hooks are called above
+  if (loading) {
+    return (
+      <div className="pt-20 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-smoked-saffron mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading model...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!model) {
+    return (
+      <div className="pt-20 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-light text-midnight-slate mb-4">Model Not Found</h1>
+          <p className="text-gray-600 mb-8">The requested model could not be found.</p>
+          <Link to="/categories" className="btn-primary">
+            Back to Categories
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-20">
@@ -658,12 +718,21 @@ const ModelDetail = () => {
       <section className="section-padding bg-gray-50">
         <div className="container-custom">
           <div className="flex flex-col sm:flex-row justify-between items-center">
-            <Link
-              to={`/categories/${category.id}`}
-              className="btn-outline mb-4 sm:mb-0"
-            >
-              ← Back to {category.name}
-            </Link>
+            {category ? (
+              <Link
+                to={`/categories/${category.id}`}
+                className="btn-outline mb-4 sm:mb-0"
+              >
+                ← Back to {category.name}
+              </Link>
+            ) : (
+              <Link
+                to="/categories"
+                className="btn-outline mb-4 sm:mb-0"
+              >
+                ← Back to Categories
+              </Link>
+            )}
             <div className="text-center">
               <p className="text-gray-600 mb-2">Ready to customize your {model.name}?</p>
               <Link

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import api from '../services/api';
 import { allCategories } from '../data/models';
 import { getCustomizerFolder, getBaseImage, getPartImage, customizerParts } from '../data/customizerConfig';
 import { getAvailableColors } from '../data/customizerColors';
@@ -49,6 +50,10 @@ const ModelCustomizer = () => {
   const [partImages, setPartImages] = useState({});
   const [selectedFeatures, setSelectedFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showInquiryModal, setShowInquiryModal] = useState(false);
+  const [inquiryData, setInquiryData] = useState({ name: '', email: '', phone: '', message: '' });
+  const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
+  const [inquiryMessage, setInquiryMessage] = useState({ type: '', text: '' });
 
   // Initialize customizer
   useEffect(() => {
@@ -117,6 +122,40 @@ const ModelCustomizer = () => {
       ...prev,
       [partKey]: color
     }));
+  };
+
+  const handleInquirySubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmittingInquiry(true);
+    setInquiryMessage({ type: '', text: '' });
+
+    try {
+      const response = await api.submitCustomizerInquiry({
+        name: inquiryData.name,
+        email: inquiryData.email,
+        phone: inquiryData.phone,
+        modelName: fullModelName,
+        selectedColors,
+        selectedFeatures,
+        message: inquiryData.message
+      });
+
+      if (response.success) {
+        setInquiryMessage({ type: 'success', text: 'Inquiry sent successfully! We will contact you soon.' });
+        setInquiryData({ name: '', email: '', phone: '', message: '' });
+        setTimeout(() => {
+          setShowInquiryModal(false);
+          setInquiryMessage({ type: '', text: '' });
+        }, 2000);
+      } else {
+        setInquiryMessage({ type: 'error', text: response.error || 'Failed to send inquiry. Please try again.' });
+      }
+    } catch (error) {
+      console.error('Inquiry error:', error);
+      setInquiryMessage({ type: 'error', text: 'Failed to send inquiry. Please try again.' });
+    } finally {
+      setIsSubmittingInquiry(false);
+    }
   };
 
   if (loading) {
@@ -418,18 +457,24 @@ const ModelCustomizer = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="mt-6 flex flex-col sm:flex-row gap-4 flex-shrink-0">
-                <button className="btn-primary flex-1">
-                  Save Configuration
-                </button>
-                <Link
-                  to="/contact"
-                  className="btn-outline flex-1 text-center"
-                >
-                  Request Quote
-                </Link>
-              </div>
+                {/* Action Buttons */}
+                <div className="mt-6 flex flex-col sm:flex-row gap-4 flex-shrink-0">
+                  <button className="btn-primary flex-1">
+                    Save Configuration
+                  </button>
+                  <button
+                    onClick={() => setShowInquiryModal(true)}
+                    className="btn-outline flex-1"
+                  >
+                    Send Inquiry
+                  </button>
+                  <Link
+                    to="/contact"
+                    className="btn-outline flex-1 text-center"
+                  >
+                    Request Quote
+                  </Link>
+                </div>
             </div>
           </div>
         </div>
@@ -516,6 +561,115 @@ const ModelCustomizer = () => {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* Inquiry Modal */}
+      {showInquiryModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-2xl font-light text-midnight-slate">Send Inquiry</h2>
+              <button
+                onClick={() => {
+                  setShowInquiryModal(false);
+                  setInquiryMessage({ type: '', text: '' });
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleInquirySubmit} className="p-6 space-y-4">
+              {inquiryMessage.text && (
+                <div className={`p-4 rounded-lg ${
+                  inquiryMessage.type === 'success' 
+                    ? 'bg-green-50 text-green-800 border border-green-200' 
+                    : 'bg-red-50 text-red-800 border border-red-200'
+                }`}>
+                  {inquiryMessage.text}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={inquiryData.name}
+                  onChange={(e) => setInquiryData({ ...inquiryData, name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={inquiryData.email}
+                  onChange={(e) => setInquiryData({ ...inquiryData, email: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  value={inquiryData.phone}
+                  onChange={(e) => setInquiryData({ ...inquiryData, phone: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Additional Message
+                </label>
+                <textarea
+                  rows={4}
+                  value={inquiryData.message}
+                  onChange={(e) => setInquiryData({ ...inquiryData, message: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Tell us about your customization preferences..."
+                />
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowInquiryModal(false);
+                    setInquiryMessage({ type: '', text: '' });
+                  }}
+                  className="flex-1 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingInquiry}
+                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmittingInquiry ? 'Sending...' : 'Send Inquiry'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
         </div>
       )}
 

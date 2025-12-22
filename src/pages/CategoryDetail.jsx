@@ -1,11 +1,23 @@
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ModelCard from '../components/ModelCard';
-import { inflatableBoats } from '../data/models';
+import { useModels } from '../context/ModelsContext';
 
 const CategoryDetail = () => {
   const { id } = useParams();
-  const category = inflatableBoats.find(c => c.id === parseInt(id));
+  const { categories, loading } = useModels();
+  const category = categories.find(c => c.id === parseInt(id));
+
+  if (loading) {
+    return (
+      <div className="pt-20 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-smoked-saffron mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading category...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!category) {
     return (

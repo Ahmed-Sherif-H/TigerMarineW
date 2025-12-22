@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ModelsProvider } from './context/ModelsContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -14,15 +15,17 @@ import About from './pages/About';
 import BoatShows from './pages/BoatShows';
 import UpcomingModels from './pages/UpcomingModels';
 import ModelCustomizer from './pages/ModelCustomizer';
+import AdminDashboard from './pages/AdminDashboard';
 import './styles/index.css';
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-white">
-        <Navbar />
-        <AnimatePresence mode="wait">
-          <Routes>
+    <ModelsProvider>
+      <Router>
+        <div className="min-h-screen bg-white">
+          <Navbar />
+          <AnimatePresence mode="wait">
+            <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/categories/:id" element={<CategoryDetail />} />
@@ -35,11 +38,13 @@ function App() {
             <Route path="/color-fabric" element={<ColorFabric />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
-          </Routes>
-        </AnimatePresence>
-        <Footer />
-      </div>
-    </Router>
+            <Route path="/admin" element={<AdminDashboard />} />
+            </Routes>
+          </AnimatePresence>
+          <Footer />
+        </div>
+      </Router>
+    </ModelsProvider>
   );
 }
 

@@ -1,8 +1,21 @@
 import { motion } from 'framer-motion';
 import CategoryCard from '../components/CategoryCard';
-import { inflatableBoats } from '../data/models';
+import { useModels } from '../context/ModelsContext';
 
 const Categories = () => {
+  const { categories, loading } = useModels();
+
+  if (loading) {
+    return (
+      <div className="pt-20 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-smoked-saffron mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading categories...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="pt-20">
       {/* Hero Section */}
@@ -49,9 +62,15 @@ const Categories = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-            {inflatableBoats.map((category, index) => (
-              <CategoryCard key={category.id} category={category} index={index} />
-            ))}
+            {categories.length === 0 ? (
+              <div className="col-span-full text-center py-12 text-gray-500">
+                No categories found
+              </div>
+            ) : (
+              categories.map((category, index) => (
+                <CategoryCard key={category.id} category={category} index={index} />
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -86,7 +105,7 @@ const Categories = () => {
                 </tr>
               </thead>
               <tbody>
-                {inflatableBoats.map((category, index) => (
+                {categories.map((category, index) => (
                   <motion.tr
                     key={category.id}
                     initial={{ opacity: 0, x: -20 }}
