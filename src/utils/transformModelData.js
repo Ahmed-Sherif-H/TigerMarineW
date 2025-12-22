@@ -96,9 +96,13 @@ export function transformModel(model) {
     }),
     interiorImages: (model.interiorFiles || []).map(file => {
       const filename = typeof file === 'string' ? file : (file?.filename || file);
+      if (!filename) return null;
+      
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const BACKEND_URL = API_BASE_URL.replace('/api', '');
       const basePath = getModelImagePath(model.name);
       return `${basePath}Interior/${encodeFilename(filename)}`;
-    }),
+    }).filter(Boolean),
     
     // Transform specs from array to object if needed
     specs: model.specs 
@@ -153,12 +157,30 @@ export function transformCategory(category, models) {
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
   const BACKEND_URL = API_BASE_URL.replace('/api', '');
   
+  // Helper to get category image path
+  const getCategoryImagePath = (filename) => {
+    if (!filename) return null;
+    
+    // If it's already a full URL, return as-is
+    if (filename.startsWith('http://') || filename.startsWith('https://')) {
+      return filename;
+    }
+    
+    // If it's a path starting with /images/, convert to backend URL
+    if (filename.startsWith('/images/')) {
+      return `${BACKEND_URL}${filename}`;
+    }
+    
+    // Otherwise, treat as filename and build the path
+    return `${BACKEND_URL}/images/categories/${category.name}/${filename}`;
+  };
+  
   return {
     ...category,
     models: categoryModels,
-    // Category images - served from backend
-    image: category.image || `${BACKEND_URL}/images/${category.name}/${category.name}.jpg`,
-    heroImage: category.heroImage || category.image || `${BACKEND_URL}/images/${category.name}/${category.name}.jpg`,
+    // Category images - served from backend categories folder
+    image: getCategoryImagePath(category.image) || `${BACKEND_URL}/images/categories/${category.name}/${category.name}.jpg`,
+    heroImage: getCategoryImagePath(category.heroImage) || getCategoryImagePath(category.image) || `${BACKEND_URL}/images/categories/${category.name}/${category.name}.jpg`,
   };
 }
 

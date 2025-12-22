@@ -893,25 +893,103 @@ const AdminDashboard = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Image
+                          Category Image
                         </label>
-                        <input
-                          type="text"
-                          value={editedData.image || ''}
-                          onChange={(e) => handleInputChange('image', e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={editedData.image || ''}
+                            onChange={(e) => handleInputChange('image', e.target.value)}
+                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Image filename"
+                          />
+                          <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (!file) return;
+                                try {
+                                  // Upload to categories folder
+                                  const formData = new FormData();
+                                  formData.append('file', file);
+                                  formData.append('folder', 'categories');
+                                  formData.append('categoryName', editedData.name);
+                                  
+                                  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+                                  const response = await fetch(`${API_BASE_URL}/upload/single`, {
+                                    method: 'POST',
+                                    body: formData,
+                                  });
+                                  
+                                  const result = await response.json();
+                                  if (result.success) {
+                                    handleInputChange('image', result.filename);
+                                    setMessage({ type: 'success', text: 'Category image uploaded successfully!' });
+                                  } else {
+                                    throw new Error(result.error || 'Upload failed');
+                                  }
+                                } catch (error) {
+                                  setMessage({ type: 'error', text: 'Failed to upload image: ' + error.message });
+                                }
+                                e.target.value = '';
+                              }}
+                            />
+                            Upload
+                          </label>
+                        </div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Hero Image
                         </label>
-                        <input
-                          type="text"
-                          value={editedData.heroImage || ''}
-                          onChange={(e) => handleInputChange('heroImage', e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={editedData.heroImage || ''}
+                            onChange={(e) => handleInputChange('heroImage', e.target.value)}
+                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Hero image filename"
+                          />
+                          <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (!file) return;
+                                try {
+                                  // Upload to categories folder
+                                  const formData = new FormData();
+                                  formData.append('file', file);
+                                  formData.append('folder', 'categories');
+                                  formData.append('categoryName', editedData.name);
+                                  
+                                  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+                                  const response = await fetch(`${API_BASE_URL}/upload/single`, {
+                                    method: 'POST',
+                                    body: formData,
+                                  });
+                                  
+                                  const result = await response.json();
+                                  if (result.success) {
+                                    handleInputChange('heroImage', result.filename);
+                                    setMessage({ type: 'success', text: 'Hero image uploaded successfully!' });
+                                  } else {
+                                    throw new Error(result.error || 'Upload failed');
+                                  }
+                                } catch (error) {
+                                  setMessage({ type: 'error', text: 'Failed to upload hero image: ' + error.message });
+                                }
+                                e.target.value = '';
+                              }}
+                            />
+                            Upload
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>

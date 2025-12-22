@@ -42,22 +42,26 @@ export function getModelImagePath(modelName) {
 export function getFullImagePath(modelName, filename) {
   if (!filename) return null;
   
-  // If filename is already a full path (starts with /images/ or http://), return as-is
-  if (filename.startsWith('/images/') || filename.startsWith('http://') || filename.startsWith('https://')) {
-    // If it's a relative path like /images/..., convert to full backend URL
-    if (filename.startsWith('/images/')) {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-      const BACKEND_URL = API_BASE_URL.replace('/api', '');
-      return `${BACKEND_URL}${filename}`;
-    }
-    return filename; // Already a full URL
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+  const BACKEND_URL = API_BASE_URL.replace('/api', '');
+  
+  // If filename is already a full URL, return as-is
+  if (filename.startsWith('http://') || filename.startsWith('https://')) {
+    return filename;
   }
   
-  const basePath = getModelImagePath(modelName);
-  // Remove any leading slashes from filename
-  const cleanFilename = filename.replace(/^\//, '');
+  // If it's a relative path like /images/..., convert to full backend URL
+  if (filename.startsWith('/images/')) {
+    return `${BACKEND_URL}${filename}`;
+  }
   
-  const fullPath = `${basePath}${cleanFilename}`;
+  // Otherwise, treat as filename and build the path
+  const basePath = getModelImagePath(modelName);
+  // Remove any leading slashes from filename and encode spaces
+  const cleanFilename = filename.replace(/^\//, '');
+  const encodedFilename = encodeFilename(cleanFilename);
+  
+  const fullPath = `${basePath}${encodedFilename}`;
   
   // Debug logging
   if (import.meta.env.DEV) {
@@ -65,6 +69,29 @@ export function getFullImagePath(modelName, filename) {
   }
   
   return fullPath;
+}
+
+/**
+ * Get category image path
+ */
+export function getCategoryImagePath(categoryName, filename) {
+  if (!filename) return null;
+  
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+  const BACKEND_URL = API_BASE_URL.replace('/api', '');
+  
+  // If it's already a full URL, return as-is
+  if (filename.startsWith('http://') || filename.startsWith('https://')) {
+    return filename;
+  }
+  
+  // If it's a path starting with /images/, convert to backend URL
+  if (filename.startsWith('/images/')) {
+    return `${BACKEND_URL}${filename}`;
+  }
+  
+  // Otherwise, treat as filename and build the path
+  return `${BACKEND_URL}/images/categories/${categoryName}/${encodeFilename(filename)}`;
 }
 
 /**
