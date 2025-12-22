@@ -358,36 +358,105 @@ const AdminDashboard = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Image File
+                          Image File (Thumbnail)
                         </label>
-                        <input
-                          type="text"
-                          value={editedData.imageFile || ''}
-                          onChange={(e) => handleInputChange('imageFile', e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={editedData.imageFile || ''}
+                            onChange={(e) => handleInputChange('imageFile', e.target.value)}
+                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Image filename"
+                          />
+                          <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (!file) return;
+                                try {
+                                  const result = await api.uploadFile(file, 'images', editedData.name);
+                                  handleInputChange('imageFile', result.filename);
+                                  setMessage({ type: 'success', text: 'Image uploaded successfully!' });
+                                } catch (error) {
+                                  setMessage({ type: 'error', text: 'Failed to upload image: ' + error.message });
+                                }
+                                e.target.value = ''; // Reset input
+                              }}
+                            />
+                            Upload
+                          </label>
+                        </div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Hero Image
                         </label>
-                        <input
-                          type="text"
-                          value={editedData.heroImageFile || ''}
-                          onChange={(e) => handleInputChange('heroImageFile', e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={editedData.heroImageFile || ''}
+                            onChange={(e) => handleInputChange('heroImageFile', e.target.value)}
+                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Hero image filename"
+                          />
+                          <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (!file) return;
+                                try {
+                                  const result = await api.uploadFile(file, 'images', editedData.name);
+                                  handleInputChange('heroImageFile', result.filename);
+                                  setMessage({ type: 'success', text: 'Hero image uploaded successfully!' });
+                                } catch (error) {
+                                  setMessage({ type: 'error', text: 'Failed to upload hero image: ' + error.message });
+                                }
+                                e.target.value = '';
+                              }}
+                            />
+                            Upload
+                          </label>
+                        </div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Content Image
                         </label>
-                        <input
-                          type="text"
-                          value={editedData.contentImageFile || ''}
-                          onChange={(e) => handleInputChange('contentImageFile', e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={editedData.contentImageFile || ''}
+                            onChange={(e) => handleInputChange('contentImageFile', e.target.value)}
+                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Content image filename"
+                          />
+                          <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (!file) return;
+                                try {
+                                  const result = await api.uploadFile(file, 'images', editedData.name);
+                                  handleInputChange('contentImageFile', result.filename);
+                                  setMessage({ type: 'success', text: 'Content image uploaded successfully!' });
+                                } catch (error) {
+                                  setMessage({ type: 'error', text: 'Failed to upload content image: ' + error.message });
+                                }
+                                e.target.value = '';
+                              }}
+                            />
+                            Upload
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -534,30 +603,25 @@ const AdminDashboard = () => {
                     <input
                       type="file"
                       accept="image/*"
+                      multiple
                       onChange={async (e) => {
-                        const file = e.target.files[0];
-                        if (!file) return;
+                        const files = Array.from(e.target.files);
+                        if (!files.length) return;
                         
                         try {
-                          const formData = new FormData();
-                          formData.append('file', file);
-                          formData.append('folder', 'images');
-                          formData.append('modelName', editedData.name);
+                          setMessage({ type: '', text: '' });
+                          const uploadedFiles = [];
                           
-                          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/upload/single`, {
-                            method: 'POST',
-                            body: formData,
-                          });
-                          
-                          const result = await response.json();
-                          if (result.success) {
-                            const newGallery = [...(editedData.galleryFiles || []), result.filename];
-                            setEditedData({ ...editedData, galleryFiles: newGallery });
-                            setMessage({ type: 'success', text: 'Image uploaded successfully!' });
-                            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+                          for (const file of files) {
+                            const result = await api.uploadFile(file, 'images', editedData.name);
+                            uploadedFiles.push(result.filename);
                           }
+                          
+                          const newGallery = [...(editedData.galleryFiles || []), ...uploadedFiles];
+                          setEditedData({ ...editedData, galleryFiles: newGallery });
+                          setMessage({ type: 'success', text: `${uploadedFiles.length} image(s) uploaded successfully!` });
                         } catch (error) {
-                          setMessage({ type: 'error', text: 'Failed to upload image' });
+                          setMessage({ type: 'error', text: 'Failed to upload image: ' + error.message });
                         }
                         e.target.value = ''; // Reset input
                       }}
@@ -621,31 +685,42 @@ const AdminDashboard = () => {
                     <input
                       type="file"
                       accept="image/*"
+                      multiple
                       onChange={async (e) => {
-                        const file = e.target.files[0];
-                        if (!file) return;
+                        const files = Array.from(e.target.files);
+                        if (!files.length) return;
                         
                         try {
-                          const formData = new FormData();
-                          formData.append('file', file);
-                          formData.append('folder', 'images');
-                          formData.append('modelName', editedData.name);
-                          formData.append('subfolder', 'Interior');
+                          setMessage({ type: '', text: '' });
+                          const uploadedFiles = [];
                           
-                          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/upload/single`, {
-                            method: 'POST',
-                            body: formData,
-                          });
-                          
-                          const result = await response.json();
-                          if (result.success) {
-                            const newInterior = [...(editedData.interiorFiles || []), result.filename];
-                            setEditedData({ ...editedData, interiorFiles: newInterior });
-                            setMessage({ type: 'success', text: 'Interior image uploaded successfully!' });
-                            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+                          for (const file of files) {
+                            // Upload to Interior subfolder
+                            const formData = new FormData();
+                            formData.append('file', file);
+                            formData.append('folder', 'images');
+                            formData.append('modelName', editedData.name);
+                            formData.append('subfolder', 'Interior');
+                            
+                            const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+                            const response = await fetch(`${API_BASE_URL}/upload/single`, {
+                              method: 'POST',
+                              body: formData,
+                            });
+                            
+                            const result = await response.json();
+                            if (result.success) {
+                              uploadedFiles.push(result.filename);
+                            } else {
+                              throw new Error(result.error || 'Upload failed');
+                            }
                           }
+                          
+                          const newInterior = [...(editedData.interiorFiles || []), ...uploadedFiles];
+                          setEditedData({ ...editedData, interiorFiles: newInterior });
+                          setMessage({ type: 'success', text: `${uploadedFiles.length} interior image(s) uploaded successfully!` });
                         } catch (error) {
-                          setMessage({ type: 'error', text: 'Failed to upload interior image' });
+                          setMessage({ type: 'error', text: 'Failed to upload interior image: ' + error.message });
                         }
                         e.target.value = '';
                       }}
@@ -709,30 +784,25 @@ const AdminDashboard = () => {
                     <input
                       type="file"
                       accept="video/*"
+                      multiple
                       onChange={async (e) => {
-                        const file = e.target.files[0];
-                        if (!file) return;
+                        const files = Array.from(e.target.files);
+                        if (!files.length) return;
                         
                         try {
-                          const formData = new FormData();
-                          formData.append('file', file);
-                          formData.append('folder', 'images');
-                          formData.append('modelName', editedData.name);
+                          setMessage({ type: '', text: '' });
+                          const uploadedFiles = [];
                           
-                          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/upload/single`, {
-                            method: 'POST',
-                            body: formData,
-                          });
-                          
-                          const result = await response.json();
-                          if (result.success) {
-                            const newVideos = [...(editedData.videoFiles || []), result.filename];
-                            setEditedData({ ...editedData, videoFiles: newVideos });
-                            setMessage({ type: 'success', text: 'Video uploaded successfully!' });
-                            setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+                          for (const file of files) {
+                            const result = await api.uploadFile(file, 'images', editedData.name);
+                            uploadedFiles.push(result.filename);
                           }
+                          
+                          const newVideos = [...(editedData.videoFiles || []), ...uploadedFiles];
+                          setEditedData({ ...editedData, videoFiles: newVideos });
+                          setMessage({ type: 'success', text: `${uploadedFiles.length} video(s) uploaded successfully!` });
                         } catch (error) {
-                          setMessage({ type: 'error', text: 'Failed to upload video' });
+                          setMessage({ type: 'error', text: 'Failed to upload video: ' + error.message });
                         }
                         e.target.value = '';
                       }}
