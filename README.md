@@ -1,137 +1,78 @@
-# Tiger Marine - Luxury Yacht Website
+# Tiger Marine Frontend
 
-A modern and elegant React website for Tiger Marine, a luxury boat manufacturer. Built with React, Vite, Tailwind CSS, and Framer Motion for smooth animations.
+## Setup
 
-## Features
+### Environment Variables
 
-- **Elegant Design**: Sophisticated design with improved visual hierarchy and better backgrounds
-- **Boat Categories**: Five distinct categories (Maxline, Topline, Proline, Sportline, Open) with dedicated pages
-- **Enhanced Navigation**: Logo-centered navbar with left-side burger menu and side panel navigation
-- **Interactive Hover Effects**: Category previews with images on hover in navigation
-- **Responsive Layout**: Fully responsive design that works on all devices
-- **Smooth Animations**: Framer Motion animations for page transitions and hover effects
-- **Complete Page Set**: All required pages including Categories, Models, Professional, Dealers, etc.
-- **Model Customization**: Color and fabric selection interface
-- **Contact Forms**: Professional contact forms with validation
-- **SEO Optimized**: Proper meta tags and semantic HTML structure
-
-## Pages
-
-- **Home**: Hero section with boat categories showcase and company highlights
-- **Categories**: Overview of all five boat categories with comparison table
-- **Category Detail**: Individual category pages showing models within each category
-- **Models**: Complete model showcase with detailed specifications
-- **Model Detail**: Individual model pages with specs, features, and pricing
-- **Professional**: Professional services and commercial solutions
-- **Dealers**: Global dealer network with contact information
-- **Color & Fabric Selection**: Interactive customization interface
-- **Contact**: Contact forms and global office information
-- **About Us**: Company history, values, and team information
-
-## Tech Stack
-
-- **React 18** - Frontend framework
-- **Vite** - Build tool and development server
-- **React Router** - Client-side routing
-- **Tailwind CSS** - Utility-first CSS framework
-- **Framer Motion** - Animation library
-- **JavaScript** - Programming language
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (version 16 or higher)
-- npm or yarn
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd tiger-marine-frontend
+**For Local Development:**
+Create a `.env` file in the root:
+```env
+VITE_API_URL=http://localhost:3001/api
 ```
 
-2. Install dependencies:
+**For Production (Netlify):**
+Set in Netlify dashboard → Site settings → Environment variables:
+```
+VITE_API_URL=https://tigermarinewbackend.onrender.com/api
+```
+
+### Install Dependencies
 ```bash
 npm install
 ```
 
-3. Start the development server:
+### Run Development Server
 ```bash
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:3000`
+## Deployment
 
-### Build for Production
+### Netlify
 
-```bash
-npm run build
-```
+1. **Build Settings:**
+   - Build command: `npm run build`
+   - Publish directory: `dist`
 
-The built files will be in the `dist` directory.
+2. **Environment Variables:**
+   - `VITE_API_URL` = `https://tigermarinewbackend.onrender.com/api`
+
+3. **Important Files:**
+   - `public/_redirects` - Handles SPA routing
 
 ## Project Structure
 
 ```
-src/
-├── components/          # Reusable React components
-│   ├── Navbar.jsx      # Navigation with burger menu
-│   ├── Footer.jsx      # Site footer
-│   ├── HeroSection.jsx # Hero section component
-│   └── ModelCard.jsx   # Model card component
-├── pages/              # Page components
-│   ├── Home.jsx        # Home page
-│   ├── Models.jsx      # Models listing page
-│   ├── ModelDetail.jsx # Individual model page
-│   ├── Professional.jsx # Professional services page
-│   ├── Dealers.jsx     # Dealers page
-│   ├── ColorFabric.jsx # Color & fabric selection
-│   ├── Contact.jsx     # Contact page
-│   └── About.jsx       # About us page
-├── data/               # Static data
-│   └── models.js       # Model and dealer data
-├── styles/             # CSS files
-│   └── index.css       # Main stylesheet
-├── App.jsx             # Main app component
-└── main.jsx            # App entry point
+frontend/
+├── src/
+│   ├── components/     # Reusable components
+│   ├── pages/          # Page components
+│   ├── services/       # API service
+│   ├── utils/          # Utility functions
+│   └── context/        # React context
+├── public/             # Static files
+└── dist/              # Build output
 ```
 
-## Customization
+## API Configuration
 
-### Colors
-The color scheme can be customized in `tailwind.config.js`:
-- Navy: `#1e3a8a`
-- Gold: `#d4af37`
-- Silver: `#c0c0c0`
+The frontend connects to the backend API. The API URL is configured via `VITE_API_URL` environment variable.
 
-### Models Data
-Model information is stored in `src/data/models.js` and can be easily updated or extended.
+- **Local:** `http://localhost:3001/api`
+- **Production:** `https://tigermarinewbackend.onrender.com/api`
 
-### Styling
-Custom styles are defined in `src/styles/index.css` using Tailwind's `@layer` directive.
+## Troubleshooting
 
-## Future Enhancements
+### Images Not Loading
+- Check that images exist in backend `public/images/` folder
+- Verify image filenames in database match actual files
+- Use Admin Dashboard to upload/update images
 
-This frontend is ready for backend integration with:
-- Node.js backend for email handling
-- Admin panel for model management
-- Database integration for dynamic content
-- User authentication and accounts
-- E-commerce functionality
+### API Errors
+- Verify `VITE_API_URL` is set correctly
+- Check backend is running (test: `/api/health`)
+- Check browser console for detailed error messages
 
-## Browser Support
-
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
-
-## License
-
-This project is proprietary software owned by Tiger Marine.
-
-## Contact
-
-For questions about this project, please contact the development team.
+### CORS Errors
+- Verify backend `FRONTEND_URL` is set to Netlify URL
+- Check backend CORS configuration

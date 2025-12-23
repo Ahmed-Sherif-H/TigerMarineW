@@ -18,6 +18,27 @@ if (import.meta.env.PROD && API_BASE_URL.includes('localhost')) {
 }
 
 class ApiService {
+  // Health check - test if backend is awake
+  async checkBackendHealth() {
+    try {
+      const healthUrl = `${API_BASE_URL}/health`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(healthUrl, {
+        method: 'GET',
+        signal: controller.signal,
+        credentials: 'include'
+      });
+      
+      clearTimeout(timeoutId);
+      return response.ok;
+    } catch (error) {
+      console.warn('[API] Backend health check failed:', error.message);
+      return false;
+    }
+  }
+
   // Generic fetch method
   async fetch(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -29,7 +50,16 @@ class ApiService {
         ...options.headers,
       },
       ...options,
+      credentials: 'include', // Include credentials for CORS
     };
+    
+    // Only add signal if not already provided
+    let timeoutId = null;
+    if (!config.signal) {
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      config.signal = controller.signal;
+    }
 
     // Add body if present
     if (options.body && typeof options.body === 'object') {
@@ -38,6 +68,7 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
+      if (timeoutId) clearTimeout(timeoutId); // Clear timeout if request succeeds
       
       // Check if response is JSON before parsing
       const contentType = response.headers.get('content-type');
@@ -57,20 +88,27 @@ class ApiService {
 
       return data;
     } catch (error) {
+      if (timeoutId) clearTimeout(timeoutId); // Clear timeout on error
+      
       console.error('[API] Error details:');
       console.error('  URL:', url);
       console.error('  Error:', error.message);
       console.error('  Type:', error.name);
       
       // Provide helpful error message
-      if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_REFUSED')) {
+      if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_REFUSED') || error.name === 'TypeError') {
         const helpfulError = new Error(
-          `Cannot connect to backend at ${url}. ` +
-          `Check that VITE_API_URL is set correctly. ` +
-          `Current value: ${import.meta.env.VITE_API_URL || 'NOT SET (using localhost fallback)'}`
+          `Cannot connect to backend. Check that the backend is running at: ${API_BASE_URL}`
         );
         console.error('[API]', helpfulError.message);
         throw helpfulError;
+      }
+      
+      // Handle timeout
+      if (error.name === 'AbortError' || error.message.includes('aborted')) {
+        const timeoutError = new Error(`Request timed out. Please try again.`);
+        console.error('[API]', timeoutError.message);
+        throw timeoutError;
       }
       
       throw error;
@@ -197,12 +235,19 @@ class ApiService {
     console.log('[API] Folder:', folder, 'Model:', modelName, 'Subfolder:', subfolder);
     
     try {
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for uploads
+      
       const response = await fetch(url, {
         method: 'POST',
         body: formData,
         // Don't set Content-Type header - browser will set it with boundary
         credentials: 'include', // Include credentials for CORS
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId); // Clear timeout on success
 
       // Check if response is JSON
       const contentType = response.headers.get('content-type');
@@ -224,12 +269,23 @@ class ApiService {
       console.log('[API] Upload successful:', data);
       return data;
     } catch (error) {
+      if (timeoutId) clearTimeout(timeoutId); // Clear timeout on error
+      
       console.error('[API] Upload error details:', {
         url,
         error: error.message,
-        name: error.name,
-        stack: error.stack
+        name: error.name
       });
+      
+      // Provide helpful error message
+      if (error.name === 'AbortError' || error.message.includes('timeout') || error.message.includes('aborted')) {
+        throw new Error('Upload timed out. Please try again.');
+      }
+      
+      if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+        throw new Error('Cannot connect to backend. Check that the backend is running.');
+      }
+      
       throw error;
     }
   }

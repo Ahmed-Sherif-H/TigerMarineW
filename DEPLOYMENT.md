@@ -4,69 +4,97 @@
 
 ### Environment Variables
 
-⚠️ **CRITICAL:** This must be set BEFORE building, or you must redeploy after setting it!
-
-In your Netlify dashboard, go to **Site settings > Environment variables** and add:
+**CRITICAL:** Set this in Netlify dashboard → Site settings → Environment variables:
 
 ```
 VITE_API_URL=https://tigermarinewbackend.onrender.com/api
 ```
 
-**IMPORTANT:** After adding this variable, you **MUST redeploy** your site for it to take effect!
-
-1. Go to **Deploys** tab
-2. Click **Trigger deploy** → **Deploy site**
-3. Wait for build to complete
+**IMPORTANT:** After setting the variable, you MUST redeploy for it to take effect!
 
 ### Build Settings
 
-- **Build command**: `npm run build`
-- **Publish directory**: `dist`
+- **Build command:** `npm run build`
+- **Publish directory:** `dist`
 
-### Important Files
+### Required Files
 
-- `public/_redirects` - This file handles SPA routing. It redirects all routes to `index.html` so React Router can handle them.
+- `public/_redirects` - Handles SPA routing (redirects all routes to index.html)
 
 ## Backend (Render)
 
 ### Environment Variables
 
-In your Render dashboard, go to your service **Environment** tab and add:
+Set in Render dashboard → Your service → Environment:
 
 ```
 DATABASE_URL=your-postgresql-connection-string
+FRONTEND_URL=https://tigermarineweb.netlify.app
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASSWORD=your-app-password
 CONTACT_EMAIL=ahmed.sh.hammam@gmail.com
-FRONTEND_URL=https://tigermarineweb.netlify.app
 ```
 
 ### CORS Configuration
 
-The backend is configured to allow requests from:
+Backend is configured to allow requests from:
 - `FRONTEND_URL` environment variable
-- `http://localhost:5173` (for local development)
+- `https://tigermarineweb.netlify.app` (hardcoded)
+- Local development URLs
 
-Make sure `FRONTEND_URL` is set to `https://tigermarineweb.netlify.app` in Render.
+## Local Development
+
+### Frontend
+
+1. Create `.env` file:
+```env
+VITE_API_URL=http://localhost:3001/api
+```
+
+2. Install and run:
+```bash
+npm install
+npm run dev
+```
+
+### Backend
+
+1. Create `.env` file:
+```env
+DATABASE_URL=your-local-postgres-url
+FRONTEND_URL=http://localhost:5173
+```
+
+2. Install and run:
+```bash
+npm install
+npm run dev
+```
 
 ## Troubleshooting
 
-### `/admin` route not working
+### API Connection Errors
 
-1. Make sure `public/_redirects` file exists with content: `/*    /index.html   200`
-2. Redeploy on Netlify after adding the `_redirects` file
-3. Clear browser cache and try again
+1. **Check environment variables:**
+   - Frontend: `VITE_API_URL` in Netlify
+   - Backend: `FRONTEND_URL` in Render
 
-### API calls failing
+2. **Verify backend is running:**
+   - Test: `https://tigermarinewbackend.onrender.com/api/health`
+   - Should return: `{"status":"ok",...}`
 
-1. Check that `VITE_API_URL` is set in Netlify environment variables
-2. Verify the backend URL is correct: `https://tigermarinewbackend.onrender.com/api`
-3. Check browser console for CORS errors
-4. Verify `FRONTEND_URL` is set in Render environment variables
+3. **Check browser console:**
+   - Look for `[API]` logs
+   - Check what URL is being used
 
-### Database connection issues
+### CORS Errors
 
-1. Verify `DATABASE_URL` is correctly set in Render
-2. Check that your PostgreSQL database is running on Render
-3. Ensure the connection string format is correct
+1. Verify `FRONTEND_URL` is set in Render
+2. Check backend logs for CORS warnings
+3. Ensure backend service is running
 
+### Images Not Loading
+
+1. Images are served from backend: `backend/public/images/`
+2. Use Admin Dashboard to upload/update images
+3. Check image filenames in database match actual files
