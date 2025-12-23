@@ -170,17 +170,117 @@ class ApiService {
 
   // ========== INQUIRIES ==========
   async submitContactForm(data) {
-    return this.fetch('/inquiries/contact', {
-      method: 'POST',
-      body: data,
-    });
+    // Use longer timeout for form submissions (backend might be sleeping + email sending)
+    const url = `${API_BASE_URL}/inquiries/contact`;
+    console.log('[API] Submitting contact form to:', url);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout for forms
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      const contentType = response.headers.get('content-type');
+      let responseData;
+      
+      if (contentType && contentType.includes('application/json')) {
+        responseData = await response.json();
+      } else {
+        const text = await response.text();
+        throw new Error(`Invalid response: ${response.status} - ${text}`);
+      }
+      
+      if (!response.ok) {
+        throw new Error(responseData.error || `HTTP error! status: ${response.status}`);
+      }
+      
+      return responseData;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error.name === 'AbortError' || error.message.includes('aborted')) {
+        throw new Error(
+          'Request timed out. The backend might be waking up (can take 30-60 seconds on Render free tier). ' +
+          'Please wait a moment and try again.'
+        );
+      }
+      
+      if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+        throw new Error(
+          'Cannot connect to backend. The backend might be sleeping. ' +
+          'Please wait a moment and try again.'
+        );
+      }
+      
+      throw error;
+    }
   }
 
   async submitCustomizerInquiry(data) {
-    return this.fetch('/inquiries/customizer', {
-      method: 'POST',
-      body: data,
-    });
+    // Use longer timeout for form submissions (backend might be sleeping + email sending)
+    const url = `${API_BASE_URL}/inquiries/customizer`;
+    console.log('[API] Submitting customizer inquiry to:', url);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout for forms
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        credentials: 'include',
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      const contentType = response.headers.get('content-type');
+      let responseData;
+      
+      if (contentType && contentType.includes('application/json')) {
+        responseData = await response.json();
+      } else {
+        const text = await response.text();
+        throw new Error(`Invalid response: ${response.status} - ${text}`);
+      }
+      
+      if (!response.ok) {
+        throw new Error(responseData.error || `HTTP error! status: ${response.status}`);
+      }
+      
+      return responseData;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error.name === 'AbortError' || error.message.includes('aborted')) {
+        throw new Error(
+          'Request timed out. The backend might be waking up (can take 30-60 seconds on Render free tier). ' +
+          'Please wait a moment and try again.'
+        );
+      }
+      
+      if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+        throw new Error(
+          'Cannot connect to backend. The backend might be sleeping. ' +
+          'Please wait a moment and try again.'
+        );
+      }
+      
+      throw error;
+    }
   }
 
   async getCategoryById(id) {
