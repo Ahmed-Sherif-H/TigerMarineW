@@ -3,13 +3,17 @@
  * Images are now served from backend public folder
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-const BACKEND_URL = API_BASE_URL.replace('/api', ''); // Remove /api to get base backend URL
+// Get backend URL dynamically (not at module load time)
+function getBackendUrl() {
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+  return API_BASE_URL.replace('/api', ''); // Remove /api to get base backend URL
+}
 
 /**
  * Get the image folder path for a model (pointing to backend)
  */
 export function getModelImagePath(modelName) {
+  const BACKEND_URL = getBackendUrl();
   if (!modelName) return `${BACKEND_URL}/images/`;
   
   // Map model names to folder names
@@ -77,8 +81,7 @@ export function getFullImagePath(modelName, filename) {
 export function getCategoryImagePath(categoryName, filename) {
   if (!filename) return null;
   
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-  const BACKEND_URL = API_BASE_URL.replace('/api', '');
+  const BACKEND_URL = getBackendUrl();
   
   // If it's already a full URL, return as-is
   if (filename.startsWith('http://') || filename.startsWith('https://')) {

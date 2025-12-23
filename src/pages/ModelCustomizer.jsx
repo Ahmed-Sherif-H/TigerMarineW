@@ -152,7 +152,8 @@ const ModelCustomizer = () => {
       }
     } catch (error) {
       console.error('Inquiry error:', error);
-      setInquiryMessage({ type: 'error', text: 'Failed to send inquiry. Please try again.' });
+      const errorMessage = error.message || 'Failed to send inquiry. Please try again.';
+      setInquiryMessage({ type: 'error', text: errorMessage });
     } finally {
       setIsSubmittingInquiry(false);
     }

@@ -4,11 +4,19 @@
 
 ### Environment Variables
 
+⚠️ **CRITICAL:** This must be set BEFORE building, or you must redeploy after setting it!
+
 In your Netlify dashboard, go to **Site settings > Environment variables** and add:
 
 ```
 VITE_API_URL=https://tigermarinewbackend.onrender.com/api
 ```
+
+**IMPORTANT:** After adding this variable, you **MUST redeploy** your site for it to take effect!
+
+1. Go to **Deploys** tab
+2. Click **Trigger deploy** → **Deploy site**
+3. Wait for build to complete
 
 ### Build Settings
 

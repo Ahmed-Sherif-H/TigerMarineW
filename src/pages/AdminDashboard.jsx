@@ -696,24 +696,8 @@ const AdminDashboard = () => {
                           
                           for (const file of files) {
                             // Upload to Interior subfolder
-                            const formData = new FormData();
-                            formData.append('file', file);
-                            formData.append('folder', 'images');
-                            formData.append('modelName', editedData.name);
-                            formData.append('subfolder', 'Interior');
-                            
-                            const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                            const response = await fetch(`${API_BASE_URL}/upload/single`, {
-                              method: 'POST',
-                              body: formData,
-                            });
-                            
-                            const result = await response.json();
-                            if (result.success) {
-                              uploadedFiles.push(result.filename);
-                            } else {
-                              throw new Error(result.error || 'Upload failed');
-                            }
+                            const result = await api.uploadFile(file, 'images', editedData.name, null, 'Interior');
+                            uploadedFiles.push(result.filename);
                           }
                           
                           const newInterior = [...(editedData.interiorFiles || []), ...uploadedFiles];
@@ -912,25 +896,9 @@ const AdminDashboard = () => {
                                 const file = e.target.files[0];
                                 if (!file) return;
                                 try {
-                                  // Upload to categories folder
-                                  const formData = new FormData();
-                                  formData.append('file', file);
-                                  formData.append('folder', 'categories');
-                                  formData.append('categoryName', editedData.name);
-                                  
-                                  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                  const response = await fetch(`${API_BASE_URL}/upload/single`, {
-                                    method: 'POST',
-                                    body: formData,
-                                  });
-                                  
-                                  const result = await response.json();
-                                  if (result.success) {
-                                    handleInputChange('image', result.filename);
-                                    setMessage({ type: 'success', text: 'Category image uploaded successfully!' });
-                                  } else {
-                                    throw new Error(result.error || 'Upload failed');
-                                  }
+                                  const result = await api.uploadFile(file, 'categories', null, null, null, editedData.name);
+                                  handleInputChange('image', result.filename);
+                                  setMessage({ type: 'success', text: 'Category image uploaded successfully!' });
                                 } catch (error) {
                                   setMessage({ type: 'error', text: 'Failed to upload image: ' + error.message });
                                 }
@@ -962,25 +930,9 @@ const AdminDashboard = () => {
                                 const file = e.target.files[0];
                                 if (!file) return;
                                 try {
-                                  // Upload to categories folder
-                                  const formData = new FormData();
-                                  formData.append('file', file);
-                                  formData.append('folder', 'categories');
-                                  formData.append('categoryName', editedData.name);
-                                  
-                                  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                  const response = await fetch(`${API_BASE_URL}/upload/single`, {
-                                    method: 'POST',
-                                    body: formData,
-                                  });
-                                  
-                                  const result = await response.json();
-                                  if (result.success) {
-                                    handleInputChange('heroImage', result.filename);
-                                    setMessage({ type: 'success', text: 'Hero image uploaded successfully!' });
-                                  } else {
-                                    throw new Error(result.error || 'Upload failed');
-                                  }
+                                  const result = await api.uploadFile(file, 'categories', null, null, null, editedData.name);
+                                  handleInputChange('heroImage', result.filename);
+                                  setMessage({ type: 'success', text: 'Hero image uploaded successfully!' });
                                 } catch (error) {
                                   setMessage({ type: 'error', text: 'Failed to upload hero image: ' + error.message });
                                 }

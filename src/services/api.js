@@ -2,12 +2,27 @@
  * API Service - Handles all backend API calls
  */
 
+// Get API URL from environment or use fallback
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
+// Always log the API URL being used (helps debug)
+console.log('[API] Backend URL:', API_BASE_URL);
+console.log('[API] VITE_API_URL env var:', import.meta.env.VITE_API_URL || 'NOT SET');
+console.log('[API] Environment:', import.meta.env.MODE || 'unknown');
+
+// Warn if using localhost in production
+if (import.meta.env.PROD && API_BASE_URL.includes('localhost')) {
+  console.error('[API] ⚠️ CRITICAL: Using localhost in production!');
+  console.error('[API] Set VITE_API_URL in Netlify environment variables and redeploy!');
+  console.error('[API] Expected: https://tigermarinewbackend.onrender.com/api');
+}
 
 class ApiService {
   // Generic fetch method
   async fetch(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
+    console.log('[API] Fetching:', url);
+    
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -23,7 +38,18 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
-      const data = await response.json();
+      
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get('content-type');
+      let data;
+      
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        console.error('[API] Non-JSON response:', text);
+        throw new Error(`Invalid response format: ${response.status}`);
+      }
 
       if (!response.ok) {
         throw new Error(data.error || `HTTP error! status: ${response.status}`);
@@ -31,7 +57,22 @@ class ApiService {
 
       return data;
     } catch (error) {
-      console.error('API Error:', error);
+      console.error('[API] Error details:');
+      console.error('  URL:', url);
+      console.error('  Error:', error.message);
+      console.error('  Type:', error.name);
+      
+      // Provide helpful error message
+      if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_REFUSED')) {
+        const helpfulError = new Error(
+          `Cannot connect to backend at ${url}. ` +
+          `Check that VITE_API_URL is set correctly. ` +
+          `Current value: ${import.meta.env.VITE_API_URL || 'NOT SET (using localhost fallback)'}`
+        );
+        console.error('[API]', helpfulError.message);
+        throw helpfulError;
+      }
+      
       throw error;
     }
   }
@@ -133,28 +174,64 @@ class ApiService {
   }
 
   // ========== UPLOAD ==========
-  async uploadFile(file, folder, modelName, partName = null) {
+  async uploadFile(file, folder, modelName = null, partName = null, subfolder = null, categoryName = null) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('folder', folder);
-    formData.append('modelName', modelName);
+    if (modelName) {
+      formData.append('modelName', modelName);
+    }
+    if (categoryName) {
+      formData.append('categoryName', categoryName);
+    }
     if (partName) {
       formData.append('partName', partName);
     }
-
-    const url = `${API_BASE_URL}/upload/single`;
-    const response = await fetch(url, {
-      method: 'POST',
-      body: formData,
-      // Don't set Content-Type header - browser will set it with boundary
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || `Upload failed: ${response.status}`);
+    if (subfolder) {
+      formData.append('subfolder', subfolder);
     }
 
-    return data;
+    const url = `${API_BASE_URL}/upload/single`;
+    console.log('[API] Uploading file to:', url);
+    console.log('[API] File:', file.name, 'Size:', file.size);
+    console.log('[API] Folder:', folder, 'Model:', modelName, 'Subfolder:', subfolder);
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        // Don't set Content-Type header - browser will set it with boundary
+        credentials: 'include', // Include credentials for CORS
+      });
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      let data;
+      
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        console.error('[API] Upload non-JSON response:', text);
+        throw new Error(`Invalid response format: ${response.status} - ${text}`);
+      }
+
+      if (!response.ok) {
+        console.error('[API] Upload failed:', data);
+        throw new Error(data.error || `Upload failed: ${response.status}`);
+      }
+
+      console.log('[API] Upload successful:', data);
+      return data;
+    } catch (error) {
+      console.error('[API] Upload error details:', {
+        url,
+        error: error.message,
+        name: error.name,
+        stack: error.stack
+      });
+      throw error;
+    }
   }
 
   async uploadMultipleFiles(files, folder, modelName, partName = null) {
@@ -169,17 +246,34 @@ class ApiService {
     }
 
     const url = `${API_BASE_URL}/upload/multiple`;
-    const response = await fetch(url, {
-      method: 'POST',
-      body: formData,
-    });
+    console.log('[API] Uploading multiple files to:', url);
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include', // Include credentials for CORS
+      });
 
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || `Upload failed: ${response.status}`);
+      const contentType = response.headers.get('content-type');
+      let data;
+      
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        throw new Error(`Invalid response format: ${response.status} - ${text}`);
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || `Upload failed: ${response.status}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('[API] Multiple upload error:', error);
+      throw error;
     }
-
-    return data;
   }
 
   async listFiles(folder, modelName, partName = null) {
