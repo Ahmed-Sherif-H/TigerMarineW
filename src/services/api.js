@@ -224,26 +224,45 @@ class ApiService {
       throw new Error('modelName and partName are required for customizer uploads');
     }
     
+    // Validate folder is provided
+    if (!folder) {
+      throw new Error('Folder is required for upload');
+    }
+    
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('folder', folder);
+    // IMPORTANT: Append fields BEFORE file to ensure they're parsed first
+    formData.append('folder', String(folder)); // Must be first!
     if (modelName) {
-      formData.append('modelName', String(modelName)); // Ensure it's a string
+      formData.append('modelName', String(modelName));
     }
     if (categoryName) {
-      formData.append('categoryName', String(categoryName)); // Ensure it's a string
+      formData.append('categoryName', String(categoryName));
     }
     if (partName) {
-      formData.append('partName', String(partName)); // Ensure it's a string
+      formData.append('partName', String(partName));
     }
     if (subfolder) {
-      formData.append('subfolder', String(subfolder)); // Ensure it's a string
+      formData.append('subfolder', String(subfolder));
     }
-
+    // Append file LAST
+    formData.append('file', file);
+    
     const url = `${API_BASE_URL}/upload/single`;
     console.log('[API] Uploading file to:', url);
     console.log('[API] File:', file.name, 'Size:', file.size);
-    console.log('[API] Folder:', folder, 'Model:', modelName, 'Subfolder:', subfolder);
+    console.log('[API] FormData fields:', {
+      folder,
+      modelName: modelName || 'none',
+      categoryName: categoryName || 'none',
+      subfolder: subfolder || 'none'
+    });
+    
+    // Debug: Log FormData entries (for development)
+    if (import.meta.env.DEV) {
+      for (const [key, value] of formData.entries()) {
+        console.log(`  FormData[${key}]:`, value instanceof File ? `File: ${value.name}` : value);
+      }
+    }
     
     try {
       // Create abort controller for timeout
