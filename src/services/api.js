@@ -213,20 +213,31 @@ class ApiService {
 
   // ========== UPLOAD ==========
   async uploadFile(file, folder, modelName = null, partName = null, subfolder = null, categoryName = null) {
+    // Validate required fields based on folder type
+    if (folder === 'images' && !modelName) {
+      throw new Error('modelName is required for image uploads');
+    }
+    if (folder === 'categories' && !categoryName) {
+      throw new Error('categoryName is required for category uploads');
+    }
+    if (folder === 'customizer' && (!modelName || !partName)) {
+      throw new Error('modelName and partName are required for customizer uploads');
+    }
+    
     const formData = new FormData();
     formData.append('file', file);
     formData.append('folder', folder);
     if (modelName) {
-      formData.append('modelName', modelName);
+      formData.append('modelName', String(modelName)); // Ensure it's a string
     }
     if (categoryName) {
-      formData.append('categoryName', categoryName);
+      formData.append('categoryName', String(categoryName)); // Ensure it's a string
     }
     if (partName) {
-      formData.append('partName', partName);
+      formData.append('partName', String(partName)); // Ensure it's a string
     }
     if (subfolder) {
-      formData.append('subfolder', subfolder);
+      formData.append('subfolder', String(subfolder)); // Ensure it's a string
     }
 
     const url = `${API_BASE_URL}/upload/single`;

@@ -376,6 +376,11 @@ const AdminDashboard = () => {
                               onChange={async (e) => {
                                 const file = e.target.files[0];
                                 if (!file) return;
+                                if (!editedData.name) {
+                                  setMessage({ type: 'error', text: 'Please select a model first' });
+                                  e.target.value = '';
+                                  return;
+                                }
                                 try {
                                   const result = await api.uploadFile(file, 'images', editedData.name);
                                   handleInputChange('imageFile', result.filename);
@@ -411,6 +416,11 @@ const AdminDashboard = () => {
                                 const file = e.target.files[0];
                                 if (!file) return;
                                 try {
+                                  if (!editedData.name) {
+                                    setMessage({ type: 'error', text: 'Please select a model first' });
+                                    e.target.value = '';
+                                    return;
+                                  }
                                   const result = await api.uploadFile(file, 'images', editedData.name);
                                   handleInputChange('heroImageFile', result.filename);
                                   setMessage({ type: 'success', text: 'Hero image uploaded successfully!' });
@@ -444,6 +454,11 @@ const AdminDashboard = () => {
                               onChange={async (e) => {
                                 const file = e.target.files[0];
                                 if (!file) return;
+                                if (!editedData.name) {
+                                  setMessage({ type: 'error', text: 'Please select a model first' });
+                                  e.target.value = '';
+                                  return;
+                                }
                                 try {
                                   const result = await api.uploadFile(file, 'images', editedData.name);
                                   handleInputChange('contentImageFile', result.filename);
@@ -608,6 +623,12 @@ const AdminDashboard = () => {
                         const files = Array.from(e.target.files);
                         if (!files.length) return;
                         
+                        if (!editedData.name) {
+                          setMessage({ type: 'error', text: 'Please select a model first' });
+                          e.target.value = '';
+                          return;
+                        }
+                        
                         try {
                           setMessage({ type: '', text: '' });
                           const uploadedFiles = [];
@@ -691,6 +712,11 @@ const AdminDashboard = () => {
                         if (!files.length) return;
                         
                         try {
+                          if (!editedData.name) {
+                            setMessage({ type: 'error', text: 'Please select a model first' });
+                            e.target.value = '';
+                            return;
+                          }
                           setMessage({ type: '', text: '' });
                           const uploadedFiles = [];
                           
@@ -774,6 +800,11 @@ const AdminDashboard = () => {
                         if (!files.length) return;
                         
                         try {
+                          if (!editedData.name) {
+                            setMessage({ type: 'error', text: 'Please select a model first' });
+                            e.target.value = '';
+                            return;
+                          }
                           setMessage({ type: '', text: '' });
                           const uploadedFiles = [];
                           
