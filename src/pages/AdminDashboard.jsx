@@ -103,7 +103,23 @@ const AdminDashboard = () => {
     setMessage({ type: '', text: '' });
   };
 
+  // Helper to extract filename from path
+  const extractFilename = (pathOrFilename) => {
+    if (!pathOrFilename) return '';
+    // If it's a full path like /images/TopLine850/image.jpg, extract just "image.jpg"
+    if (pathOrFilename.includes('/')) {
+      return pathOrFilename.split('/').pop();
+    }
+    // Otherwise, it's already just a filename
+    return pathOrFilename;
+  };
+
   const handleInputChange = (field, value) => {
+    // For image file fields, extract just the filename (not the full path)
+    if (field === 'imageFile' || field === 'heroImageFile' || field === 'contentImageFile') {
+      value = extractFilename(value);
+    }
+    
     setEditedData(prev => ({
       ...prev,
       [field]: value
@@ -144,16 +160,33 @@ const AdminDashboard = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      const response = await api.updateModel(editedData.id, editedData);
+      // Ensure we're sending only filenames (not full paths) for image fields
+      const dataToSave = {
+        ...editedData,
+        imageFile: extractFilename(editedData.imageFile),
+        heroImageFile: extractFilename(editedData.heroImageFile),
+        contentImageFile: extractFilename(editedData.contentImageFile),
+        // Ensure gallery/interior/video arrays contain only filenames
+        galleryFiles: (editedData.galleryFiles || []).map(extractFilename).filter(Boolean),
+        interiorFiles: (editedData.interiorFiles || []).map(extractFilename).filter(Boolean),
+        videoFiles: (editedData.videoFiles || []).map(extractFilename).filter(Boolean),
+      };
+      
+      console.log('Saving model data:', dataToSave);
+      
+      const response = await api.updateModel(editedData.id, dataToSave);
       if (response.success) {
         setMessage({ type: 'success', text: 'Model updated successfully!' });
         await refreshModels();
+        // Reload the model data to get the updated version
+        await loadModelData(editedData.id);
         setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       } else {
         setMessage({ type: 'error', text: response.message || 'Failed to update model' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to update model' });
+      console.error('Save error:', error);
+      setMessage({ type: 'error', text: 'Failed to update model: ' + error.message });
     } finally {
       setIsSaving(false);
     }
