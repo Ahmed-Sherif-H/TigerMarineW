@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useModels } from '../context/ModelsContext';
 import api from '../services/api';
+import { 
+  normalizeModelDataForSave, 
+  normalizeModelDataForEdit,
+  extractFilename 
+} from '../utils/backendConfig';
 
 const AdminDashboard = () => {
   const { models, categories, loading, refreshModels } = useModels();
@@ -33,40 +38,23 @@ const AdminDashboard = () => {
     setIsLoadingModel(true);
     setMessage({ type: '', text: '' });
     try {
-      // API service already extracts data from response
       const modelData = await api.getModelById(id);
-      console.log('Loaded model data:', modelData); // Debug log
+      console.log('[AdminDashboard] Loaded raw model data:', modelData);
       
       if (modelData && (modelData.id || modelData.name)) {
-        // Ensure arrays are properly formatted
-        const formattedData = {
-          ...modelData,
-          galleryFiles: modelData.galleryFiles 
-            ? (Array.isArray(modelData.galleryFiles) 
-                ? modelData.galleryFiles.map(img => typeof img === 'string' ? img : img.filename || img)
-                : [])
-            : [],
-          interiorFiles: modelData.interiorFiles 
-            ? (Array.isArray(modelData.interiorFiles)
-                ? modelData.interiorFiles.map(img => typeof img === 'string' ? img : img.filename || img)
-                : [])
-            : [],
-          videoFiles: modelData.videoFiles 
-            ? (Array.isArray(modelData.videoFiles)
-                ? modelData.videoFiles.map(vid => typeof vid === 'string' ? vid : vid.filename || vid)
-                : [])
-            : [],
-        };
+        // Normalize data: extract filenames from paths
+        const normalizedData = normalizeModelDataForEdit(modelData);
+        console.log('[AdminDashboard] Normalized model data:', normalizedData);
         
-        setEditedData(formattedData);
-        console.log('Model data set successfully'); // Debug log
+        setEditedData(normalizedData);
+        console.log('[AdminDashboard] Model data loaded and set successfully');
       } else {
-        console.error('Invalid model data:', modelData);
+        console.error('[AdminDashboard] Invalid model data:', modelData);
         setMessage({ type: 'error', text: 'Invalid model data received' });
         setEditedData(null);
       }
     } catch (error) {
-      console.error('Error loading model:', error);
+      console.error('[AdminDashboard] Error loading model:', error);
       setMessage({ type: 'error', text: 'Failed to load model data: ' + error.message });
       setEditedData(null);
     } finally {
@@ -101,17 +89,6 @@ const AdminDashboard = () => {
     setSelectedCategoryId(e.target.value);
     setEditedData(null);
     setMessage({ type: '', text: '' });
-  };
-
-  // Helper to extract filename from path
-  const extractFilename = (pathOrFilename) => {
-    if (!pathOrFilename) return '';
-    // If it's a full path like /images/TopLine850/image.jpg, extract just "image.jpg"
-    if (pathOrFilename.includes('/')) {
-      return pathOrFilename.split('/').pop();
-    }
-    // Otherwise, it's already just a filename
-    return pathOrFilename;
   };
 
   const handleInputChange = (field, value) => {
@@ -160,32 +137,38 @@ const AdminDashboard = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      // Ensure we're sending only filenames (not full paths) for image fields
-      const dataToSave = {
-        ...editedData,
-        imageFile: extractFilename(editedData.imageFile),
-        heroImageFile: extractFilename(editedData.heroImageFile),
-        contentImageFile: extractFilename(editedData.contentImageFile),
-        // Ensure gallery/interior/video arrays contain only filenames
-        galleryFiles: (editedData.galleryFiles || []).map(extractFilename).filter(Boolean),
-        interiorFiles: (editedData.interiorFiles || []).map(extractFilename).filter(Boolean),
-        videoFiles: (editedData.videoFiles || []).map(extractFilename).filter(Boolean),
-      };
+      // Normalize data: ensure all image fields contain only filenames
+      const dataToSave = normalizeModelDataForSave(editedData);
       
-      console.log('Saving model data:', dataToSave);
+      console.log('[AdminDashboard] Saving model data:', {
+        id: dataToSave.id,
+        name: dataToSave.name,
+        imageFile: dataToSave.imageFile,
+        heroImageFile: dataToSave.heroImageFile,
+        contentImageFile: dataToSave.contentImageFile,
+        galleryFilesCount: dataToSave.galleryFiles?.length || 0,
+        interiorFilesCount: dataToSave.interiorFiles?.length || 0,
+        videoFilesCount: dataToSave.videoFiles?.length || 0,
+      });
       
       const response = await api.updateModel(editedData.id, dataToSave);
+      
       if (response.success) {
         setMessage({ type: 'success', text: 'Model updated successfully!' });
+        
+        // Refresh models list
         await refreshModels();
-        // Reload the model data to get the updated version
+        
+        // Reload the specific model to get the updated version from database
+        // This ensures we have the latest data with proper filenames
         await loadModelData(editedData.id);
+        
         setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       } else {
         setMessage({ type: 'error', text: response.message || 'Failed to update model' });
       }
     } catch (error) {
-      console.error('Save error:', error);
+      console.error('[AdminDashboard] Save error:', error);
       setMessage({ type: 'error', text: 'Failed to update model: ' + error.message });
     } finally {
       setIsSaving(false);
@@ -626,7 +609,8 @@ const AdminDashboard = () => {
                             value={typeof image === 'string' ? image : image.filename || ''}
                             onChange={(e) => {
                               const newGallery = [...editedData.galleryFiles];
-                              newGallery[index] = e.target.value;
+                              // Extract filename from user input (in case they enter a full path)
+                              newGallery[index] = extractFilename(e.target.value);
                               setEditedData({ ...editedData, galleryFiles: newGallery });
                             }}
                             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -668,7 +652,8 @@ const AdminDashboard = () => {
                           
                           for (const file of files) {
                             const result = await api.uploadFile(file, 'images', editedData.name);
-                            uploadedFiles.push(result.filename);
+                            // Extract filename to ensure we store just the filename, not a path
+                            uploadedFiles.push(extractFilename(result.filename));
                           }
                           
                           const newGallery = [...(editedData.galleryFiles || []), ...uploadedFiles];
@@ -714,7 +699,8 @@ const AdminDashboard = () => {
                             value={typeof image === 'string' ? image : image.filename || ''}
                             onChange={(e) => {
                               const newInterior = [...editedData.interiorFiles];
-                              newInterior[index] = e.target.value;
+                              // Extract filename from user input (in case they enter a full path)
+                              newInterior[index] = extractFilename(e.target.value);
                               setEditedData({ ...editedData, interiorFiles: newInterior });
                             }}
                             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -756,7 +742,8 @@ const AdminDashboard = () => {
                           for (const file of files) {
                             // Upload to Interior subfolder
                             const result = await api.uploadFile(file, 'images', editedData.name, null, 'Interior');
-                            uploadedFiles.push(result.filename);
+                            // Extract filename to ensure we store just the filename, not a path
+                            uploadedFiles.push(extractFilename(result.filename));
                           }
                           
                           const newInterior = [...(editedData.interiorFiles || []), ...uploadedFiles];
@@ -802,7 +789,8 @@ const AdminDashboard = () => {
                             value={typeof video === 'string' ? video : video.filename || ''}
                             onChange={(e) => {
                               const newVideos = [...editedData.videoFiles];
-                              newVideos[index] = e.target.value;
+                              // Extract filename from user input (in case they enter a full path)
+                              newVideos[index] = extractFilename(e.target.value);
                               setEditedData({ ...editedData, videoFiles: newVideos });
                             }}
                             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -843,7 +831,8 @@ const AdminDashboard = () => {
                           
                           for (const file of files) {
                             const result = await api.uploadFile(file, 'images', editedData.name);
-                            uploadedFiles.push(result.filename);
+                            // Extract filename to ensure we store just the filename, not a path
+                            uploadedFiles.push(extractFilename(result.filename));
                           }
                           
                           const newVideos = [...(editedData.videoFiles || []), ...uploadedFiles];

@@ -1,78 +1,94 @@
-# Tiger Marine Frontend
+# Tiger Marine Website
 
-## Setup
+Modern yacht showcase website with admin dashboard for managing boat models, images, and inquiries.
 
-### Environment Variables
+## 🚀 Quick Start
 
-**For Local Development:**
-Create a `.env` file in the root:
-```env
-VITE_API_URL=http://localhost:3001/api
-```
+### Local Development
 
-**For Production (Netlify):**
-Set in Netlify dashboard → Site settings → Environment variables:
-```
-VITE_API_URL=https://tigermarinewbackend.onrender.com/api
-```
+1. **Frontend:**
+   ```bash
+   cd frontend
+   npm install
+   cp .env.example .env
+   npm run dev
+   ```
 
-### Install Dependencies
-```bash
-npm install
-```
+2. **Backend:**
+   ```bash
+   cd backend
+   npm install
+   cp .env.example .env  # Configure database
+   npm run prisma:generate
+   npm run prisma:migrate
+   npm run dev
+   ```
 
-### Run Development Server
-```bash
-npm run dev
-```
+3. **Access:**
+   - Frontend: http://localhost:5173
+   - Backend: http://localhost:3001
+   - Admin: http://localhost:5173/admin
 
-## Deployment
+## 📚 Documentation
 
-### Netlify
+- [Complete Setup Guide](./docs/SETUP.md) - Detailed setup instructions
+- [Deployment Guide](./docs/DEPLOYMENT.md) - Deploy to Netlify & Render
+- [Troubleshooting](./docs/TROUBLESHOOTING.md) - Common issues and solutions
+- [Image Management](./docs/IMAGE_MANAGEMENT.md) - Managing images
 
-1. **Build Settings:**
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-
-2. **Environment Variables:**
-   - `VITE_API_URL` = `https://tigermarinewbackend.onrender.com/api`
-
-3. **Important Files:**
-   - `public/_redirects` - Handles SPA routing
-
-## Project Structure
+## 🏗️ Project Structure
 
 ```
 frontend/
 ├── src/
-│   ├── components/     # Reusable components
+│   ├── components/     # React components
 │   ├── pages/          # Page components
-│   ├── services/       # API service
+│   ├── services/       # API services
 │   ├── utils/          # Utility functions
+│   ├── config/         # Configuration files
 │   └── context/        # React context
-├── public/             # Static files
-└── dist/              # Build output
+├── public/             # Static assets
+└── docs/               # Documentation
+
+backend/
+├── routes/             # API routes
+├── services/           # Business logic
+├── controllers/        # Request handlers
+├── config/             # Configuration
+├── scripts/            # Utility scripts
+├── public/             # Static files (images)
+└── docs/               # Documentation
 ```
 
-## API Configuration
+## 🛠️ Tech Stack
 
-The frontend connects to the backend API. The API URL is configured via `VITE_API_URL` environment variable.
+**Frontend:**
+- React 18
+- Vite
+- Tailwind CSS
+- React Router
+- Framer Motion
 
-- **Local:** `http://localhost:3001/api`
-- **Production:** `https://tigermarinewbackend.onrender.com/api`
+**Backend:**
+- Node.js + Express
+- PostgreSQL
+- Prisma ORM
+- Multer (file uploads)
+- Nodemailer (emails)
 
-## Troubleshooting
+## 📝 Features
 
-### Images Not Loading
-- Check that images exist in backend `public/images/` folder
-- Verify image filenames in database match actual files
-- Use Admin Dashboard to upload/update images
+- ✅ Boat model showcase
+- ✅ Admin dashboard for content management
+- ✅ Image upload and management
+- ✅ Contact form with email notifications
+- ✅ Model customizer with inquiry system
+- ✅ Responsive design
 
-### API Errors
-- Verify `VITE_API_URL` is set correctly
-- Check backend is running (test: `/api/health`)
-- Check browser console for detailed error messages
+## 🔧 Environment Variables
 
-### CORS Errors
-- Verify backend `FRONTEND_URL` is set to Netlify URL
-- Check backend CORS configuration
+See [SETUP.md](./docs/SETUP.md) for complete environment variable configuration.
+
+## 📖 License
+
+Private project - All rights reserved
