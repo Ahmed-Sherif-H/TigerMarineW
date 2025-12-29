@@ -173,7 +173,9 @@ class ApiService {
       method: 'PUT',
       body: modelData,
     });
-    return response.data;
+    // Backend may return { success: true, data: {...} } or direct model data
+    // Return the full response so frontend can check both formats
+    return response.data || response;
   }
 
   async deleteModel(id) {

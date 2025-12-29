@@ -167,7 +167,10 @@ const AdminDashboard = () => {
       
       const response = await api.updateModel(editedData.id, dataToSave);
       
-      if (response.success) {
+      // Handle both response formats: { success: true, data: {...} } or direct model data
+      const isSuccess = response?.success !== false && (response?.id || response?.data?.id || response?.name);
+      
+      if (isSuccess) {
         setMessage({ type: 'success', text: 'Model updated successfully!' });
         
         // Refresh models list
@@ -179,7 +182,9 @@ const AdminDashboard = () => {
         
         setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       } else {
-        setMessage({ type: 'error', text: response.message || 'Failed to update model' });
+        const errorMessage = response?.message || response?.error || 'Failed to update model';
+        setMessage({ type: 'error', text: errorMessage });
+        console.error('[AdminDashboard] Update failed:', response);
       }
     } catch (error) {
       console.error('[AdminDashboard] Save error:', error);
