@@ -10,7 +10,7 @@ import {
 } from '../utils/backendConfig';
 
 const AdminDashboard = () => {
-  const { models, categories, loading, refreshModels } = useModels();
+  const { models, categories, loading, refreshData } = useModels();
   const [activeTab, setActiveTab] = useState('models');
   const [selectedModelId, setSelectedModelId] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
@@ -166,23 +166,37 @@ const AdminDashboard = () => {
       });
       
       const response = await api.updateModel(editedData.id, dataToSave);
+      console.log('[AdminDashboard] Update response:', response);
       
       // Handle both response formats: { success: true, data: {...} } or direct model data
-      const isSuccess = response?.success !== false && (response?.id || response?.data?.id || response?.name);
+      // Check if response indicates success (has id/name or success: true)
+      const hasModelData = response && (response.id || response.name || response.data?.id || response.data?.name);
+      const hasSuccessFlag = response && response.success === true;
+      const isSuccess = hasSuccessFlag || hasModelData;
       
       if (isSuccess) {
         setMessage({ type: 'success', text: 'Model updated successfully!' });
         
-        // Refresh models list
-        await refreshModels();
+        // Refresh models list if function exists
+        if (refreshData && typeof refreshData === 'function') {
+          try {
+            await refreshData();
+          } catch (refreshError) {
+            console.warn('[AdminDashboard] Error refreshing models:', refreshError);
+          }
+        }
         
         // Reload the specific model to get the updated version from database
         // This ensures we have the latest data with proper filenames
-        await loadModelData(editedData.id);
+        try {
+          await loadModelData(editedData.id);
+        } catch (loadError) {
+          console.warn('[AdminDashboard] Error reloading model:', loadError);
+        }
         
         setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       } else {
-        const errorMessage = response?.message || response?.error || 'Failed to update model';
+        const errorMessage = (response && (response.message || response.error)) || 'Failed to update model';
         setMessage({ type: 'error', text: errorMessage });
         console.error('[AdminDashboard] Update failed:', response);
       }
@@ -216,7 +230,7 @@ const AdminDashboard = () => {
         setMessage({ type: 'success', text: 'Category updated successfully!' });
         
         // Refresh categories list
-        await refreshModels();
+        await refreshData();
         
         // Reload the specific category to get the updated version from database
         await loadCategoryData(editedData.id);
