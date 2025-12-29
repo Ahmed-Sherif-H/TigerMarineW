@@ -4,6 +4,8 @@ import api from '../services/api';
 import { 
   normalizeModelDataForSave, 
   normalizeModelDataForEdit,
+  normalizeCategoryDataForSave,
+  normalizeCategoryDataForEdit,
   extractFilename 
 } from '../utils/backendConfig';
 
@@ -73,16 +75,20 @@ const AdminDashboard = () => {
     try {
       const category = categories.find(c => c.id === parseInt(id));
       if (category) {
-        setEditedData({
+        // Normalize category data: extract filenames from paths
+        const normalizedData = normalizeCategoryDataForEdit({
           id: category.id,
           name: category.name,
           description: category.description || '',
           image: category.image || '',
           heroImage: category.heroImage || '',
         });
+        console.log('[AdminDashboard] Loaded category data:', normalizedData);
+        setEditedData(normalizedData);
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to load category data' });
+      console.error('[AdminDashboard] Error loading category:', error);
+      setMessage({ type: 'error', text: 'Failed to load category data: ' + error.message });
     }
   };
 
@@ -100,7 +106,8 @@ const AdminDashboard = () => {
 
   const handleInputChange = (field, value) => {
     // For image file fields, extract just the filename (not the full path)
-    if (field === 'imageFile' || field === 'heroImageFile' || field === 'contentImageFile') {
+    if (field === 'imageFile' || field === 'heroImageFile' || field === 'contentImageFile' ||
+        field === 'image' || field === 'heroImage') {
       value = extractFilename(value);
     }
     
@@ -189,16 +196,33 @@ const AdminDashboard = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      const response = await api.updateCategory(editedData.id, editedData);
+      // Normalize data: ensure all image fields contain only filenames
+      const dataToSave = normalizeCategoryDataForSave(editedData);
+      
+      console.log('[AdminDashboard] Saving category data:', {
+        id: dataToSave.id,
+        name: dataToSave.name,
+        image: dataToSave.image,
+        heroImage: dataToSave.heroImage,
+      });
+      
+      const response = await api.updateCategory(editedData.id, dataToSave);
       if (response.success) {
         setMessage({ type: 'success', text: 'Category updated successfully!' });
+        
+        // Refresh categories list
         await refreshModels();
+        
+        // Reload the specific category to get the updated version from database
+        await loadCategoryData(editedData.id);
+        
         setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       } else {
         setMessage({ type: 'error', text: response.message || 'Failed to update category' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to update category' });
+      console.error('[AdminDashboard] Save category error:', error);
+      setMessage({ type: 'error', text: 'Failed to update category: ' + error.message });
     } finally {
       setIsSaving(false);
     }

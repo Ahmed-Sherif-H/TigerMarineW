@@ -113,6 +113,40 @@ export function normalizeModelDataForEdit(modelData) {
 }
 
 /**
+ * Normalize category data for saving to backend
+ * Ensures all image fields contain only filenames (not paths)
+ */
+export function normalizeCategoryDataForSave(categoryData) {
+  if (!categoryData || typeof categoryData !== 'object') {
+    return categoryData;
+  }
+  
+  return {
+    ...categoryData,
+    // Extract filenames from image fields
+    image: extractFilename(categoryData.image || ''),
+    heroImage: extractFilename(categoryData.heroImage || ''),
+  };
+}
+
+/**
+ * Normalize category data when loading from backend
+ * Extracts filenames from paths returned by API
+ */
+export function normalizeCategoryDataForEdit(categoryData) {
+  if (!categoryData || typeof categoryData !== 'object') {
+    return categoryData;
+  }
+  
+  return {
+    ...categoryData,
+    // Extract filenames from image fields (API returns paths)
+    image: extractFilename(categoryData.image || ''),
+    heroImage: extractFilename(categoryData.heroImage || ''),
+  };
+}
+
+/**
  * Get folder name for a model
  */
 export function getModelFolderName(modelName) {

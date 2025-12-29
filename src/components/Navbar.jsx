@@ -77,10 +77,10 @@ const Navbar = () => {
               />
             </button>
 
-            {/* Logo - Center (slightly to the right, responsive) */}
+            {/* Logo - Center (slightly to the left, responsive) */}
             <Link 
               to="/" 
-              className="absolute left-1/2 transform -translate-x-1/2 translate-x-2 sm:translate-x-4 flex items-center justify-center" 
+              className="absolute left-1/2 transform -translate-x-1/2 -translate-x-2 sm:-translate-x-4 flex items-center justify-center" 
             >
               <img 
                 src="/images/LOGO.png" 
