@@ -17,9 +17,32 @@ if (import.meta.env.PROD && API_BASE_URL.includes('localhost')) {
   console.error('[API] Expected: https://tigermarinewbackend.onrender.com/api');
 }
 
+// Keep-alive ping for Render free tier (prevents sleeping)
+if (import.meta.env.PROD && API_BASE_URL.includes('onrender.com')) {
+  // Ping backend every 10 minutes to keep it awake
+  setInterval(async () => {
+    try {
+      await api.healthCheck();
+      console.log('[Keep-Alive] ✅ Backend pinged successfully');
+    } catch (error) {
+      console.warn('[Keep-Alive] ⚠️ Ping failed (backend might be sleeping):', error.message);
+    }
+  }, 10 * 60 * 1000); // Every 10 minutes
+  
+  // Initial ping after 30 seconds (give time for page to load)
+  setTimeout(async () => {
+    try {
+      await api.healthCheck();
+      console.log('[Keep-Alive] ✅ Initial backend ping successful');
+    } catch (error) {
+      console.warn('[Keep-Alive] ⚠️ Initial ping failed:', error.message);
+    }
+  }, 30000); // 30 seconds
+}
+
 class ApiService {
   // Health check - test if backend is awake
-  async checkBackendHealth() {
+  async healthCheck() {
     try {
       const healthUrl = `${API_BASE_URL}/health`;
       const controller = new AbortController();
@@ -37,6 +60,11 @@ class ApiService {
       console.warn('[API] Backend health check failed:', error.message);
       return false;
     }
+  }
+  
+  // Alias for backward compatibility
+  async checkBackendHealth() {
+    return this.healthCheck();
   }
 
   // Generic fetch method

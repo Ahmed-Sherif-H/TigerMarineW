@@ -33,8 +33,11 @@ Modern yacht showcase website with admin dashboard for managing boat models, ima
 
 - [Complete Setup Guide](./docs/SETUP.md) - Detailed setup instructions
 - [Deployment Guide](./docs/DEPLOYMENT.md) - Deploy to Netlify & Render
+- [Production Setup](./docs/PRODUCTION_SETUP_COMPLETE.md) - **Fix production images & Render sleeping**
+- [Admin Dashboard Guide](./docs/ADMIN_DASHBOARD_GUIDE.md) - **How to upload images (no shell needed)**
 - [Troubleshooting](./docs/TROUBLESHOOTING.md) - Common issues and solutions
 - [Image Management](./docs/IMAGE_MANAGEMENT.md) - Managing images
+- [Render Sleeping](./docs/RENDER_SLEEPING.md) - Understanding Render free tier
 
 ## 🏗️ Project Structure
 
