@@ -376,7 +376,7 @@ const ModelDetail = () => {
       </section>
 
       {/* 6) Image Left, Text Right - Boat Features */}
-      <section className="section-padding bg-white">
+      {/*<section className="section-padding bg-white">
         <div className="container-custom">
           <div className="flex gap-8 items-center">
             <motion.div
@@ -411,7 +411,7 @@ const ModelDetail = () => {
             </motion.div>
           </div>
         </div>
-      </section>
+      </section>*/}
 
       {/* 6.5) Key Features Grid Section */}
       <section className="section-padding bg-gray-50">
@@ -465,7 +465,7 @@ const ModelDetail = () => {
               className="text-center mb-12"
             >
               <h3 className="text-3xl md:text-4xl font-light text-midnight-slate mb-4">
-                Elevate Your Experience
+               OPTIONAL FEATURES
               </h3>
               <p className="text-gray-600 max-w-3xl mx-auto">
                 Enhance your {fullModelName} with these optional upgrades and customizations.
