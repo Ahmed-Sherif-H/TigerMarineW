@@ -80,12 +80,12 @@ const Navbar = () => {
             {/* Logo - Center (slightly to the left, responsive) */}
             <Link 
               to="/" 
-              className="absolute left-1/2 transform -translate-x-1/2 -translate-x-2 sm:-translate-x-4 flex items-center justify-center" 
+              className="absolute left-1/2 transform -translate-x-1/2 -translate-x-2 sm:-translate-x-0 flex items-center justify-center" 
             >
               <img 
                 src="/images/LOGO.png" 
                 alt="Tiger Marine" 
-                className="h-14 sm:h-20 md:h-24 w-auto"
+                className="h-14 sm:h-26 md:h-24 w-auto"
               />
             </Link>
 

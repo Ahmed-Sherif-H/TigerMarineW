@@ -125,6 +125,41 @@ const ModelDetail = () => {
   }, [modelFolder, model?.interiorFiles]);
 
   const [interiorSlide, setInteriorSlide] = useState(0);
+  const [activeNavTab, setActiveNavTab] = useState('overview');
+  
+  // Scroll spy to highlight active section
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ['overview', 'video', 'gallery', 'features', 'optional-features', 'interior', 'specifications'];
+      const scrollPosition = window.scrollY + 200; // Offset for sticky nav
+      
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const element = document.getElementById(sections[i]);
+        if (element && element.offsetTop <= scrollPosition) {
+          setActiveNavTab(sections[i]);
+          break;
+        }
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const offset = 100; // Offset for sticky nav
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+  
   const goInteriorPrev = () => {
     if (interiorImages.length <= 1) return;
     const maxIndex = interiorImages.length - 2; // -2 because we skip the first image (shown on left)
@@ -222,8 +257,103 @@ const ModelDetail = () => {
         </motion.div>
       </section>
 
+      {/* Navigation Tabs - Sticky after hero */}
+      <nav className="sticky top-20 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+        <div className="container-custom">
+          <div className="flex items-center gap-2 overflow-x-auto py-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <style>{`
+              .overflow-x-auto::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
+            <button
+              onClick={() => scrollToSection('overview')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                activeNavTab === 'overview'
+                  ? 'bg-smoked-saffron text-white'
+                  : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
+              }`}
+            >
+              Overview
+            </button>
+            {videoFiles.length > 0 && (
+              <button
+                onClick={() => scrollToSection('video')}
+                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                  activeNavTab === 'video'
+                    ? 'bg-smoked-saffron text-white'
+                    : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
+                }`}
+              >
+                Video
+              </button>
+            )}
+            {galleryImages.length > 0 && (
+              <button
+                onClick={() => scrollToSection('gallery')}
+                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                  activeNavTab === 'gallery'
+                    ? 'bg-smoked-saffron text-white'
+                    : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
+                }`}
+              >
+                Gallery
+              </button>
+            )}
+            {((model.standardFeatures || model.features || []).length > 0) && (
+              <button
+                onClick={() => scrollToSection('features')}
+                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                  activeNavTab === 'features'
+                    ? 'bg-smoked-saffron text-white'
+                    : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
+                }`}
+              >
+                Features
+              </button>
+            )}
+            {optionalFeaturesForElevate.length > 0 && (
+              <button
+                onClick={() => scrollToSection('optional-features')}
+                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                  activeNavTab === 'optional-features'
+                    ? 'bg-smoked-saffron text-white'
+                    : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
+                }`}
+              >
+                Optional Features
+              </button>
+            )}
+            {interiorImages.length > 0 && (
+              <button
+                onClick={() => scrollToSection('interior')}
+                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                  activeNavTab === 'interior'
+                    ? 'bg-smoked-saffron text-white'
+                    : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
+                }`}
+              >
+                Interior
+              </button>
+            )}
+            {model.specs && Object.keys(model.specs).length > 0 && (
+              <button
+                onClick={() => scrollToSection('specifications')}
+                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                  activeNavTab === 'specifications'
+                    ? 'bg-smoked-saffron text-white'
+                    : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
+                }`}
+              >
+                Specifications
+              </button>
+            )}
+          </div>
+        </div>
+      </nav>
+
       {/* 2) Model Name and Description - Centered */}
-      <section className="section-padding bg-white">
+      <section id="overview" className="section-padding bg-white">
         <div className="container-custom">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -243,7 +373,7 @@ const ModelDetail = () => {
       </section>
 
       {/* 3) Video Section */}
-      <section className="relative h-[60vh] sm:h-[70vh] md:h-screen">
+      <section id="video" className="relative h-[60vh] sm:h-[70vh] md:h-screen">
         {videoFiles.length > 0 && videoFiles[0] ? (
           <>
             <video
@@ -325,7 +455,7 @@ const ModelDetail = () => {
       </section>
 
       {/* 5) Full Width Image Carousel */}
-      <section className="relative w-full">
+      <section id="gallery" className="relative w-full">
         <div className="relative h-[85vh] w-full overflow-hidden">
           <img
             src={galleryImages[currentSlide]}
@@ -414,7 +544,7 @@ const ModelDetail = () => {
       </section>*/}
 
       {/* 6.5) Key Features Grid Section */}
-      <section className="section-padding bg-gray-50">
+      <section id="features" className="section-padding bg-gray-50">
         <div className="container-custom">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -455,7 +585,7 @@ const ModelDetail = () => {
 
       {/* 7) Elevate Your Experience - Optional Features */}
       {optionalFeaturesForElevate.length > 0 && (
-        <section className="section-padding bg-white">
+        <section id="optional-features" className="section-padding bg-white">
           <div className="container-custom">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -537,7 +667,7 @@ const ModelDetail = () => {
       )}
 
       {/* 8) Interior Section */}
-      <section className="section-padding bg-white">
+      <section id="interior" className="section-padding bg-white">
         <div className="container-custom">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -669,7 +799,7 @@ const ModelDetail = () => {
       )}
 
       {/* 10) Specifications Section */}
-      <section className="section-padding bg-white">
+      <section id="specifications" className="section-padding bg-white">
         <div className="container-custom">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
