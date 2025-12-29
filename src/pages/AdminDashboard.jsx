@@ -51,6 +51,8 @@ const AdminDashboard = () => {
         // Normalize data: extract filenames from paths
         const normalizedData = normalizeModelDataForEdit(actualData);
         console.log('[AdminDashboard] Normalized model data:', normalizedData);
+        console.log('[AdminDashboard] Gallery files after normalization:', normalizedData.galleryFiles);
+        console.log('[AdminDashboard] Interior files after normalization:', normalizedData.interiorFiles);
         
         setEditedData(normalizedData);
         console.log('[AdminDashboard] Model data loaded and set successfully');
@@ -160,8 +162,11 @@ const AdminDashboard = () => {
         imageFile: dataToSave.imageFile,
         heroImageFile: dataToSave.heroImageFile,
         contentImageFile: dataToSave.contentImageFile,
+        galleryFiles: dataToSave.galleryFiles,
         galleryFilesCount: dataToSave.galleryFiles?.length || 0,
+        interiorFiles: dataToSave.interiorFiles,
         interiorFilesCount: dataToSave.interiorFiles?.length || 0,
+        videoFiles: dataToSave.videoFiles,
         videoFilesCount: dataToSave.videoFiles?.length || 0,
       });
       
@@ -507,8 +512,10 @@ const AdminDashboard = () => {
                               }
                               try {
                                 const result = await api.uploadFile(file, 'images', editedData.name);
+                                console.log('[AdminDashboard] Upload result:', result);
                                 // Extract just the filename (backend may return full path)
-                                const filename = extractFilename(result.filename || result.path || result.url || '');
+                                const filename = extractFilename(result.filename || result.path || result.url || result.file || '');
+                                console.log('[AdminDashboard] Extracted filename:', filename);
                                 handleInputChange('imageFile', filename);
                                 setMessage({ type: 'success', text: 'Thumbnail image uploaded successfully!' });
                               } catch (error) {
@@ -919,8 +926,10 @@ const AdminDashboard = () => {
                           
                           for (const file of files) {
                             const result = await api.uploadFile(file, 'images', editedData.name);
+                            console.log('[AdminDashboard] Gallery upload result:', result);
                             // Extract just the filename (backend may return full path)
-                            const filename = extractFilename(result.filename || result.path || result.url || '');
+                            const filename = extractFilename(result.filename || result.path || result.url || result.file || '');
+                            console.log('[AdminDashboard] Extracted gallery filename:', filename);
                             uploadedFiles.push(filename);
                           }
                           
