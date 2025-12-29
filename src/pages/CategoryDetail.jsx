@@ -179,7 +179,7 @@ const CategoryDetail = () => {
       </section>
 
       {/* Category Features */}
-      <section className="section-padding">
+      {/*<section className="section-padding">
         <div className="container-custom">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
