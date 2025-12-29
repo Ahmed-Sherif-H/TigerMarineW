@@ -41,19 +41,33 @@ export function transformModel(model) {
   const transformed = {
     ...model,
     // Main images - generate full paths, use fallback if null
+    // Extract filename from path if backend returns full path
     image: model.imageFile ? (() => {
-      const path = getFullImagePath(model.name, model.imageFile);
-      console.log(`[Transform] Image: ${model.imageFile} → ${path}`);
+      let filename = model.imageFile;
+      // If it's a path like "/images/Open650/image.jpg", extract just "image.jpg"
+      if (filename.includes('/')) {
+        filename = filename.split('/').pop();
+      }
+      const path = getFullImagePath(model.name, filename);
+      console.log(`[Transform] Image: ${model.imageFile} → ${filename} → ${path}`);
       return path;
     })() : getFallbackImage(model.name),
     heroImage: model.heroImageFile ? (() => {
-      const path = getFullImagePath(model.name, model.heroImageFile);
-      console.log(`[Transform] HeroImage: ${model.heroImageFile} → ${path}`);
+      let filename = model.heroImageFile;
+      if (filename.includes('/')) {
+        filename = filename.split('/').pop();
+      }
+      const path = getFullImagePath(model.name, filename);
+      console.log(`[Transform] HeroImage: ${model.heroImageFile} → ${filename} → ${path}`);
       return path;
     })() : getFallbackImage(model.name),
     contentImage: model.contentImageFile ? (() => {
-      const path = getFullImagePath(model.name, model.contentImageFile);
-      console.log(`[Transform] ContentImage: ${model.contentImageFile} → ${path}`);
+      let filename = model.contentImageFile;
+      if (filename.includes('/')) {
+        filename = filename.split('/').pop();
+      }
+      const path = getFullImagePath(model.name, filename);
+      console.log(`[Transform] ContentImage: ${model.contentImageFile} → ${filename} → ${path}`);
       return path;
     })() : getFallbackImage(model.name),
     
@@ -62,17 +76,31 @@ export function transformModel(model) {
     heroImageFile: model.heroImageFile || '',
     contentImageFile: model.contentImageFile || '',
     
-    // Transform arrays to full paths
-    // Backend returns galleryFiles as array of strings already
+    // Transform arrays - extract filenames first, then build paths
+    // Backend may return full paths like "/images/Open650/image.jpg" or just "image.jpg"
     galleryFiles: (model.galleryFiles || []).map(file => {
-      if (typeof file === 'string') return file;
-      if (file && file.filename) return file.filename;
+      if (typeof file === 'string') {
+        // Extract filename from path if it's a path
+        if (file.includes('/')) {
+          return file.split('/').pop();
+        }
+        return file;
+      }
+      if (file && file.filename) {
+        const f = file.filename;
+        return f.includes('/') ? f.split('/').pop() : f;
+      }
       return file;
     }),
     galleryImages: (model.galleryFiles || []).length > 0 
       ? (model.galleryFiles || []).map(file => {
-          const filename = typeof file === 'string' ? file : (file?.filename || file);
-          // getFullImagePath now handles both relative filenames and full paths
+          // Extract filename from path if needed
+          let filename = typeof file === 'string' ? file : (file?.filename || file);
+          // If it's a path like "/images/Open650/image.jpg", extract just "image.jpg"
+          if (filename.includes('/')) {
+            filename = filename.split('/').pop();
+          }
+          // Now build the full path from just the filename
           const fullPath = getFullImagePath(model.name, filename);
           console.log(`[Transform] Gallery file: ${filename} → ${fullPath}`);
           return fullPath;
@@ -80,23 +108,49 @@ export function transformModel(model) {
       : [getFallbackImage(model.name)], // Use fallback if no gallery files
     
     videoFiles: (model.videoFiles || []).map(file => {
-      if (typeof file === 'string') return file;
-      if (file && file.filename) return file.filename;
+      if (typeof file === 'string') {
+        // Extract filename from path if it's a path
+        if (file.includes('/')) {
+          return file.split('/').pop();
+        }
+        return file;
+      }
+      if (file && file.filename) {
+        const f = file.filename;
+        return f.includes('/') ? f.split('/').pop() : f;
+      }
       return file;
     }),
     videos: (model.videoFiles || []).map(file => {
-      const filename = typeof file === 'string' ? file : (file?.filename || file);
+      let filename = typeof file === 'string' ? file : (file?.filename || file);
+      // Extract filename from path if it's a path
+      if (filename && filename.includes('/')) {
+        filename = filename.split('/').pop();
+      }
       return getFullImagePath(model.name, filename);
     }),
     
     interiorFiles: (model.interiorFiles || []).map(file => {
-      if (typeof file === 'string') return file;
-      if (file && file.filename) return file.filename;
+      if (typeof file === 'string') {
+        // Extract filename from path if it's a path
+        if (file.includes('/')) {
+          return file.split('/').pop();
+        }
+        return file;
+      }
+      if (file && file.filename) {
+        const f = file.filename;
+        return f.includes('/') ? f.split('/').pop() : f;
+      }
       return file;
     }),
     interiorImages: (model.interiorFiles || []).map(file => {
-      const filename = typeof file === 'string' ? file : (file?.filename || file);
+      let filename = typeof file === 'string' ? file : (file?.filename || file);
       if (!filename) return null;
+      // Extract filename from path if it's a path
+      if (filename.includes('/')) {
+        filename = filename.split('/').pop();
+      }
       
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
       const BACKEND_URL = API_BASE_URL.replace('/api', '');
