@@ -77,15 +77,21 @@ const Navbar = () => {
               />
             </button>
 
-            {/* Logo - Center (slightly to the left, responsive) */}
+            {/* Logo - Positioned to the left
+                Edit the left-[XX%] values to adjust position:
+                - Mobile: left-[45%] (smaller = more left, larger = more right)
+                - Tablet: sm:left-[48%] 
+                - Desktop: md:left-[50%]
+                You can also use fixed values like left-20, left-32, etc.
+            */}
             <Link 
               to="/" 
-              className="absolute left-1/2 transform -translate-x-1/2 -translate-x-2 sm:-translate-x-0 flex items-center justify-center" 
+              className="absolute left-[45%] sm:left-[48%] md:left-[50%] transform -translate-x-1/2 flex items-center justify-center" 
             >
               <img 
                 src="/images/LOGO.png" 
                 alt="Tiger Marine" 
-                className="h-14 sm:h-26 md:h-24 w-auto"
+                className="h-14 sm:h-20 md:h-24 w-auto"
               />
             </Link>
 

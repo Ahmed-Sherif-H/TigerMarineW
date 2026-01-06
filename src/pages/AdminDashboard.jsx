@@ -77,6 +77,7 @@ const AdminDashboard = () => {
     try {
       const category = categories.find(c => c.id === parseInt(id));
       if (category) {
+        console.log('[AdminDashboard] Raw category data from context:', category);
         // Normalize category data: extract filenames from paths
         const normalizedData = normalizeCategoryDataForEdit({
           id: category.id,
@@ -86,6 +87,8 @@ const AdminDashboard = () => {
           heroImage: category.heroImage || '',
         });
         console.log('[AdminDashboard] Loaded category data:', normalizedData);
+        console.log('[AdminDashboard] Category image after normalization:', normalizedData.image);
+        console.log('[AdminDashboard] Category heroImage after normalization:', normalizedData.heroImage);
         setEditedData(normalizedData);
       }
     } catch (error) {

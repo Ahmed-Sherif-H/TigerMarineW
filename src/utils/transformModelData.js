@@ -220,21 +220,43 @@ export function transformCategory(category, models) {
       return filename;
     }
     
-    // If it's a path starting with /images/, convert to backend URL
+    // If it's a path starting with /images/, extract filename first, then build path
     if (filename.startsWith('/images/')) {
-      return `${BACKEND_URL}${filename}`;
+      // Extract just the filename from the path
+      const extractedFilename = filename.split('/').pop();
+      // Build path using category name
+      return `${BACKEND_URL}/images/categories/${category.name}/${encodeFilename(extractedFilename)}`;
     }
     
     // Otherwise, treat as filename and build the path
-    return `${BACKEND_URL}/images/categories/${category.name}/${filename}`;
+    return `${BACKEND_URL}/images/categories/${category.name}/${encodeFilename(filename)}`;
   };
+  
+  // Extract filenames from paths if backend returns paths
+  const categoryImage = category.image ? (() => {
+    let filename = category.image;
+    // If it's a path, extract just the filename
+    if (filename.includes('/')) {
+      filename = filename.split('/').pop();
+    }
+    return getCategoryImagePath(filename);
+  })() : `${BACKEND_URL}/images/categories/${category.name}/${category.name}.jpg`;
+  
+  const categoryHeroImage = category.heroImage ? (() => {
+    let filename = category.heroImage;
+    // If it's a path, extract just the filename
+    if (filename.includes('/')) {
+      filename = filename.split('/').pop();
+    }
+    return getCategoryImagePath(filename);
+  })() : categoryImage;
   
   return {
     ...category,
     models: categoryModels,
-    // Category images - served from backend categories folder
-    image: getCategoryImagePath(category.image) || `${BACKEND_URL}/images/categories/${category.name}/${category.name}.jpg`,
-    heroImage: getCategoryImagePath(category.heroImage) || getCategoryImagePath(category.image) || `${BACKEND_URL}/images/categories/${category.name}/${category.name}.jpg`,
+    // Category images - extract filenames from paths if needed
+    image: categoryImage,
+    heroImage: categoryHeroImage,
   };
 }
 

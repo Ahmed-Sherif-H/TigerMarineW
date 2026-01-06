@@ -85,11 +85,14 @@ const Footer = () => {
             <h4 className="text-xl font-semibold mb-6" style={{ color: '#A87932' }}>CONTACT</h4>
             <div className="space-y-4">
               <div>
-                <p className="text-gray-300 text-sm">+1 (555) 123-4567</p>
+                <p className="text-gray-300 text-sm">+202 23108045</p>
+                <p className="text-gray-300 text-sm">+20100 4004079</p>
                 <p className="text-gray-300 text-sm">info@tigermarine.com</p>
               </div>
               <div className="mt-6">
-                <p className="text-gray-300 text-sm mb-3">Monaco • Miami • Sydney</p>
+                <p className="text-gray-300 text-sm mb-3">Factory No. 62, 100 Fadan Zone
+
+Badr Industrial City – Cairo – Egypt</p>
               </div>
               <div className="space-y-2">
                 <Link to="/dealers" className="block text-gray-300 hover:text-white transition-colors text-sm">
@@ -107,7 +110,7 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-white/20 pt-8">
+        {/*<div className="border-t border-white/20 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm mb-2 md:mb-0">
               © {currentYear} Tiger Marine. All rights reserved.
@@ -117,7 +120,7 @@ const Footer = () => {
               <Link to="/about" className="text-gray-400 hover:text-white transition-colors text-sm">Terms of Service</Link>
             </div>
           </div>
-        </div>
+        </div>*/}
       </div>
     </footer>
   );

@@ -52,8 +52,8 @@ const Contact = () => {
   const contactInfo = [
     {
       title: "Headquarters",
-      address: "123 Marina Drive, Monaco 98000",
-      phone: "+377 93 15 88 88",
+      address: "Factory No. 62, 100 Fadan ZoneBadr Industrial City – Cairo – Egypt",
+      phone: "+202 23108045 - +20100 4004079",
       email: "info@tigermarine.com"
     },
 
@@ -295,7 +295,7 @@ const Contact = () => {
             <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg p-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <h3 className="text-xl font-semibold text-midnight-slate mb-4">Monaco Headquarters</h3>
+                  <h3 className="text-xl font-semibold text-midnight-slate mb-4">Headquarters</h3>
                   <div className="space-y-2 text-gray-600">
                     <p>Monday - Friday: 9:00 AM - 6:00 PM</p>
                     <p>Saturday: 10:00 AM - 4:00 PM</p>

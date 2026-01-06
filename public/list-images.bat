@@ -13,10 +13,21 @@ echo ============================== >> "%OUTPUT%"
 for /d %%F in ("%ROOT%\*") do (
     echo. >> "%OUTPUT%"
     echo %%~nxF >> "%OUTPUT%"
-    
+
+    REM Images directly inside the main folder
     for %%I in ("%%F\*.jpg" "%%F\*.png" "%%F\*.jpeg" "%%F\*.webp") do (
         if exist "%%I" (
             echo   %%~nxI >> "%OUTPUT%"
+        )
+    )
+
+    REM Images inside the interior folder (if it exists)
+    if exist "%%F\interior\" (
+        echo   interior >> "%OUTPUT%"
+        for %%J in ("%%F\interior\*.jpg" "%%F\interior\*.png" "%%F\interior\*.jpeg" "%%F\interior\*.webp") do (
+            if exist "%%J" (
+                echo     %%~nxJ >> "%OUTPUT%"
+            )
         )
     )
 )
