@@ -359,11 +359,36 @@ class ApiService {
       throw new Error('Folder is required for upload');
     }
     
+    // Map model name to folder name (e.g., SL480 -> SportLine480)
+    // This ensures uploads go to the correct folder that matches the actual folder structure
+    let mappedModelName = modelName;
+    if (modelName && folder === 'images') {
+      const MODEL_FOLDER_MAP = {
+        'TL950': 'TopLine950',
+        'TL850': 'TopLine850',
+        'TL750': 'TopLine750',
+        'TL650': 'TopLine650',
+        'PL620': 'ProLine620',
+        'PL550': 'ProLine550',
+        'SL520': 'SportLine520',
+        'SL480': 'SportLine480',
+        'OP850': 'Open850',
+        'OP750': 'Open750',
+        'OP650': 'Open650',
+        'ML38': 'MaxLine 38',
+        'Infinity 280': 'Infinity 280'
+      };
+      mappedModelName = MODEL_FOLDER_MAP[modelName] || modelName;
+      if (mappedModelName !== modelName) {
+        console.log(`[API] Mapping model name: ${modelName} -> ${mappedModelName}`);
+      }
+    }
+    
     const formData = new FormData();
     // IMPORTANT: Append fields BEFORE file to ensure they're parsed first
     formData.append('folder', String(folder)); // Must be first!
-    if (modelName) {
-      formData.append('modelName', String(modelName));
+    if (mappedModelName) {
+      formData.append('modelName', String(mappedModelName));
     }
     if (categoryName) {
       formData.append('categoryName', String(categoryName));
