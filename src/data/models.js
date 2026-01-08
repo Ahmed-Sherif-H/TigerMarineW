@@ -1053,43 +1053,6 @@ export const allCategories = [
         ]
       }
     ]
-  }),
-  
-  createCategory({
-    id: 7,
-    name: "Striker",
-    description: "The Striker series - performance rigid boats",
-    shortDescription: "Striker collection",
-    color: "#f59e0b",
-    // Image automatically synced from imageConfig.js
-    models: [
-      {
-        name: "Striker 330",
-        description: "Striker 330 model - performance rigid boat",
-        shortDescription: "Striker 330",
-        imageFile: "740PL.jpg",
-        heroImageFile: "740-12.jpg",
-        specs: {
-          length: "10.0 m",
-          beam: "3.3 m",
-          draft: "1.1 m",
-          engine: "Outboard 400HP",
-          fuelCapacity: "300L",
-          waterCapacity: "70L",
-          maxSpeed: "55 knots",
-          cruisingSpeed: "40 knots",
-          capacity: "10 passengers"
-        },
-        features: [
-          "Performance hull design",
-          "Premium materials",
-          "Advanced navigation",
-          "Comfortable seating",
-          "Safety equipment",
-          "Storage compartments"
-        ]
-      }
-    ]
   })
 ];
 

@@ -7,6 +7,7 @@ import { getCustomizerFolder, getBaseImage, getPartImage, customizerParts } from
 import { getAvailableColors } from '../data/customizerColors';
 import { getColorHex } from '../data/customizerColorMap';
 import { getModelImageFolder, encodeFilename } from '../data/imageHelpers';
+import { getModelDisplayName } from '../utils/modelNameUtils';
 
 const ModelCustomizer = () => {
   const { id } = useParams();
@@ -23,14 +24,7 @@ const ModelCustomizer = () => {
 
   // Get full model name (e.g., "TopLine 850" instead of "TL850")
   const fullModelName = useMemo(() => {
-    if (category && model) {
-      // Extract number from model name (e.g., "TL850" -> "850")
-      const numberMatch = model.name.match(/\d+/);
-      const number = numberMatch ? numberMatch[0] : '';
-      // Combine category name with number
-      return number ? `${category.name} ${number}` : `${category.name} ${model.name}`;
-    }
-    return model?.name || '';
+    return getModelDisplayName(model, category);
   }, [model, category]);
 
   // Build dynamic media paths for optional features

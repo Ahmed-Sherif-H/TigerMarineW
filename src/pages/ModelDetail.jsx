@@ -5,6 +5,7 @@ import { useModels } from '../context/ModelsContext';
 import api from '../services/api';
 import { getModelImageFolder, encodeFilename } from '../data/imageHelpers';
 import { getCustomizerFolder } from '../data/customizerConfig';
+import { getModelDisplayName } from '../utils/modelNameUtils';
 
 const ModelDetail = () => {
   const { id } = useParams();
@@ -114,8 +115,15 @@ const ModelDetail = () => {
     return model.optionalFeatures && model.optionalFeatures.length > 4;
   }, [model?.optionalFeatures]);
 
-  // Get interior images from the interior subfolder
-  const interiorImages = useMemo(() => {
+  // Get left interior image (single image)
+  const interiorMainImage = useMemo(() => {
+    if (!model || !model.interiorMainImage) return null;
+    const interiorFolder = modelFolder + 'Interior/';
+    return interiorFolder + encodeFilename(model.interiorMainImage);
+  }, [modelFolder, model?.interiorMainImage]);
+
+  // Get interior carousel images (array for the right side)
+  const interiorCarouselImages = useMemo(() => {
     if (!model) return [];
     if (model.interiorFiles && Array.isArray(model.interiorFiles) && model.interiorFiles.length > 0) {
       const interiorFolder = modelFolder + 'Interior/';
@@ -161,28 +169,23 @@ const ModelDetail = () => {
   };
   
   const goInteriorPrev = () => {
-    if (interiorImages.length <= 1) return;
-    const maxIndex = interiorImages.length - 2; // -2 because we skip the first image (shown on left)
+    if (interiorCarouselImages.length <= 0) return;
+    const maxIndex = interiorCarouselImages.length - 1;
     setInteriorSlide((prev) => {
       const newIndex = prev - 1;
       return newIndex < 0 ? maxIndex : newIndex;
     });
   };
   const goInteriorNext = () => {
-    if (interiorImages.length <= 1) return;
-    const maxIndex = interiorImages.length - 2; // -2 because we skip the first image (shown on left)
+    if (interiorCarouselImages.length <= 0) return;
+    const maxIndex = interiorCarouselImages.length - 1;
     setInteriorSlide((prev) => (prev + 1) % (maxIndex + 1));
   };
 
   // Get full model name (e.g., "TopLine 850" instead of "TL850")
   const fullModelName = useMemo(() => {
-    if (!model || !category) return model?.name || '';
-    // Extract number from model name (e.g., "TL850" -> "850")
-    const numberMatch = model.name.match(/\d+/);
-    const number = numberMatch ? numberMatch[0] : '';
-    // Combine category name with number
-    return number ? `${category.name} ${number}` : `${category.name} ${model.name}`;
-  }, [category, model?.name]);
+    return getModelDisplayName(model, category);
+  }, [model, category]);
 
   // NOW we can do early returns - ALL hooks are called above
   if (loading) {
@@ -227,7 +230,7 @@ const ModelDetail = () => {
           className="relative z-10 text-white ml-12 md:ml-24 max-w-2xl"
         >
           <h1 className="text-4xl md:text-5xl font-light mb-4 drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-            {model.name}
+            {fullModelName}
           </h1>
           {model.shortDescription && (
             <p className="text-lg md:text-xl text-gray-200 leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] mb-6">
@@ -260,7 +263,7 @@ const ModelDetail = () => {
       {/* Navigation Tabs - Sticky after hero */}
       <nav className="sticky top-20 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
         <div className="container-custom">
-          <div className="flex items-center gap-2 overflow-x-auto py-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex items-center gap-3 overflow-x-auto py-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <style>{`
               .overflow-x-auto::-webkit-scrollbar {
                 display: none;
@@ -268,7 +271,7 @@ const ModelDetail = () => {
             `}</style>
             <button
               onClick={() => scrollToSection('overview')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+              className={`px-6 py-3 rounded-lg font-semibold text-base whitespace-nowrap transition-all ${
                 activeNavTab === 'overview'
                   ? 'bg-smoked-saffron text-white'
                   : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
@@ -279,7 +282,7 @@ const ModelDetail = () => {
             {videoFiles.length > 0 && (
               <button
                 onClick={() => scrollToSection('video')}
-                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                className={`px-6 py-3 rounded-lg font-semibold text-base whitespace-nowrap transition-all ${
                   activeNavTab === 'video'
                     ? 'bg-smoked-saffron text-white'
                     : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
@@ -291,7 +294,7 @@ const ModelDetail = () => {
             {galleryImages.length > 0 && (
               <button
                 onClick={() => scrollToSection('gallery')}
-                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                className={`px-6 py-3 rounded-lg font-semibold text-base whitespace-nowrap transition-all ${
                   activeNavTab === 'gallery'
                     ? 'bg-smoked-saffron text-white'
                     : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
@@ -303,7 +306,7 @@ const ModelDetail = () => {
             {((model.standardFeatures || model.features || []).length > 0) && (
               <button
                 onClick={() => scrollToSection('features')}
-                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                className={`px-6 py-3 rounded-lg font-semibold text-base whitespace-nowrap transition-all ${
                   activeNavTab === 'features'
                     ? 'bg-smoked-saffron text-white'
                     : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
@@ -315,7 +318,7 @@ const ModelDetail = () => {
             {optionalFeaturesForElevate.length > 0 && (
               <button
                 onClick={() => scrollToSection('optional-features')}
-                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                className={`px-6 py-3 rounded-lg font-semibold text-base whitespace-nowrap transition-all ${
                   activeNavTab === 'optional-features'
                     ? 'bg-smoked-saffron text-white'
                     : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
@@ -324,10 +327,10 @@ const ModelDetail = () => {
                 Optional Features
               </button>
             )}
-            {interiorImages.length > 0 && (
+            {(interiorMainImage || interiorCarouselImages.length > 0) && (
               <button
                 onClick={() => scrollToSection('interior')}
-                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                className={`px-6 py-3 rounded-lg font-semibold text-base whitespace-nowrap transition-all ${
                   activeNavTab === 'interior'
                     ? 'bg-smoked-saffron text-white'
                     : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
@@ -339,7 +342,7 @@ const ModelDetail = () => {
             {model.specs && Object.keys(model.specs).length > 0 && (
               <button
                 onClick={() => scrollToSection('specifications')}
-                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                className={`px-6 py-3 rounded-lg font-semibold text-base whitespace-nowrap transition-all ${
                   activeNavTab === 'specifications'
                     ? 'bg-smoked-saffron text-white'
                     : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
@@ -684,30 +687,32 @@ const ModelDetail = () => {
             </p>
           </motion.div>
           {/* Two images 30/70 - Small image same height, big one is carousel */}
-          {interiorImages.length > 0 ? (
+          {(interiorMainImage || interiorCarouselImages.length > 0) ? (
             <div className="flex gap-4">
-              {/* Left image - first interior image */}
-              <div className="w-[30%] hidden lg:block" style={{ height: '600px' }}>
-                <div className="h-full bg-gray-200 rounded-2xl overflow-hidden shadow-lg">
-                  <img 
-                    src={interiorImages[0]} 
-                    alt="Interior" 
-                    className="w-full h-full object-cover" 
-                  />
+              {/* Left image - separate main interior image */}
+              {interiorMainImage && (
+                <div className="w-[30%] hidden lg:block" style={{ height: '600px' }}>
+                  <div className="h-full bg-gray-200 rounded-2xl overflow-hidden shadow-lg">
+                    <img 
+                      src={interiorMainImage} 
+                      alt="Interior" 
+                      className="w-full h-full object-cover" 
+                    />
+                  </div>
                 </div>
-              </div>
-              {/* Right carousel - rest of interior images */}
-              <div className="w-full lg:w-[70%] relative" style={{ height: '600px' }}>
+              )}
+              {/* Right carousel - interior carousel images */}
+              <div className={`relative ${interiorMainImage ? 'w-full lg:w-[70%]' : 'w-full'}`} style={{ height: '600px' }}>
                 <div className="relative h-full w-full bg-gray-200 rounded-2xl overflow-hidden shadow-lg">
-                  {interiorImages.length > 1 ? (
+                  {interiorCarouselImages.length > 0 ? (
                     <>
                       <img 
-                        src={interiorImages[interiorSlide + 1] || interiorImages[0]} 
-                        alt={`Interior ${interiorSlide + 2}`} 
+                        src={interiorCarouselImages[interiorSlide] || interiorCarouselImages[0]} 
+                        alt={`Interior ${interiorSlide + 1}`} 
                         className="w-full h-full object-cover" 
                       />
                       {/* Carousel controls */}
-                      {interiorImages.length > 2 && (
+                      {interiorCarouselImages.length > 1 && (
                         <>
                           <button
                             onClick={goInteriorPrev}
@@ -730,28 +735,28 @@ const ModelDetail = () => {
                         </>
                       )}
                       {/* Carousel indicators */}
-                      {interiorImages.length > 2 && (
+                      {interiorCarouselImages.length > 1 && (
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2 bg-black/30 backdrop-blur-sm rounded-full px-3 py-2">
-                          {Array.from({ length: interiorImages.length - 1 }).map((_, idx) => (
+                          {interiorCarouselImages.map((_, idx) => (
                             <button
                               key={idx}
                               onClick={() => setInteriorSlide(idx)}
                               className={`w-2.5 h-2.5 rounded-full transition ${
                                 interiorSlide === idx ? 'bg-smoked-saffron' : 'bg-white/60'
                               }`}
-                              aria-label={`Go to image ${idx + 2}`}
+                              aria-label={`Go to image ${idx + 1}`}
                             />
                           ))}
                         </div>
                       )}
                     </>
-                  ) : (
+                  ) : interiorMainImage ? (
                     <img 
-                      src={interiorImages[0]} 
+                      src={interiorMainImage} 
                       alt="Interior" 
                       className="w-full h-full object-cover" 
                     />
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -809,7 +814,7 @@ const ModelDetail = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-light text-midnight-slate mb-6">Specifications</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">Core measurements and performance figures for {model.name}.</p>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">Core measurements and performance figures for {fullModelName}.</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -864,7 +869,7 @@ const ModelDetail = () => {
               </Link>
             )}
             <div className="text-center">
-              <p className="text-gray-600 mb-2">Ready to customize your {model.name}?</p>
+              <p className="text-gray-600 mb-2">Ready to customize your {fullModelName}?</p>
               <Link
                 to={`/models/${model.id}/customize`}
                 className="btn-primary inline-block"

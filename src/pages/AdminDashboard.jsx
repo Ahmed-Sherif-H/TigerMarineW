@@ -18,6 +18,8 @@ const AdminDashboard = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingModel, setIsLoadingModel] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
   // Load model data when selection changes
   useEffect(() => {
@@ -167,6 +169,7 @@ const AdminDashboard = () => {
         contentImageFile: dataToSave.contentImageFile,
         galleryFiles: dataToSave.galleryFiles,
         galleryFilesCount: dataToSave.galleryFiles?.length || 0,
+        interiorMainImage: dataToSave.interiorMainImage,
         interiorFiles: dataToSave.interiorFiles,
         interiorFilesCount: dataToSave.interiorFiles?.length || 0,
         videoFiles: dataToSave.videoFiles,
@@ -272,6 +275,69 @@ const AdminDashboard = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleClearAllImages = async () => {
+    if (!showClearConfirm) {
+      setShowClearConfirm(true);
+      return;
+    }
+
+    setIsClearing(true);
+    setMessage({ type: '', text: '' });
+    setShowClearConfirm(false);
+
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+      const totalModels = models.length;
+
+      // Clear images for each model
+      for (const model of models) {
+        try {
+          const clearedData = {
+            ...model,
+            imageFile: '',
+            heroImageFile: '',
+            contentImageFile: '',
+            galleryFiles: [],
+            interiorMainImage: '',
+            interiorFiles: [],
+            videoFiles: [],
+          };
+
+          // Normalize before saving
+          const dataToSave = normalizeModelDataForSave(clearedData);
+          await api.updateModel(model.id, dataToSave);
+          successCount++;
+        } catch (error) {
+          console.error(`[AdminDashboard] Error clearing images for model ${model.name}:`, error);
+          errorCount++;
+        }
+      }
+
+      // Refresh data
+      await refreshData();
+
+      if (errorCount === 0) {
+        setMessage({ 
+          type: 'success', 
+          text: `✅ Successfully cleared all images from ${successCount} model(s)!` 
+        });
+      } else {
+        setMessage({ 
+          type: 'error', 
+          text: `⚠️ Cleared images from ${successCount} model(s), but ${errorCount} failed. Check console for details.` 
+        });
+      }
+
+      setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+    } catch (error) {
+      console.error('[AdminDashboard] Error clearing all images:', error);
+      setMessage({ type: 'error', text: 'Failed to clear images: ' + error.message });
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -350,6 +416,60 @@ const AdminDashboard = () => {
         {/* Models Tab */}
         {activeTab === 'models' && (
           <div className="space-y-6">
+            {/* Clear All Images Button - Dangerous Action */}
+            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-red-900 flex items-center gap-2">
+                    <span>🗑️</span>
+                    Clear All Model Images
+                  </h3>
+                  <p className="text-sm text-red-700 mt-1">
+                    This will remove all images (thumbnails, hero, content, gallery, interior, videos) from ALL models.
+                    The client can then upload their preferred images.
+                  </p>
+                </div>
+                {!showClearConfirm ? (
+                  <button
+                    onClick={handleClearAllImages}
+                    disabled={isClearing || models.length === 0}
+                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isClearing ? '⏳ Clearing...' : '🗑️ Clear All Images'}
+                  </button>
+                ) : (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleClearAllImages}
+                      disabled={isClearing}
+                      className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isClearing ? '⏳ Clearing...' : '✅ Confirm Clear All'}
+                    </button>
+                    <button
+                      onClick={() => setShowClearConfirm(false)}
+                      disabled={isClearing}
+                      className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
+              {showClearConfirm && (
+                <div className="mt-4 p-4 bg-red-100 border border-red-300 rounded-lg">
+                  <p className="text-red-900 font-semibold">
+                    ⚠️ WARNING: This action cannot be undone!
+                  </p>
+                  <p className="text-red-800 text-sm mt-2">
+                    This will clear images from <strong>{models.length} model(s)</strong>. 
+                    All image fields (thumbnail, hero, content, gallery, interior, videos) will be emptied.
+                    The image files themselves will remain on the server, but they won't be linked to any models.
+                  </p>
+                </div>
+              )}
+            </div>
+
             {/* Model Selector Card */}
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
               <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
@@ -965,15 +1085,64 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                {/* Interior Images Card */}
+                {/* Left Interior Image Card */}
+                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                  <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-200">
+                    <span className="text-2xl">🖼️</span>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900">
+                        Left Interior Image
+                      </h2>
+                      <p className="text-xs text-gray-500 mt-1">Used in: Left side of interior section (30% width)</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={editedData.interiorMainImage || ''}
+                      onChange={(e) => handleInputChange('interiorMainImage', e.target.value)}
+                      className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white text-sm"
+                      placeholder="interior-main.jpg"
+                    />
+                    <label className="block w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer text-center font-medium transition-all shadow-sm hover:shadow-md">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+                          if (!editedData.name) {
+                            setMessage({ type: 'error', text: 'Please select a model first' });
+                            e.target.value = '';
+                            return;
+                          }
+                          try {
+                            const result = await api.uploadFile(file, 'images', editedData.name, null, 'Interior');
+                            // Extract just the filename (backend may return full path)
+                            const filename = extractFilename(result.filename || result.path || result.url || result.file || '');
+                            handleInputChange('interiorMainImage', filename);
+                            setMessage({ type: 'success', text: 'Left interior image uploaded successfully!' });
+                          } catch (error) {
+                            setMessage({ type: 'error', text: 'Failed to upload left interior image: ' + error.message });
+                          }
+                          e.target.value = '';
+                        }}
+                      />
+                      📤 Upload Left Interior Image
+                    </label>
+                  </div>
+                </div>
+
+                {/* Interior Carousel Images Card */}
                 <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
                   <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-200">
                     <span className="text-2xl">🏠</span>
                     <div>
                       <h2 className="text-xl font-bold text-gray-900">
-                        Interior Images ({editedData.interiorFiles?.length || 0})
+                        Interior Carousel Images ({editedData.interiorFiles?.length || 0})
                       </h2>
-                      <p className="text-xs text-gray-500 mt-1">Used in: Interior section showing boat interior views</p>
+                      <p className="text-xs text-gray-500 mt-1">Used in: Right side carousel of interior section (70% width)</p>
                     </div>
                   </div>
                   <div className="space-y-3 mb-4 max-h-96 overflow-y-auto">

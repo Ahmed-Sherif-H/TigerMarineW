@@ -281,7 +281,7 @@ const Contact = () => {
       </section>
 
       {/* Business Hours */}
-      <section className="section-padding bg-gray-50">
+     {/*  <section className="section-padding bg-gray-50">
         <div className="container-custom">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -315,7 +315,7 @@ const Contact = () => {
             </div>
           </motion.div>
         </div>
-      </section>
+      </section>*/}
     </div>
   );
 };

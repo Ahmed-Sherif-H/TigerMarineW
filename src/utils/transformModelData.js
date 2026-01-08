@@ -75,6 +75,7 @@ export function transformModel(model) {
     imageFile: model.imageFile || '',
     heroImageFile: model.heroImageFile || '',
     contentImageFile: model.contentImageFile || '',
+    interiorMainImage: model.interiorMainImage || '',
     
     // Transform arrays - extract filenames first, then build paths
     // Backend may return full paths like "/images/Open650/image.jpg" or just "image.jpg"

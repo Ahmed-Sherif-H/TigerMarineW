@@ -17,8 +17,7 @@ export const MODEL_FOLDER_MAP = {
   'OP750': 'Open750',
   'OP650': 'Open650',
   'ML38': 'MaxLine 38',
-  'Infinity 280': 'Infinity 280',
-  'Striker 330': 'Striker 330'
+  'Infinity 280': 'Infinity 280'
 };
 
 /**
@@ -83,6 +82,7 @@ export function normalizeModelDataForSave(modelData) {
     imageFile: extractFilename(modelData.imageFile || ''),
     heroImageFile: extractFilename(modelData.heroImageFile || ''),
     contentImageFile: extractFilename(modelData.contentImageFile || ''),
+    interiorMainImage: extractFilename(modelData.interiorMainImage || ''),
     // Extract filenames from arrays
     galleryFiles: extractFilenames(modelData.galleryFiles || []),
     interiorFiles: extractFilenames(modelData.interiorFiles || []),
@@ -105,6 +105,7 @@ export function normalizeModelDataForEdit(modelData) {
     imageFile: extractFilename(modelData.imageFile || ''),
     heroImageFile: extractFilename(modelData.heroImageFile || ''),
     contentImageFile: extractFilename(modelData.contentImageFile || ''),
+    interiorMainImage: extractFilename(modelData.interiorMainImage || ''),
     // Extract filenames from arrays
     galleryFiles: extractFilenames(modelData.galleryFiles || []),
     interiorFiles: extractFilenames(modelData.interiorFiles || []),

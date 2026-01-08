@@ -1,7 +1,12 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { getModelDisplayName } from '../utils/modelNameUtils';
+import { useModels } from '../context/ModelsContext';
 
 const ModelCard = ({ model, index = 0 }) => {
+  const { categories } = useModels();
+  const category = categories.find(c => c.id === model.categoryId);
+  const fullModelName = getModelDisplayName(model, category);
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -30,7 +35,7 @@ const ModelCard = ({ model, index = 0 }) => {
           {/* Content */}
           <div className="p-6 flex-1 flex flex-col">
             <h3 className="text-2xl font-semibold text-midnight-slate mb-2 group-hover:text-gold transition-colors duration-300">
-              {model.name}
+              {fullModelName}
             </h3>
             
             <p className="text-gray-600 mb-4 line-clamp-2">

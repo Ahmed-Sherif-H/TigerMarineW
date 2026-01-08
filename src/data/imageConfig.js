@@ -40,7 +40,6 @@ export const modelImageFolders = {
   
   // Rigid Boats
   'Infinity 280': 'Infinity280',
-  'Striker 330': 'Striker330',
   
   // Add new models here:
   // 'NewModel': 'NewModelFolder',
@@ -64,7 +63,6 @@ export const sideMenuImages = {
   'OP750': 'Open-750.png',
   'OP650': 'Open-650.png',
   'Infinity 280': 'Infinity-280.png',
-  'Striker 330': 'sideMenu-NoBG.png',
   
   // Add new models here:
   // 'NewModel': 'NewModel-sideMenu.png',
@@ -81,7 +79,6 @@ export const categoryImages = {
   'SportLine': '/images/SportLine480/480SL1.jpg',
   'Open': '/images/Open750/IMG_0535.jpg',
   'Infinity': '/images/Max-line.jpg',
-  'Striker': '/images/Max-line.jpg',
   
   // Add new categories here:
   // 'NewCategory': '/images/new-category.jpg',
@@ -95,7 +92,6 @@ export const categoryHeroImages = {
   'SportLine': '/images/SportLine520/DJI_0239.jpg',
   'Open': '/images/Max-line2.jpg',
   'Infinity': '/images/Max-line2.jpg',
-  'Striker': '/images/Max-line2.jpg',
   
   // Add new categories here:
   // 'NewCategory': '/images/new-category-hero.jpg',

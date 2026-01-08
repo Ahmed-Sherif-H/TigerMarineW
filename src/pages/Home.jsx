@@ -5,6 +5,7 @@ import HeroSection from '../components/HeroSection';
 import { useModels } from '../context/ModelsContext';
 import { upcomingModels } from '../data/models';
 import { getLatestNews, formatNewsDate } from '../data/news';
+import { getModelDisplayName } from '../utils/modelNameUtils';
 
 const Home = () => {
   const { categories, models, loading } = useModels();
@@ -237,7 +238,7 @@ const Home = () => {
                   }`} />
                   <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-gradient-to-t from-black/80 to-transparent">
                     <h4 className="text-white text-[10px] font-semibold text-center drop-shadow-lg truncate">
-                      {model.name}
+                      {getModelDisplayName(model, categories.find(c => c.id === model.categoryId))}
                     </h4>
                   </div>
                 </button>

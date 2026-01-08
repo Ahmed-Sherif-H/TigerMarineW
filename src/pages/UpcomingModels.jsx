@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { upcomingModels } from '../data/models';
+import { getFullModelName } from '../utils/modelNameUtils';
 
 const UpcomingModels = () => {
   const model = upcomingModels[0]; // Only Infinity 280
@@ -73,7 +74,7 @@ const UpcomingModels = () => {
               className="text-6xl md:text-7xl lg:text-8xl font-light mb-6 tracking-tight"
               style={{ textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
             >
-              {model.name}
+              {getFullModelName(model.name)}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -99,7 +100,7 @@ const UpcomingModels = () => {
             className="text-center max-w-4xl mx-auto"
           >
             <h2 className="text-4xl md:text-5xl font-light text-midnight-slate mb-6">
-              {model.name}
+              {getFullModelName(model.name)}
             </h2>
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-8">
               {model.description}
@@ -125,7 +126,7 @@ const UpcomingModels = () => {
               Preview
             </h2>
             <p className="text-lg text-gray-600">
-              Preview images of the {model.name}
+              Preview images of the {getFullModelName(model.name)}
             </p>
           </motion.div>
 
@@ -203,7 +204,7 @@ const UpcomingModels = () => {
               Stay Updated
             </h2>
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-              Be the first to know when the {model.name} becomes available. 
+              Be the first to know when the {getFullModelName(model.name)} becomes available. 
               Contact us to receive updates and exclusive preview opportunities.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">

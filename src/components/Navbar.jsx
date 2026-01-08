@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { inflatableBoats, boatsCategories } from '../data/models';
+import { getModelDisplayName } from '../utils/modelNameUtils';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -22,8 +23,7 @@ const Navbar = () => {
       'OP850': 'Open-850.png',
       'OP750': 'Open-750.png',
       'OP650': 'Open-650.png',
-      'Infinity 280': 'sideMenu-NoBG.png', // No Infinity image available
-      'Striker 330': 'sideMenu-NoBG.png' // No Striker image available
+      'Infinity 280': 'sideMenu-NoBG.png' // No Infinity image available
     };
     
     const imageName = imageMap[modelName] || 'sideMenu-NoBG.png';
@@ -274,7 +274,7 @@ const Navbar = () => {
                           />
                         </div>
                         <p className="text-base font-medium text-black text-center group-hover:text-gray-600 transition-colors">
-                          {model.name}
+                          {getModelDisplayName(model, hoveredCategory)}
                         </p>
                       </div>
                     </Link>
