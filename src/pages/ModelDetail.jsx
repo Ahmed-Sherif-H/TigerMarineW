@@ -118,6 +118,7 @@ const ModelDetail = () => {
   }, [model?.optionalFeatures]);
 
   // Get left interior image (single image)
+  // Note: interiorMainImage is already transformed to full path in transformModelData.js
   const interiorMainImage = useMemo(() => {
     if (!model) {
       console.log('[ModelDetail] No model for interiorMainImage');
@@ -128,11 +129,10 @@ const ModelDetail = () => {
       console.log('[ModelDetail] Model interiorMainImage value:', model.interiorMainImage);
       return null;
     }
-    const interiorFolder = modelFolder + 'Interior/';
-    const fullPath = interiorFolder + encodeFilename(model.interiorMainImage);
-    console.log('[ModelDetail] Interior main image path:', fullPath, 'from filename:', model.interiorMainImage);
-    return fullPath;
-  }, [modelFolder, model?.interiorMainImage]);
+    // interiorMainImage is already a full path from transformModelData
+    console.log('[ModelDetail] Interior main image path:', model.interiorMainImage);
+    return model.interiorMainImage;
+  }, [model?.interiorMainImage]);
 
   // Get interior carousel images (array for the right side)
   const interiorCarouselImages = useMemo(() => {
