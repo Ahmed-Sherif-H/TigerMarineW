@@ -42,7 +42,6 @@ const ModelCustomizer = () => {
   const [availableColors, setAvailableColors] = useState({});
   const [baseImage, setBaseImage] = useState(null);
   const [partImages, setPartImages] = useState({});
-  const [selectedFeatures, setSelectedFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [inquiryData, setInquiryData] = useState({ name: '', email: '', phone: '', message: '' });
@@ -130,7 +129,6 @@ const ModelCustomizer = () => {
         phone: inquiryData.phone,
         modelName: fullModelName,
         selectedColors,
-        selectedFeatures,
         message: inquiryData.message
       });
 
@@ -475,89 +473,6 @@ const ModelCustomizer = () => {
         </div>
       </div>
 
-      {/* Optional Features Section */}
-      {model && model.optionalFeatures && model.optionalFeatures.length > 0 && (
-        <div className="container-custom py-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="mb-4"
-          >
-            <h2 className="text-xl md:text-2xl font-light text-midnight-slate mb-1">
-              Optional Features
-            </h2>
-            <p className="text-sm text-gray-600">Select optional upgrades for your {fullModelName}</p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {model.optionalFeatures.map((feature, idx) => {
-              const featureName = typeof feature === 'string' ? feature : feature.name;
-              const featurePrice = typeof feature === 'object' && feature.price ? feature.price : null;
-              const featureId = typeof feature === 'object' && feature.id ? feature.id : idx;
-              const isSelected = selectedFeatures.includes(featureId);
-              
-              const handleFeatureToggle = () => {
-                setSelectedFeatures(prev => {
-                  if (prev.includes(featureId)) {
-                    return prev.filter(id => id !== featureId);
-                  } else {
-                    return [...prev, featureId];
-                  }
-                });
-              };
-              
-              return (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: idx * 0.05 }}
-                  viewport={{ once: true }}
-                  onClick={handleFeatureToggle}
-                  className={`bg-white rounded-lg border-2 p-3 cursor-pointer transition-all hover:shadow-md ${
-                    isSelected 
-                      ? 'border-smoked-saffron bg-smoked-saffron/5 shadow-sm' 
-                      : 'border-gray-200 hover:border-smoked-saffron/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    {/* Radio Button */}
-                    <div className="flex-shrink-0">
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
-                        isSelected 
-                          ? 'border-smoked-saffron' 
-                          : 'border-gray-300 bg-white'
-                      }`}>
-                        {isSelected && (
-                          <div className="w-2 h-2 rounded-full bg-smoked-saffron"></div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Feature Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col gap-1">
-                        <span className={`text-sm font-medium ${
-                          isSelected ? 'text-smoked-saffron' : 'text-midnight-slate'
-                        }`}>
-                          {featureName}
-                        </span>
-                        {featurePrice && (
-                          <span className="text-xs text-smoked-saffron font-semibold">
-                            {featurePrice}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Inquiry Modal */}
       {showInquiryModal && (
