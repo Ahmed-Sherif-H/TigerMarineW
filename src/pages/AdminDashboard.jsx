@@ -54,6 +54,7 @@ const AdminDashboard = () => {
         const normalizedData = normalizeModelDataForEdit(actualData);
         console.log('[AdminDashboard] Normalized model data:', normalizedData);
         console.log('[AdminDashboard] Gallery files after normalization:', normalizedData.galleryFiles);
+        console.log('[AdminDashboard] Interior main image after normalization:', normalizedData.interiorMainImage);
         console.log('[AdminDashboard] Interior files after normalization:', normalizedData.interiorFiles);
         
         setEditedData(normalizedData);

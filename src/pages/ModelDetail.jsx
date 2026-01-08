@@ -36,6 +36,8 @@ const ModelDetail = () => {
           contentImage: transformed?.contentImage,
           imageFile: transformed?.imageFile,
           heroImageFile: transformed?.heroImageFile,
+          interiorMainImage: transformed?.interiorMainImage,
+          interiorFiles: transformed?.interiorFiles,
           defaultHero: transformed?.heroImage || transformed?.image
         });
         setModel(transformed);
@@ -117,9 +119,19 @@ const ModelDetail = () => {
 
   // Get left interior image (single image)
   const interiorMainImage = useMemo(() => {
-    if (!model || !model.interiorMainImage) return null;
+    if (!model) {
+      console.log('[ModelDetail] No model for interiorMainImage');
+      return null;
+    }
+    if (!model.interiorMainImage) {
+      console.log('[ModelDetail] No interiorMainImage field in model. Model keys:', Object.keys(model));
+      console.log('[ModelDetail] Model interiorMainImage value:', model.interiorMainImage);
+      return null;
+    }
     const interiorFolder = modelFolder + 'Interior/';
-    return interiorFolder + encodeFilename(model.interiorMainImage);
+    const fullPath = interiorFolder + encodeFilename(model.interiorMainImage);
+    console.log('[ModelDetail] Interior main image path:', fullPath, 'from filename:', model.interiorMainImage);
+    return fullPath;
   }, [modelFolder, model?.interiorMainImage]);
 
   // Get interior carousel images (array for the right side)
