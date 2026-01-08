@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ModelsProvider } from './context/ModelsContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import Categories from './pages/Categories';
 import CategoryDetail from './pages/CategoryDetail';
@@ -22,6 +23,7 @@ function App() {
   return (
     <ModelsProvider>
       <Router>
+        <ScrollToTop />
         <div className="min-h-screen bg-white">
           <Navbar />
           <AnimatePresence mode="wait">

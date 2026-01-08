@@ -69,8 +69,11 @@ class ApiService {
 
   // Generic fetch method
   async fetch(endpoint, options = {}) {
-    const url = `${API_BASE_URL}${endpoint}`;
+    // Ensure endpoint starts with / if it doesn't already
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${API_BASE_URL}${cleanEndpoint}`;
     console.log('[API] Fetching:', url);
+    console.log('[API] Full URL:', url);
     
     const config = {
       headers: {
@@ -195,6 +198,42 @@ class ApiService {
     return this.fetch(`/categories/${id}`, {
       method: 'PUT',
       body: data,
+    });
+  }
+
+  // ========== EVENTS ==========
+  async getAllEvents() {
+    console.log('[API] Fetching all events');
+    return this.fetch('/events');
+  }
+
+  async getEventById(id) {
+    console.log('[API] Fetching event by ID:', id);
+    return this.fetch(`/events/${id}`);
+  }
+
+  async createEvent(eventData) {
+    console.log('[API] Creating event');
+    return this.fetch('/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(eventData)
+    });
+  }
+
+  async updateEvent(id, eventData) {
+    console.log('[API] Updating event:', id);
+    return this.fetch(`/events/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(eventData)
+    });
+  }
+
+  async deleteEvent(id) {
+    console.log('[API] Deleting event:', id);
+    return this.fetch(`/events/${id}`, {
+      method: 'DELETE'
     });
   }
 

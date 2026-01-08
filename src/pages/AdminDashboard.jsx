@@ -14,6 +14,9 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('models');
   const [selectedModelId, setSelectedModelId] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [selectedEventId, setSelectedEventId] = useState('');
+  const [events, setEvents] = useState([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [editedData, setEditedData] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [isSaving, setIsSaving] = useState(false);
@@ -37,6 +40,22 @@ const AdminDashboard = () => {
       loadCategoryData(selectedCategoryId);
     }
   }, [selectedCategoryId, activeTab]);
+
+  // Load events when events tab is active
+  useEffect(() => {
+    if (activeTab === 'events') {
+      loadEvents();
+    }
+  }, [activeTab]);
+
+  // Load event data when selection changes
+  useEffect(() => {
+    if (selectedEventId && activeTab === 'events') {
+      loadEventData(selectedEventId);
+    } else if (!selectedEventId && activeTab === 'events') {
+      setEditedData(null);
+    }
+  }, [selectedEventId, activeTab]);
 
   const loadModelData = async (id) => {
     setIsLoadingModel(true);
@@ -110,6 +129,116 @@ const AdminDashboard = () => {
     setSelectedCategoryId(e.target.value);
     setEditedData(null);
     setMessage({ type: '', text: '' });
+  };
+
+  const loadEvents = async () => {
+    setIsLoadingEvents(true);
+    try {
+      const eventsData = await api.getAllEvents();
+      setEvents(eventsData);
+    } catch (error) {
+      console.error('[AdminDashboard] Error loading events:', error);
+      setMessage({ type: 'error', text: 'Failed to load events: ' + error.message });
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  };
+
+  const loadEventData = async (id) => {
+    try {
+      const eventData = await api.getEventById(id);
+      // Format dates for input fields (YYYY-MM-DDTHH:mm)
+      const formattedData = {
+        ...eventData,
+        startDate: eventData.startDate ? new Date(eventData.startDate).toISOString().slice(0, 16) : '',
+        endDate: eventData.endDate ? new Date(eventData.endDate).toISOString().slice(0, 16) : '',
+        image: eventData.image ? extractFilename(eventData.image) : ''
+      };
+      setEditedData(formattedData);
+    } catch (error) {
+      console.error('[AdminDashboard] Error loading event:', error);
+      setMessage({ type: 'error', text: 'Failed to load event data: ' + error.message });
+    }
+  };
+
+  const handleEventChange = (e) => {
+    setSelectedEventId(e.target.value);
+    setEditedData(null);
+    setMessage({ type: '', text: '' });
+  };
+
+  const handleSaveEvent = async () => {
+    if (!editedData) return;
+    
+    setIsSaving(true);
+    try {
+      const dataToSave = {
+        name: editedData.name,
+        location: editedData.location,
+        startDate: editedData.startDate,
+        endDate: editedData.endDate || null,
+        description: editedData.description || '',
+        image: editedData.image ? extractFilename(editedData.image) : '',
+        website: editedData.website || '',
+        status: editedData.status || 'upcoming',
+        order: parseInt(editedData.order) || 0
+      };
+
+      if (editedData.id) {
+        // Update existing event
+        await api.updateEvent(editedData.id, dataToSave);
+        setMessage({ type: 'success', text: 'Event updated successfully!' });
+      } else {
+        // Create new event
+        await api.createEvent(dataToSave);
+        setMessage({ type: 'success', text: 'Event created successfully!' });
+      }
+      
+      await loadEvents();
+      setSelectedEventId('');
+      setEditedData(null);
+      setTimeout(() => setMessage({ type: '', text: '' }), 2000);
+    } catch (error) {
+      console.error('[AdminDashboard] Error saving event:', error);
+      setMessage({ type: 'error', text: 'Failed to save event: ' + error.message });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!editedData || !editedData.id) return;
+    
+    if (!window.confirm(`Are you sure you want to delete "${editedData.name}"?`)) {
+      return;
+    }
+    
+    try {
+      await api.deleteEvent(editedData.id);
+      setMessage({ type: 'success', text: 'Event deleted successfully!' });
+      await loadEvents();
+      setSelectedEventId('');
+      setEditedData(null);
+      setTimeout(() => setMessage({ type: '', text: '' }), 2000);
+    } catch (error) {
+      console.error('[AdminDashboard] Error deleting event:', error);
+      setMessage({ type: 'error', text: 'Failed to delete event: ' + error.message });
+    }
+  };
+
+  const handleNewEvent = () => {
+    setSelectedEventId('');
+    setEditedData({
+      name: '',
+      location: '',
+      startDate: '',
+      endDate: '',
+      description: '',
+      image: '',
+      website: '',
+      status: 'upcoming',
+      order: 0
+    });
   };
 
   const handleInputChange = (field, value) => {
@@ -389,13 +518,14 @@ const AdminDashboard = () => {
         {/* Tabs */}
         <div className="mb-6 bg-white rounded-xl shadow-sm p-2 border border-gray-200">
           <nav className="flex space-x-2">
-            {['models', 'categories', 'export'].map((tab) => (
+            {['models', 'categories', 'events', 'export'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => {
                   setActiveTab(tab);
                   setSelectedModelId('');
                   setSelectedCategoryId('');
+                  setSelectedEventId('');
                   setEditedData(null);
                   setMessage({ type: '', text: '' });
                 }}
@@ -407,6 +537,7 @@ const AdminDashboard = () => {
               >
                 {tab === 'models' && '📦 '}
                 {tab === 'categories' && '📁 '}
+                {tab === 'events' && '📅 '}
                 {tab === 'export' && '📤 '}
                 {tab}
               </button>
@@ -1538,6 +1669,199 @@ const AdminDashboard = () => {
         )}
 
         {/* Export Tab */}
+        {activeTab === 'events' && (
+          <div className="space-y-6">
+            {/* Event Selector Card */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <span>🔍</span>
+                  Select Event to Edit
+                </label>
+                <button
+                  onClick={handleNewEvent}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all text-sm font-medium"
+                >
+                  ➕ New Event
+                </button>
+              </div>
+              {isLoadingEvents ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="text-sm text-gray-500 mt-2">Loading events...</p>
+                </div>
+              ) : (
+                <select
+                  value={selectedEventId}
+                  onChange={handleEventChange}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                >
+                  <option value="">-- Select an event --</option>
+                  {events.map((event) => (
+                    <option key={event.id} value={event.id}>
+                      {event.name} - {event.location} ({new Date(event.startDate).toLocaleDateString()})
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* Event Editor Card */}
+            {editedData && (
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 space-y-6">
+                <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <span>📅</span>
+                    {editedData.id ? 'Edit Event' : 'Create New Event'}
+                  </h2>
+                  {editedData.id && (
+                    <button
+                      onClick={handleDeleteEvent}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all text-sm font-medium"
+                    >
+                      🗑️ Delete
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Event Name *</label>
+                    <input
+                      type="text"
+                      value={editedData.name || ''}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                      placeholder="Monaco Yacht Show"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Location *</label>
+                    <input
+                      type="text"
+                      value={editedData.location || ''}
+                      onChange={(e) => handleInputChange('location', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                      placeholder="Monaco"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date *</label>
+                    <input
+                      type="datetime-local"
+                      value={editedData.startDate || ''}
+                      onChange={(e) => handleInputChange('startDate', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">End Date</label>
+                    <input
+                      type="datetime-local"
+                      value={editedData.endDate || ''}
+                      onChange={(e) => handleInputChange('endDate', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                    <select
+                      value={editedData.status || 'upcoming'}
+                      onChange={(e) => handleInputChange('status', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                    >
+                      <option value="upcoming">Upcoming</option>
+                      <option value="ongoing">Ongoing</option>
+                      <option value="past">Past</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Order (Display Priority)</label>
+                    <input
+                      type="number"
+                      value={editedData.order || 0}
+                      onChange={(e) => handleInputChange('order', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Website URL</label>
+                    <input
+                      type="url"
+                      value={editedData.website || ''}
+                      onChange={(e) => handleInputChange('website', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                      placeholder="https://example.com"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                    <textarea
+                      value={editedData.description || ''}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      rows={4}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white resize-none"
+                      placeholder="Event description..."
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Event Image</label>
+                    <input
+                      type="text"
+                      value={editedData.image || ''}
+                      onChange={(e) => handleInputChange('image', e.target.value)}
+                      className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white text-sm mb-2"
+                      placeholder="event-image.jpg"
+                    />
+                    <label className="block w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer text-center font-medium transition-all shadow-sm hover:shadow-md">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+                          try {
+                            // Upload to a general events folder
+                            const result = await api.uploadFile(file, 'images', 'Events', null, null, null);
+                            const filename = extractFilename(result.filename || result.path || '');
+                            handleInputChange('image', filename);
+                            setMessage({ type: 'success', text: 'Event image uploaded successfully!' });
+                          } catch (error) {
+                            setMessage({ type: 'error', text: 'Failed to upload image: ' + error.message });
+                          }
+                          e.target.value = '';
+                        }}
+                      />
+                      📤 Upload Event Image
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={handleSaveEvent}
+                    disabled={isSaving || !editedData.name || !editedData.location || !editedData.startDate}
+                    className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-medium shadow-sm hover:shadow-md"
+                  >
+                    {isSaving ? '💾 Saving...' : '💾 Save Event'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedEventId('');
+                      setEditedData(null);
+                    }}
+                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === 'export' && (
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Export Data</h2>

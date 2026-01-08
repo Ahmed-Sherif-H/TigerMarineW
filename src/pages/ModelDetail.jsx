@@ -105,16 +105,10 @@ const ModelDetail = () => {
   const goPrev = () => setCurrentSlide((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
   const goNext = () => setCurrentSlide((prev) => (prev + 1) % galleryImages.length);
 
-  // Get first 4 optional features for "Elevate Your Experience" section
-  const optionalFeaturesForElevate = useMemo(() => {
+  // Get all optional features (display all, not just first 4)
+  const allOptionalFeatures = useMemo(() => {
     if (!model || !model.optionalFeatures || model.optionalFeatures.length === 0) return [];
-    return model.optionalFeatures.slice(0, 4);
-  }, [model?.optionalFeatures]);
-
-  // Check if there are more optional features
-  const hasMoreOptionalFeatures = useMemo(() => {
-    if (!model) return false;
-    return model.optionalFeatures && model.optionalFeatures.length > 4;
+    return model.optionalFeatures;
   }, [model?.optionalFeatures]);
 
   // Get left interior image (single image)
@@ -333,7 +327,7 @@ const ModelDetail = () => {
                 Features
               </button>
             )}
-            {optionalFeaturesForElevate.length > 0 && (
+            {allOptionalFeatures.length > 0 && (
               <button
                 onClick={() => scrollToSection('optional-features')}
                 className={`px-6 py-3 rounded-lg font-semibold text-base whitespace-nowrap transition-all ${
@@ -564,7 +558,7 @@ const ModelDetail = () => {
         </div>
       </section>*/}
 
-      {/* 6.5) Key Features Grid Section */}
+      {/* 6.5) Standard Features Section */}
       <section id="features" className="section-padding bg-gray-50">
         <div className="container-custom">
           <motion.div
@@ -572,40 +566,38 @@ const ModelDetail = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-8"
           >
-            <h3 className="text-3xl md:text-4xl font-light text-midnight-slate mb-4">
-              Key Features
+            <h3 className="text-2xl md:text-3xl font-light text-midnight-slate mb-3">
+              Standard Features
             </h3>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base text-gray-600 max-w-3xl mx-auto">
               Discover what makes the {fullModelName} exceptional
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {(model.standardFeatures || model.features || []).map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.05 }}
-                viewport={{ once: true }}
-                className="bg-white rounded-lg p-4 border border-gray-200 hover:border-smoked-saffron/50 hover:shadow-md transition-all duration-300"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0 w-2 h-2 bg-smoked-saffron rounded-full"></div>
-                  <span className="text-base text-midnight-slate font-medium">
-                    {feature}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
+          <div className="max-w-6xl mx-auto">
+            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
+              {(model.standardFeatures || model.features || []).map((feature, index) => (
+                <motion.li
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.03 }}
+                  viewport={{ once: true }}
+                  className="flex items-start gap-3 text-sm md:text-base text-gray-700"
+                >
+                  <div className="flex-shrink-0 w-1.5 h-1.5 bg-smoked-saffron rounded-full mt-2"></div>
+                  <span>{feature}</span>
+                </motion.li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
 
-      {/* 7) Elevate Your Experience - Optional Features */}
-      {optionalFeaturesForElevate.length > 0 && (
+      {/* 7) Optional Features - Display All Titles */}
+      {allOptionalFeatures.length > 0 && (
         <section id="optional-features" className="section-padding bg-white">
           <div className="container-custom">
             <motion.div
@@ -613,76 +605,37 @@ const ModelDetail = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
-              className="text-center mb-12"
+              className="text-center mb-8"
             >
-              <h3 className="text-3xl md:text-4xl font-light text-midnight-slate mb-4">
-               OPTIONAL FEATURES
+              <h3 className="text-2xl md:text-3xl font-light text-midnight-slate mb-3">
+                Optional Features
               </h3>
-              <p className="text-gray-600 max-w-3xl mx-auto">
+              <p className="text-base text-gray-600 max-w-3xl mx-auto">
                 Enhance your {fullModelName} with these optional upgrades and customizations.
               </p>
             </motion.div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto mb-8">
-              {optionalFeaturesForElevate.map((feature, idx) => {
-                const featureName = typeof feature === 'string' ? feature : feature.name;
-                const featureDesc = typeof feature === 'object' && feature.description ? feature.description : 
-                  `Enhance your ${fullModelName} with this premium option.`;
-                
-                return (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: idx * 0.05 }}
-                    viewport={{ once: true }}
-                    className="bg-gradient-to-br from-gray-50 to-white rounded-lg p-5 border border-gray-200 hover:border-smoked-saffron/50 hover:shadow-md transition-all duration-300"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-6 h-6 bg-smoked-saffron/10 rounded-full flex items-center justify-center mt-0.5">
-                        <svg className="w-4 h-4 text-smoked-saffron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-lg font-semibold text-midnight-slate mb-2">
-                          {featureName}
-                        </h4>
-                        {featureDesc && (
-                          <p className="text-sm text-gray-600 leading-relaxed">
-                            {featureDesc}
-                          </p>
-                        )}
-                        {typeof feature === 'object' && feature.price && (
-                          <p className="text-sm text-smoked-saffron font-medium mt-2">
-                            {feature.price}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
+            <div className="max-w-6xl mx-auto">
+              <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
+                {allOptionalFeatures.map((feature, idx) => {
+                  const featureName = typeof feature === 'string' ? feature : feature.name;
+                  
+                  return (
+                    <motion.li
+                      key={idx}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: idx * 0.03 }}
+                      viewport={{ once: true }}
+                      className="flex items-start gap-3 text-sm md:text-base text-gray-700"
+                    >
+                      <div className="flex-shrink-0 w-1.5 h-1.5 bg-smoked-saffron rounded-full mt-2"></div>
+                      <span>{featureName}</span>
+                    </motion.li>
+                  );
+                })}
+              </ul>
             </div>
-            {hasMoreOptionalFeatures && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <Link
-                  to={`/models/${model.id}/customize`}
-                  className="inline-flex items-center gap-2 bg-smoked-saffron hover:bg-smoked-saffron/90 text-white px-8 py-3 rounded-lg font-medium text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 transform"
-                >
-                  See More Options
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </motion.div>
-            )}
           </div>
         </section>
       )}
@@ -707,45 +660,54 @@ const ModelDetail = () => {
           {/* Two images 30/70 - Small image same height, big one is carousel */}
           {(interiorMainImage || interiorCarouselImages.length > 0) ? (
             <div className="flex gap-4">
-              {/* Debug info - remove after testing */}
-              {process.env.NODE_ENV === 'development' && (
-                <div className="fixed bottom-4 right-4 bg-black/80 text-white p-4 rounded-lg text-xs z-50 max-w-xs">
-                  <div>interiorMainImage: {interiorMainImage ? '✅' : '❌'}</div>
-                  <div>interiorCarouselImages: {interiorCarouselImages.length}</div>
-                  {interiorMainImage && <div className="break-all">{interiorMainImage}</div>}
-                </div>
-              )}
-              {/* Left image - separate main interior image */}
-              {interiorMainImage && (
-                <div className="w-full md:w-[30%] lg:w-[30%]" style={{ height: '600px' }}>
-                  <div className="h-full bg-gray-200 rounded-2xl overflow-hidden shadow-lg relative">
+              {/* Left image - separate main interior image (always show 30% if carousel exists) */}
+              <div className="w-full md:w-[30%] lg:w-[30%]" style={{ height: '600px' }}>
+                <div className="h-full bg-gray-200 rounded-2xl overflow-hidden shadow-lg relative">
+                  {interiorMainImage ? (
                     <img 
                       src={interiorMainImage} 
                       alt="Interior" 
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         console.error('[ModelDetail] ❌ Failed to load interiorMainImage:', interiorMainImage);
-                        console.error('[ModelDetail] Image error:', e);
-                        // Show error indicator
-                        const img = e.target;
-                        img.style.display = 'none';
-                        const parent = img.parentElement;
-                        if (parent && !parent.querySelector('.error-message')) {
-                          const errorDiv = document.createElement('div');
-                          errorDiv.className = 'error-message absolute inset-0 flex items-center justify-center bg-red-100 text-red-600';
-                          errorDiv.textContent = 'Image failed to load';
-                          parent.appendChild(errorDiv);
+                        // Hide broken image and show placeholder
+                        e.target.style.display = 'none';
+                        const parent = e.target.parentElement;
+                        if (parent && !parent.querySelector('.broken-image-placeholder')) {
+                          const placeholder = document.createElement('div');
+                          placeholder.className = 'broken-image-placeholder absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-400';
+                          placeholder.innerHTML = `
+                            <svg class="w-16 h-16 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <p class="text-sm font-medium">Image not available</p>
+                          `;
+                          parent.appendChild(placeholder);
                         }
                       }}
                       onLoad={() => {
                         console.log('[ModelDetail] ✅ Successfully loaded interiorMainImage:', interiorMainImage);
+                        // Remove placeholder if image loads successfully
+                        const parent = e.target.parentElement;
+                        const placeholder = parent?.querySelector('.broken-image-placeholder');
+                        if (placeholder) {
+                          placeholder.remove();
+                        }
                       }}
                     />
-                  </div>
+                  ) : (
+                    // Show placeholder if no image URL provided
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-400">
+                      <svg className="w-16 h-16 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm font-medium">No image set</p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
               {/* Right carousel - interior carousel images */}
-              <div className={`relative ${interiorMainImage ? 'w-full lg:w-[70%]' : 'w-full'}`} style={{ height: '600px' }}>
+              <div className="relative w-full lg:w-[70%]" style={{ height: '600px' }}>
                 <div className="relative h-full w-full bg-gray-200 rounded-2xl overflow-hidden shadow-lg">
                   {interiorCarouselImages.length > 0 ? (
                     <>
@@ -799,7 +761,14 @@ const ModelDetail = () => {
                       alt="Interior" 
                       className="w-full h-full object-cover" 
                     />
-                  ) : null}
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-400">
+                      <svg className="w-16 h-16 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm font-medium">No carousel images available</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

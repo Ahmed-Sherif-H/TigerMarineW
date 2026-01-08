@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import HeroSection from '../components/HeroSection';
 import { useModels } from '../context/ModelsContext';
 import { upcomingModels } from '../data/models';
-import { getLatestNews, formatNewsDate } from '../data/news';
 import { getModelDisplayName } from '../utils/modelNameUtils';
+import api from '../services/api';
 
 const Home = () => {
   const { categories, models, loading } = useModels();
   const [selectedModels, setSelectedModels] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [loadingEvents, setLoadingEvents] = useState(true);
   
   // Get 7 random models when data loads
   useEffect(() => {
@@ -18,6 +20,28 @@ const Home = () => {
       setSelectedModels(shuffled.slice(0, Math.min(7, shuffled.length)));
     }
   }, [models]);
+
+  // Fetch events from API
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        setLoadingEvents(true);
+        const eventsData = await api.getAllEvents();
+        // Filter to show only upcoming and ongoing events, sorted by start date
+        const upcomingEvents = eventsData
+          .filter(event => event.status === 'upcoming' || event.status === 'ongoing')
+          .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+          .slice(0, 6);
+        setEvents(upcomingEvents);
+      } catch (error) {
+        console.error('Error loading events:', error);
+        setEvents([]);
+      } finally {
+        setLoadingEvents(false);
+      }
+    };
+    loadEvents();
+  }, []);
   const [currentIndex, setCurrentIndex] = useState(0);
   const totalSlides = selectedModels.length;
   
@@ -378,7 +402,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 6. Latest News Section */}
+      {/* 6. Upcoming Events Section */}
       <section className="section-padding bg-white">
         <div className="container-custom">
           <motion.div
@@ -389,69 +413,113 @@ const Home = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-light text-midnight-slate mb-6">
-              Latest News
+              Upcoming Events
             </h2>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Stay updated with our latest announcements, boat shows, and company news
+              Join us at prestigious boat shows and events around the world
             </p>
           </motion.div>
 
-          {/* News Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {getLatestNews(6).map((news, index) => (
-              <motion.div
-                key={news.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Link to="/boat-shows" className="block group">
-                  <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 h-full flex flex-col">
-                    {/* News Image */}
-                    <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={news.image}
-                        alt={news.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      <div className="absolute top-4 left-4">
-                        <span className="bg-smoked-saffron text-white px-3 py-1 rounded-full text-xs font-medium">
-                          {news.category}
-                        </span>
-                      </div>
-                      {news.featured && (
-                        <div className="absolute top-4 right-4">
-                          <span className="bg-midnight-slate text-white px-3 py-1 rounded-full text-xs font-medium">
-                            Featured
-                          </span>
+          {/* Events Grid */}
+          {loadingEvents ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-smoked-saffron mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading events...</p>
+            </div>
+          ) : events.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              {events.map((event, index) => {
+                const startDate = new Date(event.startDate);
+                const endDate = event.endDate ? new Date(event.endDate) : null;
+                const formatDate = (date) => {
+                  return date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
+                  });
+                };
+                const dateRange = endDate 
+                  ? `${formatDate(startDate)} - ${formatDate(endDate)}`
+                  : formatDate(startDate);
+
+                return (
+                  <motion.div
+                    key={event.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                  >
+                    <Link to="/boat-shows" className="block group">
+                      <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 h-full flex flex-col">
+                        {/* Event Image */}
+                        <div className="relative h-48 overflow-hidden bg-gradient-to-br from-midnight-slate to-gray-800">
+                          {event.image ? (
+                            <img
+                              src={event.image.startsWith('http') ? event.image : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${event.image.startsWith('/') ? '' : '/'}${event.image}`}
+                              alt={event.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-white text-4xl">
+                              📅
+                            </div>
+                          )}
+                          <div className="absolute top-4 left-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              event.status === 'ongoing' 
+                                ? 'bg-green-500 text-white'
+                                : 'bg-smoked-saffron text-white'
+                            }`}>
+                              {event.status === 'ongoing' ? 'Ongoing' : 'Upcoming'}
+                            </span>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                    
-                    {/* News Content */}
-                    <div className="p-6 flex-1 flex flex-col">
-                      <div className="text-sm text-gray-500 mb-3">
-                        {formatNewsDate(news.date)}
+                        
+                        {/* Event Content */}
+                        <div className="p-6 flex-1 flex flex-col">
+                          <div className="text-sm text-gray-500 mb-3 flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {dateRange}
+                          </div>
+                          <h3 className="text-xl font-semibold text-midnight-slate mb-2 group-hover:text-smoked-saffron transition-colors duration-300 line-clamp-2">
+                            {event.name}
+                          </h3>
+                          <div className="text-sm text-gray-600 mb-4 flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            {event.location}
+                          </div>
+                          {event.description && (
+                            <p className="text-gray-600 mb-4 flex-1 line-clamp-3 text-sm">
+                              {event.description}
+                            </p>
+                          )}
+                          <div className="flex items-center text-smoked-saffron group-hover:text-midnight-slate transition-colors duration-300">
+                            <span className="mr-2 font-medium">View Details</span>
+                            <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        </div>
                       </div>
-                      <h3 className="text-xl font-semibold text-midnight-slate mb-3 group-hover:text-smoked-saffron transition-colors duration-300 line-clamp-2">
-                        {news.title}
-                      </h3>
-                      <p className="text-gray-600 mb-4 flex-1 line-clamp-3">
-                        {news.excerpt}
-                      </p>
-                      <div className="flex items-center text-smoked-saffron group-hover:text-midnight-slate transition-colors duration-300">
-                        <span className="mr-2 font-medium">Read More</span>
-                        <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No upcoming events at this time. Check back soon!</p>
+            </div>
+          )}
 
           {/* View All Button */}
           <motion.div
