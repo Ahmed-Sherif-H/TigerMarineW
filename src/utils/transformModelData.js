@@ -76,7 +76,7 @@ export function transformModel(model) {
     heroImageFile: model.heroImageFile || '',
     contentImageFile: model.contentImageFile || '',
     // Transform interiorMainImage to full path (in Interior subfolder)
-    interiorMainImage: model.interiorMainImage ? (() => {
+    interiorMainImage: (model.interiorMainImage && model.interiorMainImage.trim() !== '') ? (() => {
       let filename = model.interiorMainImage;
       // Extract filename from path if backend returns full path
       if (filename.includes('/')) {
@@ -87,9 +87,12 @@ export function transformModel(model) {
       const modelFolder = getModelImagePath(model.name); // Returns: ${BACKEND_URL}/images/${folderName}/
       const encodedFilename = encodeFilename(filename);
       const fullPath = modelFolder + 'Interior/' + encodedFilename;
-      console.log(`[Transform] InteriorMainImage: ${model.interiorMainImage} → ${filename} → ${fullPath}`);
+      console.log(`[Transform] ✅ InteriorMainImage: ${model.interiorMainImage} → ${filename} → ${fullPath}`);
       return fullPath;
-    })() : null,
+    })() : (() => {
+      console.log(`[Transform] ⚠️ No interiorMainImage for model ${model.name}. Value:`, model.interiorMainImage);
+      return null;
+    })(),
     
     // Transform arrays - extract filenames first, then build paths
     // Backend may return full paths like "/images/Open650/image.jpg" or just "image.jpg"

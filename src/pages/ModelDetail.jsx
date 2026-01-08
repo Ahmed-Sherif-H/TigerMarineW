@@ -124,13 +124,19 @@ const ModelDetail = () => {
       console.log('[ModelDetail] No model for interiorMainImage');
       return null;
     }
-    if (!model.interiorMainImage) {
+    // Check for empty string, null, or undefined
+    if (!model.interiorMainImage || model.interiorMainImage.trim() === '') {
       console.log('[ModelDetail] No interiorMainImage field in model. Model keys:', Object.keys(model));
       console.log('[ModelDetail] Model interiorMainImage value:', model.interiorMainImage);
+      console.log('[ModelDetail] Model raw data:', {
+        interiorMainImage: model.interiorMainImage,
+        interiorFiles: model.interiorFiles,
+        hasInteriorFiles: !!model.interiorFiles?.length
+      });
       return null;
     }
     // interiorMainImage is already a full path from transformModelData
-    console.log('[ModelDetail] Interior main image path:', model.interiorMainImage);
+    console.log('[ModelDetail] ✅ Interior main image path:', model.interiorMainImage);
     return model.interiorMainImage;
   }, [model?.interiorMainImage]);
 
@@ -701,14 +707,39 @@ const ModelDetail = () => {
           {/* Two images 30/70 - Small image same height, big one is carousel */}
           {(interiorMainImage || interiorCarouselImages.length > 0) ? (
             <div className="flex gap-4">
+              {/* Debug info - remove after testing */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="fixed bottom-4 right-4 bg-black/80 text-white p-4 rounded-lg text-xs z-50 max-w-xs">
+                  <div>interiorMainImage: {interiorMainImage ? '✅' : '❌'}</div>
+                  <div>interiorCarouselImages: {interiorCarouselImages.length}</div>
+                  {interiorMainImage && <div className="break-all">{interiorMainImage}</div>}
+                </div>
+              )}
               {/* Left image - separate main interior image */}
               {interiorMainImage && (
-                <div className="w-[30%] hidden lg:block" style={{ height: '600px' }}>
-                  <div className="h-full bg-gray-200 rounded-2xl overflow-hidden shadow-lg">
+                <div className="w-full md:w-[30%] lg:w-[30%]" style={{ height: '600px' }}>
+                  <div className="h-full bg-gray-200 rounded-2xl overflow-hidden shadow-lg relative">
                     <img 
                       src={interiorMainImage} 
                       alt="Interior" 
-                      className="w-full h-full object-cover" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error('[ModelDetail] ❌ Failed to load interiorMainImage:', interiorMainImage);
+                        console.error('[ModelDetail] Image error:', e);
+                        // Show error indicator
+                        const img = e.target;
+                        img.style.display = 'none';
+                        const parent = img.parentElement;
+                        if (parent && !parent.querySelector('.error-message')) {
+                          const errorDiv = document.createElement('div');
+                          errorDiv.className = 'error-message absolute inset-0 flex items-center justify-center bg-red-100 text-red-600';
+                          errorDiv.textContent = 'Image failed to load';
+                          parent.appendChild(errorDiv);
+                        }
+                      }}
+                      onLoad={() => {
+                        console.log('[ModelDetail] ✅ Successfully loaded interiorMainImage:', interiorMainImage);
+                      }}
                     />
                   </div>
                 </div>
