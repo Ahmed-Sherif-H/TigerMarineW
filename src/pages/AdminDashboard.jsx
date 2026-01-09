@@ -244,7 +244,7 @@ const AdminDashboard = () => {
   const handleInputChange = (field, value) => {
     // For image file fields, extract just the filename (not the full path)
     if (field === 'imageFile' || field === 'heroImageFile' || field === 'contentImageFile' ||
-        field === 'image' || field === 'heroImage') {
+        field === 'image' || field === 'heroImage' || field === 'interiorMainImage') {
       value = extractFilename(value);
     }
     
@@ -1251,11 +1251,20 @@ const AdminDashboard = () => {
                           }
                           try {
                             const result = await api.uploadFile(file, 'images', editedData.name, null, 'Interior');
+                            console.log('[AdminDashboard] Upload result for interiorMainImage:', result);
+                            
                             // Extract just the filename (backend may return full path)
+                            // Backend returns: { success: true, filename: "image.jpg", path: "full/path/to/image.jpg" }
                             const filename = extractFilename(result.filename || result.path || result.url || result.file || '');
+                            console.log('[AdminDashboard] Extracted filename for interiorMainImage:', filename);
+                            
+                            // Store the filename in interiorMainImage field
                             handleInputChange('interiorMainImage', filename);
+                            console.log('[AdminDashboard] Set interiorMainImage to:', filename);
+                            
                             setMessage({ type: 'success', text: 'Left interior image uploaded successfully!' });
                           } catch (error) {
+                            console.error('[AdminDashboard] Upload error for interiorMainImage:', error);
                             setMessage({ type: 'error', text: 'Failed to upload left interior image: ' + error.message });
                           }
                           e.target.value = '';
