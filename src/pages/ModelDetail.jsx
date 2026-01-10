@@ -6,6 +6,7 @@ import api from '../services/api';
 import { getModelImageFolder, encodeFilename } from '../data/imageHelpers';
 import { getCustomizerFolder } from '../data/customizerConfig';
 import { getModelDisplayName } from '../utils/modelNameUtils';
+import { isYouTubeUrl, getYouTubeEmbedUrl, extractYouTubeId } from '../utils/youtubeUtils';
 
 const ModelDetail = () => {
   const { id } = useParams();
@@ -74,16 +75,23 @@ const ModelDetail = () => {
   }, [model?.heroImage, model?.image]);
   
   // Videos: support array model.videoFiles or single model.video fallback then default 'video.mp4'
+  // Supports both YouTube URLs/IDs and local video files
   const videoFiles = useMemo(() => {
     if (!model) return [];
     if (Array.isArray(model.videoFiles) && model.videoFiles.length > 0) {
       return model.videoFiles.map((f) => {
-        // Support full paths, URLs, or just filenames
+        // If it's a YouTube URL/ID, return as-is (will be detected and rendered as embed)
+        if (isYouTubeUrl(f)) return f;
+        // Support full paths, URLs, or just filenames for local videos
         if (f.startsWith('/') || f.startsWith('http')) return f;
         return modelFolder + encodeFilename(f);
       });
     }
-    if (model.video) return [model.video];
+    if (model.video) {
+      // Check if it's YouTube
+      if (isYouTubeUrl(model.video)) return [model.video];
+      return [model.video];
+    }
     // Try common video filenames as fallback
     return [modelFolder + 'video.mp4'];
   }, [model?.videoFiles, model?.video, modelFolder]);
@@ -391,21 +399,37 @@ const ModelDetail = () => {
       <section id="video" className="relative h-[60vh] sm:h-[70vh] md:h-screen">
         {videoFiles.length > 0 && videoFiles[0] ? (
           <>
-            <video
-              key={activeVideo}
-              src={videoFiles[activeVideo]}
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover"
-              onError={(e) => {
-                // Hide video if it doesn't exist and show fallback
-                e.target.style.display = 'none';
-                const fallback = e.target.parentElement?.querySelector('.video-fallback');
-                if (fallback) fallback.style.display = 'flex';
-              }}
-            />
+            {isYouTubeUrl(videoFiles[activeVideo]) ? (
+              // YouTube embed
+              <div className="absolute inset-0 w-full h-full bg-black">
+                <iframe
+                  key={activeVideo}
+                  src={`${getYouTubeEmbedUrl(videoFiles[activeVideo])}?autoplay=1&mute=1&loop=1&playlist=${extractYouTubeId(videoFiles[activeVideo])}&controls=1&rel=0&modestbranding=1`}
+                  className="absolute inset-0 w-full h-full"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="Model Video"
+                />
+              </div>
+            ) : (
+              // Local video file
+              <video
+                key={activeVideo}
+                src={videoFiles[activeVideo]}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+                onError={(e) => {
+                  // Hide video if it doesn't exist and show fallback
+                  e.target.style.display = 'none';
+                  const fallback = e.target.parentElement?.querySelector('.video-fallback');
+                  if (fallback) fallback.style.display = 'flex';
+                }}
+              />
+            )}
             {/* Fallback message (hidden by default) */}
             <div className="video-fallback absolute inset-0 flex items-center justify-center bg-gray-900" style={{ display: 'none' }}>
               <p className="text-white text-lg">Video unavailable</p>

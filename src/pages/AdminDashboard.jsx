@@ -248,10 +248,28 @@ const AdminDashboard = () => {
       value = extractFilename(value);
     }
     
-    setEditedData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    // Debug logging for interiorMainImage
+    if (field === 'interiorMainImage') {
+      console.log('[AdminDashboard] handleInputChange - interiorMainImage:', {
+        originalValue: value,
+        extractedValue: extractFilename(value),
+        field: field
+      });
+    }
+    
+    setEditedData(prev => {
+      const updated = {
+        ...prev,
+        [field]: value
+      };
+      
+      // Debug logging for interiorMainImage after update
+      if (field === 'interiorMainImage') {
+        console.log('[AdminDashboard] handleInputChange - Updated editedData.interiorMainImage:', updated.interiorMainImage);
+      }
+      
+      return updated;
+    });
   };
 
   const handleSpecChange = (specId, field, value) => {
@@ -288,8 +306,14 @@ const AdminDashboard = () => {
     setMessage({ type: '', text: '' });
 
     try {
+      // Debug: Check editedData before normalization
+      console.log('[AdminDashboard] Before normalization - editedData.interiorMainImage:', editedData.interiorMainImage);
+      console.log('[AdminDashboard] Before normalization - editedData keys:', Object.keys(editedData || {}));
+      
       // Normalize data: ensure all image fields contain only filenames
       const dataToSave = normalizeModelDataForSave(editedData);
+      
+      console.log('[AdminDashboard] After normalization - dataToSave.interiorMainImage:', dataToSave.interiorMainImage);
       
       console.log('[AdminDashboard] Saving model data:', {
         id: dataToSave.id,
@@ -300,6 +324,8 @@ const AdminDashboard = () => {
         galleryFiles: dataToSave.galleryFiles,
         galleryFilesCount: dataToSave.galleryFiles?.length || 0,
         interiorMainImage: dataToSave.interiorMainImage,
+        interiorMainImageType: typeof dataToSave.interiorMainImage,
+        interiorMainImageLength: dataToSave.interiorMainImage?.length || 0,
         interiorFiles: dataToSave.interiorFiles,
         interiorFilesCount: dataToSave.interiorFiles?.length || 0,
         videoFiles: dataToSave.videoFiles,
@@ -1252,15 +1278,31 @@ const AdminDashboard = () => {
                           try {
                             const result = await api.uploadFile(file, 'images', editedData.name, null, 'Interior');
                             console.log('[AdminDashboard] Upload result for interiorMainImage:', result);
+                            console.log('[AdminDashboard] Upload result keys:', Object.keys(result || {}));
+                            console.log('[AdminDashboard] Upload result.filename:', result?.filename);
+                            console.log('[AdminDashboard] Upload result.path:', result?.path);
                             
                             // Extract just the filename (backend may return full path)
                             // Backend returns: { success: true, filename: "image.jpg", path: "full/path/to/image.jpg" }
-                            const filename = extractFilename(result.filename || result.path || result.url || result.file || '');
+                            const filename = extractFilename(result?.filename || result?.path || result?.url || result?.file || '');
                             console.log('[AdminDashboard] Extracted filename for interiorMainImage:', filename);
+                            console.log('[AdminDashboard] Extracted filename type:', typeof filename);
+                            console.log('[AdminDashboard] Extracted filename length:', filename?.length);
+                            
+                            if (!filename || filename.trim() === '') {
+                              console.error('[AdminDashboard] ❌ Extracted filename is empty!');
+                              setMessage({ type: 'error', text: 'Failed to extract filename from upload result. Please try again.' });
+                              return;
+                            }
                             
                             // Store the filename in interiorMainImage field
+                            console.log('[AdminDashboard] Calling handleInputChange with:', { field: 'interiorMainImage', value: filename });
                             handleInputChange('interiorMainImage', filename);
-                            console.log('[AdminDashboard] Set interiorMainImage to:', filename);
+                            
+                            // Verify it was set
+                            setTimeout(() => {
+                              console.log('[AdminDashboard] Verification - editedData.interiorMainImage after set:', editedData?.interiorMainImage);
+                            }, 100);
                             
                             setMessage({ type: 'success', text: 'Left interior image uploaded successfully!' });
                           } catch (error) {

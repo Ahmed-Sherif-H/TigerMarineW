@@ -172,6 +172,10 @@ class ApiService {
   }
 
   async updateModel(id, modelData) {
+    console.log('[API] Updating model:', id);
+    console.log('[API] Update payload - interiorMainImage:', modelData.interiorMainImage);
+    console.log('[API] Update payload - interiorMainImage type:', typeof modelData.interiorMainImage);
+    console.log('[API] Update payload keys:', Object.keys(modelData || {}));
     const response = await this.fetch(`/models/${id}`, {
       method: 'PUT',
       body: modelData,
