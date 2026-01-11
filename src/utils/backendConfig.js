@@ -76,6 +76,30 @@ export function normalizeModelDataForSave(modelData) {
     return modelData;
   }
   
+  // Convert features to standardFeatures (array of strings)
+  // Handle both: array of strings and array of objects with 'feature' property
+  let standardFeatures = [];
+  if (modelData.features && Array.isArray(modelData.features)) {
+    standardFeatures = modelData.features
+      .map(feature => {
+        // If it's a string, use it directly
+        if (typeof feature === 'string') {
+          return feature.trim();
+        }
+        // If it's an object, extract the 'feature' property
+        if (typeof feature === 'object' && feature !== null) {
+          return String(feature.feature || '').trim();
+        }
+        return '';
+      })
+      .filter(Boolean); // Remove empty strings
+  } else if (modelData.standardFeatures && Array.isArray(modelData.standardFeatures)) {
+    // If standardFeatures already exists, use it
+    standardFeatures = modelData.standardFeatures
+      .map(f => typeof f === 'string' ? f.trim() : String(f).trim())
+      .filter(Boolean);
+  }
+  
   return {
     ...modelData,
     // Extract filenames from main image fields
@@ -87,6 +111,10 @@ export function normalizeModelDataForSave(modelData) {
     galleryFiles: extractFilenames(modelData.galleryFiles || []),
     interiorFiles: extractFilenames(modelData.interiorFiles || []),
     videoFiles: extractFilenames(modelData.videoFiles || []),
+    // Convert features to standardFeatures format
+    standardFeatures: standardFeatures,
+    // Remove features field to avoid confusion (backend expects standardFeatures)
+    features: undefined,
   };
 }
 

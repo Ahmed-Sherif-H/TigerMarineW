@@ -283,12 +283,20 @@ const AdminDashboard = () => {
     }));
   };
 
-  const handleFeatureChange = (featureId, value) => {
+  const handleFeatureChange = (index, value) => {
     setEditedData(prev => ({
       ...prev,
-      features: prev.features.map(feature =>
-        feature.id === featureId ? { ...feature, feature: value } : feature
-      )
+      features: prev.features.map((feature, idx) => {
+        if (idx === index) {
+          // If it's already an object with id, update the feature field
+          if (typeof feature === 'object' && feature.id) {
+            return { ...feature, feature: value };
+          }
+          // If it's a string or new feature, convert to object format
+          return value; // Keep as string for now, backend will handle conversion
+        }
+        return feature;
+      })
     }));
   };
 
@@ -994,25 +1002,25 @@ const AdminDashboard = () => {
                         Standard Features ({editedData.features.length})
                       </h2>
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
                       {editedData.features.map((feature, index) => (
-                        <div key={feature.id || index} className="flex gap-2 items-center">
-                          <span className="text-blue-600 font-bold w-6">{index + 1}.</span>
+                        <div key={feature.id || index} className="flex gap-2 items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                          <span className="text-gray-500 font-medium w-8">{index + 1}.</span>
                           <input
                             type="text"
                             value={typeof feature === 'string' ? feature : (feature.feature || '')}
-                            onChange={(e) => handleFeatureChange(feature.id, e.target.value)}
+                            onChange={(e) => handleFeatureChange(index, e.target.value)}
                             className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
-                            placeholder="Feature description"
+                            placeholder="Enter feature description"
                           />
                           <button
                             onClick={() => {
                               const newFeatures = editedData.features.filter((_, i) => i !== index);
                               setEditedData({ ...editedData, features: newFeatures });
                             }}
-                            className="px-3 py-2.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium transition-all"
+                            className="px-4 py-2.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium transition-all"
                           >
-                            ✕
+                            ✕ Remove
                           </button>
                         </div>
                       ))}
