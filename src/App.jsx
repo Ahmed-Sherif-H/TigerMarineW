@@ -18,35 +18,48 @@ import UpcomingModels from './pages/UpcomingModels';
 import ModelCustomizer from './pages/ModelCustomizer';
 import AdminDashboard from './pages/AdminDashboard';
 import './styles/index.css';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/Login';
 
 function App() {
   return (
-    <ModelsProvider>
-      <Router>
-        <ScrollToTop />
-        <div className="min-h-screen bg-white">
-          <Navbar />
-          <AnimatePresence mode="wait">
-            <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/categories" element={<Categories />} />
-            <Route path="/categories/:id" element={<CategoryDetail />} />
-            <Route path="/models/upcoming" element={<UpcomingModels />} />
-            <Route path="/models/:id" element={<ModelDetail />} />
-            <Route path="/models/:id/customize" element={<ModelCustomizer />} />
-            <Route path="/professional" element={<Professional />} />
-            <Route path="/dealers" element={<Dealers />} />
-            <Route path="/boat-shows" element={<BoatShows />} />
-            <Route path="/color-fabric" element={<ColorFabric />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            </Routes>
-          </AnimatePresence>
-          <Footer />
-        </div>
-      </Router>
-    </ModelsProvider>
+    <AuthProvider>
+      <ModelsProvider>
+        <Router>
+          <ScrollToTop />
+          <div className="min-h-screen bg-white">
+            <Navbar />
+            <AnimatePresence mode="wait">
+              <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/categories" element={<Categories />} />
+              <Route path="/categories/:id" element={<CategoryDetail />} />
+              <Route path="/models/upcoming" element={<UpcomingModels />} />
+              <Route path="/models/:id" element={<ModelDetail />} />
+              <Route path="/models/:id/customize" element={<ModelCustomizer />} />
+              <Route path="/professional" element={<Professional />} />
+              <Route path="/dealers" element={<Dealers />} />
+              <Route path="/boat-shows" element={<BoatShows />} />
+              <Route path="/color-fabric" element={<ColorFabric />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/login" element={<Login />} />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              </Routes>
+            </AnimatePresence>
+            <Footer />
+          </div>
+        </Router>
+      </ModelsProvider>
+    </AuthProvider>
   );
 }
 

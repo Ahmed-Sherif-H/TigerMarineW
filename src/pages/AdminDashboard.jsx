@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useModels } from '../context/ModelsContext';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { 
   normalizeModelDataForSave, 
@@ -12,6 +14,8 @@ import { isYouTubeUrl } from '../utils/youtubeUtils';
 
 const AdminDashboard = () => {
   const { models, categories, loading, refreshData } = useModels();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('models');
   const [selectedModelId, setSelectedModelId] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
@@ -533,12 +537,23 @@ const AdminDashboard = () => {
               </h1>
               <p className="mt-2 text-gray-600">Manage models, categories, and export data</p>
             </div>
-            {editedData && (
-              <div className="hidden md:flex items-center gap-2 text-sm text-gray-500">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                Editing: <span className="font-semibold text-gray-700">{editedData.name}</span>
-              </div>
-            )}
+            <div className="flex items-center gap-4">
+              {editedData && (
+                <div className="hidden md:flex items-center gap-2 text-sm text-gray-500">
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                  Editing: <span className="font-semibold text-gray-700">{editedData.name}</span>
+                </div>
+              )}
+              <button
+                onClick={() => {
+                  logout();
+                  navigate('/login');
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
 

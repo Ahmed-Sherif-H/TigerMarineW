@@ -44,21 +44,26 @@ class ApiService {
     return this.healthCheck();
   }
 
-  // Generic fetch method
+  // Generic fetch method with authentication support
   async fetch(endpoint, options = {}) {
     // Ensure endpoint starts with / if it doesn't already
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = `${API_BASE_URL}${cleanEndpoint}`;
-    console.log('[API] Fetching:', url);
-    console.log('[API] Full URL:', url);
+    
+    if (import.meta.env.DEV) {
+      console.log('[API] Fetching:', url);
+    }
+    
+    const token = localStorage.getItem('admin_token');
     
     const config = {
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
         ...options.headers,
       },
       ...options,
-      credentials: 'include', // Include credentials for CORS
+      credentials: 'include',
     };
     
     // Only add signal if not already provided
@@ -86,8 +91,16 @@ class ApiService {
         data = await response.json();
       } else {
         const text = await response.text();
-        console.error('[API] Non-JSON response:', text);
+        if (import.meta.env.DEV) {
+          console.error('[API] Non-JSON response:', text);
+        }
         throw new Error(`Invalid response format: ${response.status}`);
+      }
+
+      // Handle 401 Unauthorized - token expired or invalid
+      if (response.status === 401) {
+        localStorage.removeItem('admin_token');
+        throw new Error('Authentication expired. Please login again.');
       }
 
       if (!response.ok) {
@@ -98,24 +111,30 @@ class ApiService {
     } catch (error) {
       if (timeoutId) clearTimeout(timeoutId); // Clear timeout on error
       
-      console.error('[API] Error details:');
-      console.error('  URL:', url);
-      console.error('  Error:', error.message);
-      console.error('  Type:', error.name);
+      if (import.meta.env.DEV) {
+        console.error('[API] Error details:');
+        console.error('  URL:', url);
+        console.error('  Error:', error.message);
+        console.error('  Type:', error.name);
+      }
       
       // Provide helpful error message
       if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_REFUSED') || error.name === 'TypeError') {
         const helpfulError = new Error(
           `Cannot connect to backend. Check that the backend is running at: ${API_BASE_URL}`
         );
-        console.error('[API]', helpfulError.message);
+        if (import.meta.env.DEV) {
+          console.error('[API]', helpfulError.message);
+        }
         throw helpfulError;
       }
       
       // Handle timeout
       if (error.name === 'AbortError' || error.message.includes('aborted')) {
         const timeoutError = new Error(`Request timed out. Please try again.`);
-        console.error('[API]', timeoutError.message);
+        if (import.meta.env.DEV) {
+          console.error('[API]', timeoutError.message);
+        }
         throw timeoutError;
       }
       
@@ -552,6 +571,46 @@ class ApiService {
       body: { filePath },
     });
     return response;
+  }
+
+  // ========== AUTHENTICATION ==========
+  async login(email, password) {
+    const response = await this.fetch('/auth/login', {
+      method: 'POST',
+      body: { email, password },
+    });
+    return response;
+  }
+
+  async verifyAuth() {
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      return { valid: false };
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        return { valid: false };
+      }
+
+      const data = await response.json();
+      // Transform backend response to match expected format
+      if (data.success && data.data) {
+        return { valid: true, user: data.data.admin };
+      }
+      return { valid: false };
+    } catch (error) {
+      return { valid: false };
+    }
   }
 }
 
