@@ -8,6 +8,7 @@ import {
   normalizeCategoryDataForEdit,
   extractFilename 
 } from '../utils/backendConfig';
+import { isYouTubeUrl } from '../utils/youtubeUtils';
 
 const AdminDashboard = () => {
   const { models, categories, loading, refreshData } = useModels();
@@ -1427,36 +1428,59 @@ const AdminDashboard = () => {
                       <h2 className="text-xl font-bold text-gray-900">
                         Video Files ({editedData.videoFiles?.length || 0})
                       </h2>
-                      <p className="text-xs text-gray-500 mt-1">Used in: Video gallery on model detail page</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Used in: Video gallery on model detail page. 
+                        Supports YouTube URLs (e.g., https://youtube.com/watch?v=...) or local video files.
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-3 mb-4 max-h-96 overflow-y-auto">
                     {editedData.videoFiles && Array.isArray(editedData.videoFiles) && editedData.videoFiles.length > 0 ? (
-                      editedData.videoFiles.map((video, index) => (
-                        <div key={index} className="flex gap-2 items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
-                          <span className="text-gray-500 font-medium w-8">{index + 1}.</span>
-                          <input
-                            type="text"
-                            value={typeof video === 'string' ? video : video.filename || ''}
-                            onChange={(e) => {
-                              const newVideos = [...editedData.videoFiles];
-                              newVideos[index] = extractFilename(e.target.value);
-                              setEditedData({ ...editedData, videoFiles: newVideos });
-                            }}
-                            className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
-                            placeholder="video.mp4"
-                          />
-                          <button
-                            onClick={() => {
-                              const newVideos = editedData.videoFiles.filter((_, i) => i !== index);
-                              setEditedData({ ...editedData, videoFiles: newVideos });
-                            }}
-                            className="px-4 py-2.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium transition-all"
-                          >
-                            ✕ Remove
-                          </button>
-                        </div>
-                      ))
+                      editedData.videoFiles.map((video, index) => {
+                        const videoValue = typeof video === 'string' ? video : video.filename || '';
+                        const isYouTube = isYouTubeUrl(videoValue);
+                        return (
+                          <div key={index} className="flex gap-2 items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <span className="text-gray-500 font-medium w-8">{index + 1}.</span>
+                            <div className="flex-1 relative">
+                              <input
+                                type="text"
+                                value={videoValue}
+                                onChange={(e) => {
+                                  const newVideos = [...editedData.videoFiles];
+                                  const inputValue = e.target.value;
+                                  // If it's a YouTube URL, keep it as-is. Otherwise, extract filename for local files
+                                  if (isYouTubeUrl(inputValue)) {
+                                    newVideos[index] = inputValue;
+                                  } else {
+                                    newVideos[index] = extractFilename(inputValue);
+                                  }
+                                  setEditedData({ ...editedData, videoFiles: newVideos });
+                                }}
+                                className={`w-full px-4 py-2.5 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white ${
+                                  isYouTube ? 'border-green-300 bg-green-50' : 'border-gray-300'
+                                }`}
+                                placeholder="video.mp4 or https://youtube.com/watch?v=..."
+                              />
+                              {isYouTube && (
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 text-green-600 text-xs font-medium">
+                                  <span>▶️</span>
+                                  <span>YouTube</span>
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => {
+                                const newVideos = editedData.videoFiles.filter((_, i) => i !== index);
+                                setEditedData({ ...editedData, videoFiles: newVideos });
+                              }}
+                              className="px-4 py-2.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium transition-all"
+                            >
+                              ✕ Remove
+                            </button>
+                          </div>
+                        );
+                      })
                     ) : (
                       <p className="text-gray-500 text-sm text-center py-4">No video files found.</p>
                     )}
