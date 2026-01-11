@@ -629,32 +629,32 @@ const ModelDetail = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-center mb-8"
+            className="text-center mb-12"
           >
-            <h3 className="text-2xl md:text-3xl font-light text-midnight-slate mb-3">
+            <h3 className="text-3xl md:text-4xl font-light text-midnight-slate mb-4">
               Standard Features
             </h3>
-            <p className="text-base text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               Discover what makes the {fullModelName} exceptional
             </p>
           </motion.div>
 
-          <div className="max-w-6xl mx-auto">
-            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
-              {(model.standardFeatures || model.features || []).map((feature, index) => (
-                <motion.li
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.03 }}
-                  viewport={{ once: true }}
-                  className="flex items-start gap-3 text-sm md:text-base text-gray-700"
-                >
-                  <div className="flex-shrink-0 w-1.5 h-1.5 bg-smoked-saffron rounded-full mt-2"></div>
-                  <span>{feature}</span>
-                </motion.li>
-              ))}
-            </ul>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {(model.standardFeatures || model.features || []).map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.05 }}
+                viewport={{ once: true }}
+                className="p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition"
+              >
+                <div className="w-6 h-0.5 bg-smoked-saffron rounded mb-3"></div>
+                <div className="flex flex-col">
+                  <span className="text-midnight-slate font-medium text-sm leading-relaxed">{feature}</span>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -668,36 +668,40 @@ const ModelDetail = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
-              className="text-center mb-8"
+              className="text-center mb-12"
             >
-              <h3 className="text-2xl md:text-3xl font-light text-midnight-slate mb-3">
+              <h3 className="text-3xl md:text-4xl font-light text-midnight-slate mb-4">
                 Optional Features
               </h3>
-              <p className="text-base text-gray-600 max-w-3xl mx-auto">
+              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
                 Enhance your {fullModelName} with these optional upgrades and customizations.
               </p>
             </motion.div>
             
-            <div className="max-w-6xl mx-auto">
-              <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
-                {allOptionalFeatures.map((feature, idx) => {
-                  const featureName = typeof feature === 'string' ? feature : feature.name;
-                  
-                  return (
-                    <motion.li
-                      key={idx}
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: idx * 0.03 }}
-                      viewport={{ once: true }}
-                      className="flex items-start gap-3 text-sm md:text-base text-gray-700"
-                    >
-                      <div className="flex-shrink-0 w-1.5 h-1.5 bg-smoked-saffron rounded-full mt-2"></div>
-                      <span>{featureName}</span>
-                    </motion.li>
-                  );
-                })}
-              </ul>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {allOptionalFeatures.map((feature, idx) => {
+                const featureName = typeof feature === 'string' ? feature : feature.name;
+                const featureDescription = typeof feature === 'object' ? feature.description : null;
+                
+                return (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: idx * 0.05 }}
+                    viewport={{ once: true }}
+                    className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition"
+                  >
+                    <div className="w-6 h-0.5 bg-smoked-saffron rounded mb-3"></div>
+                    <div className="flex flex-col">
+                      <span className="text-midnight-slate font-medium text-sm mb-1">{featureName}</span>
+                      {featureDescription && (
+                        <span className="text-gray-600 text-xs leading-relaxed">{featureDescription}</span>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </section>
