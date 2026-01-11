@@ -629,30 +629,27 @@ const ModelDetail = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-10"
           >
-            <h3 className="text-3xl md:text-4xl font-light text-midnight-slate mb-4">
+            <h3 className="text-2xl md:text-3xl font-light text-midnight-slate mb-3">
               Standard Features
             </h3>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base text-gray-600 max-w-3xl mx-auto">
               Discover what makes the {fullModelName} exceptional
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {(model.standardFeatures || model.features || []).map((feature, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.05 }}
+                transition={{ duration: 0.4, delay: index * 0.03 }}
                 viewport={{ once: true }}
-                className="p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition"
+                className="p-3 bg-white rounded-md border-l-2 border-smoked-saffron hover:border-smoked-saffron/80 hover:shadow-sm transition"
               >
-                <div className="w-6 h-0.5 bg-smoked-saffron rounded mb-3"></div>
-                <div className="flex flex-col">
-                  <span className="text-midnight-slate font-medium text-sm leading-relaxed">{feature}</span>
-                </div>
+                <span className="text-midnight-slate text-xs font-medium leading-snug block">{feature}</span>
               </motion.div>
             ))}
           </div>
@@ -668,17 +665,17 @@ const ModelDetail = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
-              className="text-center mb-12"
+              className="text-center mb-10"
             >
-              <h3 className="text-3xl md:text-4xl font-light text-midnight-slate mb-4">
+              <h3 className="text-2xl md:text-3xl font-light text-midnight-slate mb-3">
                 Optional Features
               </h3>
-              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              <p className="text-base text-gray-600 max-w-3xl mx-auto">
                 Enhance your {fullModelName} with these optional upgrades and customizations.
               </p>
             </motion.div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {allOptionalFeatures.map((feature, idx) => {
                 const featureName = typeof feature === 'string' ? feature : feature.name;
                 const featureDescription = typeof feature === 'object' ? feature.description : null;
@@ -686,17 +683,16 @@ const ModelDetail = () => {
                 return (
                   <motion.div
                     key={idx}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: idx * 0.05 }}
+                    transition={{ duration: 0.4, delay: idx * 0.03 }}
                     viewport={{ once: true }}
-                    className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition"
+                    className="p-3 bg-gray-50 rounded-md border-l-2 border-smoked-saffron hover:border-smoked-saffron/80 hover:shadow-sm transition"
                   >
-                    <div className="w-6 h-0.5 bg-smoked-saffron rounded mb-3"></div>
                     <div className="flex flex-col">
-                      <span className="text-midnight-slate font-medium text-sm mb-1">{featureName}</span>
+                      <span className="text-midnight-slate text-xs font-medium mb-0.5 leading-snug">{featureName}</span>
                       {featureDescription && (
-                        <span className="text-gray-600 text-xs leading-relaxed">{featureDescription}</span>
+                        <span className="text-gray-500 text-[10px] leading-tight line-clamp-2">{featureDescription}</span>
                       )}
                     </div>
                   </motion.div>
