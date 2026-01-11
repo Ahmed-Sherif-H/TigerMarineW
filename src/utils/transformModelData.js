@@ -4,6 +4,7 @@
  */
 
 import { getModelImagePath, getFullImagePath, encodeFilename } from './imagePathUtils';
+import { isYouTubeUrl } from './youtubeUtils';
 
 /**
  * Transform a single model from API format to frontend format
@@ -126,8 +127,13 @@ export function transformModel(model) {
       : [getFallbackImage(model.name)], // Use fallback if no gallery files
     
     videoFiles: (model.videoFiles || []).map(file => {
+      const videoValue = typeof file === 'string' ? file : (file?.filename || file);
+      // If it's a YouTube URL, preserve it as-is
+      if (isYouTubeUrl(videoValue)) {
+        return videoValue;
+      }
+      // For local files, extract filename from path if it's a path
       if (typeof file === 'string') {
-        // Extract filename from path if it's a path
         if (file.includes('/')) {
           return file.split('/').pop();
         }
@@ -141,10 +147,17 @@ export function transformModel(model) {
     }),
     videos: (model.videoFiles || []).map(file => {
       let filename = typeof file === 'string' ? file : (file?.filename || file);
-      // Extract filename from path if it's a path
+      
+      // If it's a YouTube URL, return it as-is (don't convert to file path)
+      if (isYouTubeUrl(filename)) {
+        return filename;
+      }
+      
+      // For local video files, extract filename from path if it's a path
       if (filename && filename.includes('/')) {
         filename = filename.split('/').pop();
       }
+      // Build full path for local videos only
       return getFullImagePath(model.name, filename);
     }),
     
