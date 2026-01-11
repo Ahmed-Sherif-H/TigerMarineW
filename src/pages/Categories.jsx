@@ -1,9 +1,19 @@
 import { motion } from 'framer-motion';
 import CategoryCard from '../components/CategoryCard';
 import { useModels } from '../context/ModelsContext';
+import { useMemo } from 'react';
 
 const Categories = () => {
   const { categories, loading } = useModels();
+  
+  // Filter to only show Inflatable Boats categories (exclude Infinity and Striker)
+  const inflatableBoatsCategories = useMemo(() => {
+    return categories.filter(cat => 
+      (cat.mainGroup || 'inflatableBoats') === 'inflatableBoats' &&
+      !cat.name?.toLowerCase().includes('infinity') &&
+      !cat.name?.toLowerCase().includes('striker')
+    );
+  }, [categories]);
 
   if (loading) {
     return (
@@ -36,7 +46,7 @@ const Categories = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-xl text-gray-200 max-w-3xl mx-auto"
           >
-            Explore our five distinct inflatable boat categories, each designed for different 
+            Explore our premium inflatable boat categories, each designed for different 
             lifestyles and maritime adventures.
           </motion.p>
         </div>
@@ -62,12 +72,12 @@ const Categories = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-            {categories.length === 0 ? (
+            {inflatableBoatsCategories.length === 0 ? (
               <div className="col-span-full text-center py-12 text-gray-500">
                 No categories found
               </div>
             ) : (
-              categories.map((category, index) => (
+              inflatableBoatsCategories.map((category, index) => (
                 <CategoryCard key={category.id} category={category} index={index} />
               ))
             )}
@@ -105,7 +115,7 @@ const Categories = () => {
                 </tr>
               </thead>
               <tbody>
-                {categories.map((category, index) => (
+                {inflatableBoatsCategories.map((category, index) => (
                   <motion.tr
                     key={category.id}
                     initial={{ opacity: 0, x: -20 }}
@@ -124,7 +134,7 @@ const Categories = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-gray-600">
-                      {category.shortDescription}
+                      {category.shortDescription || category.description}
                     </td>
                     <td className="px-6 py-4 text-gray-600">
                       {category.name === 'MaxLine' ? '11.5m' :

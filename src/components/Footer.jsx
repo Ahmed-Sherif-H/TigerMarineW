@@ -1,9 +1,16 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { inflatableBoats } from '../data/models';
+import { useModels } from '../context/ModelsContext';
+import { useMemo } from 'react';
 
 const Footer = () => {
+  const { categories } = useModels();
   const currentYear = new Date().getFullYear();
+  
+  // Get inflatable boats categories
+  const inflatableBoats = useMemo(() => {
+    return categories.filter(cat => (cat.mainGroup || 'inflatableBoats') === 'inflatableBoats');
+  }, [categories]);
 
   const footerLinks = {
     company: [

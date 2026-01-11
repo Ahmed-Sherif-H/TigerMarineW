@@ -50,19 +50,19 @@ export const modelImageFolders = {
 // ============================================================================
 // Maps model names to their side menu preview images in /images/SideMenu
 export const sideMenuImages = {
-  'ML38':  'MaxLine-38.png',
-  'TL950': 'TopLine-950.png',
-  'TL850': 'TopLine-850.png',
-  'TL750': 'TopLine-750.png',
-  'TL650': 'TopLine-650.png',
-  'PL620': 'ProLine-620.png',
-  'PL550': 'ProLine-550.png',
-  'SL520': 'SportLine-520.png',
-  'SL480': 'SportLine-480.png',
-  'OP850': 'Open-850.png',
-  'OP750': 'Open-750.png',
-  'OP650': 'Open-650.png',
-  'Infinity 280': 'Infinity-280.png',
+  'ML38':  'MaxLine-38.webp',
+  'TL950': 'TopLine-950.webp',
+  'TL850': 'TopLine-850.webp',
+  'TL750': 'TopLine-750.webp',
+  'TL650': 'TopLine-650.webp',
+  'PL620': 'ProLine-620.webp',
+  'PL550': 'ProLine-550.webp',
+  'SL520': 'SportLine-520.webp',
+  'SL480': 'SportLine-480.webp',
+  'OP850': 'Open-850.webp',
+  'OP750': 'Open-750.webp',
+  'OP650': 'Open-650.webp',
+  'Infinity 280': 'Infinity-280.webp',
   
   // Add new models here:
   // 'NewModel': 'NewModel-sideMenu.png',

@@ -1,35 +1,29 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { inflatableBoats, boatsCategories } from '../data/models';
+import { useModels } from '../context/ModelsContext';
 import { getModelDisplayName } from '../utils/modelNameUtils';
+import { getSideMenuImage } from '../data/imageHelpers';
 
 const Navbar = () => {
+  const { categories, models } = useModels();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hoveredCategory, setHoveredCategory] = useState(null);
+  const [hoveredModel, setHoveredModel] = useState(null);
+  
+  // Group categories by mainGroup (only for Inflatable Boats)
+  const inflatableBoats = useMemo(() => {
+    return categories.filter(cat => (cat.mainGroup || 'inflatableBoats') === 'inflatableBoats');
+  }, [categories]);
+  
+  // Get models that belong to "Boats" mainGroup (models whose category has mainGroup = 'boats')
+  const boatsModels = useMemo(() => {
+    const boatsCategoryIds = categories
+      .filter(cat => cat.mainGroup === 'boats')
+      .map(cat => cat.id);
+    return models.filter(model => boatsCategoryIds.includes(model.categoryId));
+  }, [categories, models]);
 
-  // Function to map model names to their corresponding side menu image filenames
-  const getSideMenuImageName = (modelName) => {
-    const imageMap = {
-      'ML38': 'sideMenu-NoBG.png', // No MaxLine image available
-      'TL950': 'TopLine-950.png',
-      'TL850': 'TopLine-850.png', 
-      'TL750': 'TopLine-750.png',
-      'TL650': 'TopLine-650.png',
-      'PL620': 'ProLine-620.png',
-      'PL550': 'ProLine-550.png',
-      'SL520': 'SportLine-520.png',
-      'SL480': 'SportLine-480.png',
-      'OP850': 'Open-850.png',
-      'OP750': 'Open-750.png',
-      'OP650': 'Open-650.png',
-      'Infinity 280': 'sideMenu-NoBG.png' // No Infinity image available
-    };
-    
-    const imageName = imageMap[modelName] || 'sideMenu-NoBG.png';
-    console.log(`Model: ${modelName}, Image: ${imageName}`);
-    return imageName;
-  };
   const location = useLocation();
 
   const menuItems = [
@@ -180,19 +174,19 @@ const Navbar = () => {
                                   </motion.div>
                                 </Link>
                               ))}
-                              {item.submenuType === 'boats' && boatsCategories.map((category) => (
+                              {item.submenuType === 'boats' && boatsModels.map((model) => (
                                 <Link
-                                  key={category.id}
-                                  to={`/boats/${category.id}`}
+                                  key={model.id}
+                                  to={`/models/${model.id}`}
                                   onClick={closeMenu}
                                 >
                                   <motion.div
                                     className="group p-2 rounded hover:bg-gray-50 transition-all duration-300 cursor-pointer"
-                                    onMouseEnter={() => setHoveredCategory(category)}
+                                    onMouseEnter={() => setHoveredModel(model)}
                                     whileHover={{ x: 2 }}
                                   >
                                     <h4 className="text-black font-medium text-sm group-hover:text-gray-600 transition-colors duration-300">
-                                      {category.name}
+                                      {getModelDisplayName(model)}
                                     </h4>
                                   </motion.div>
                                 </Link>
@@ -264,7 +258,7 @@ const Navbar = () => {
                       <div className="group cursor-pointer">
                         <div className="aspect-[16/9] relative rounded-lg overflow-hidden mb-3">
                           <img
-                            src={model.sideMenuImage || `/images/sideMenu-NoBG.png`}
+                            src={getSideMenuImage(model.name)}
                             alt={model.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onError={(e) => {
@@ -280,6 +274,50 @@ const Navbar = () => {
                     </Link>
                   ))}
                 </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+        {hoveredModel && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="fixed top-20 left-64 sm:left-72 h-[calc(100vh-5rem)] w-64 sm:w-72 bg-white border-l border-gray-200 shadow-2xl hidden sm:block z-50"
+            onMouseLeave={() => setHoveredModel(null)}
+          >
+            {/* Gray background overlay */}
+            <div className="absolute inset-0" style={{ backgroundColor: '#eeeeee' }} />
+            
+            {/* Content */}
+            <div className="relative h-full overflow-y-auto p-6" style={{ fontFamily: 'Tussilago, sans-serif' }}>
+              <style>{`
+                .overflow-y-auto::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
+              
+              <div className="space-y-6">
+                {/* Single Model Preview */}
+                <Link key={hoveredModel.id} to={`/models/${hoveredModel.id}`} onClick={closeMenu}>
+                  <div className="group cursor-pointer">
+                    <div className="aspect-[16/9] relative rounded-lg overflow-hidden mb-3">
+                      <img
+                        src={getSideMenuImage(hoveredModel.name)}
+                        alt={hoveredModel.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          console.log('Image failed to load:', e.target.src);
+                          e.target.src = '/images/sideMenu-NoBG.png';
+                        }}
+                      />
+                    </div>
+                    <p className="text-base font-medium text-black text-center group-hover:text-gray-600 transition-colors">
+                      {getModelDisplayName(hoveredModel)}
+                    </p>
+                  </div>
+                </Link>
               </div>
             </div>
           </motion.div>

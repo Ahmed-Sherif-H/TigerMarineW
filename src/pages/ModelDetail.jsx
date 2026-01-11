@@ -7,6 +7,7 @@ import { getModelImageFolder, encodeFilename } from '../data/imageHelpers';
 import { getCustomizerFolder } from '../data/customizerConfig';
 import { getModelDisplayName } from '../utils/modelNameUtils';
 import { isYouTubeUrl, getYouTubeEmbedUrl, extractYouTubeId } from '../utils/youtubeUtils';
+import { getFullImagePath, getModelImagePath } from '../utils/imagePathUtils';
 
 const ModelDetail = () => {
   const { id } = useParams();
@@ -64,9 +65,11 @@ const ModelDetail = () => {
   }, [id]);
 
   // Build dynamic media paths - ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
+  // Use getModelImagePath from imagePathUtils to get full backend URL
   const modelFolder = useMemo(() => {
     if (!model || !model.name) return '';
-    return getModelImageFolder(model.name);
+    // Use imagePathUtils to get full backend URL path
+    return getModelImagePath(model.name);
   }, [model?.name]);
 
   const defaultHero = useMemo(() => {
@@ -83,31 +86,42 @@ const ModelDetail = () => {
         // If it's a YouTube URL/ID, return as-is (will be detected and rendered as embed)
         if (isYouTubeUrl(f)) return f;
         // Support full paths, URLs, or just filenames for local videos
-        if (f.startsWith('/') || f.startsWith('http')) return f;
-        return modelFolder + encodeFilename(f);
+        if (f.startsWith('http://') || f.startsWith('https://')) return f;
+        // Use getFullImagePath to ensure full backend URL
+        return getFullImagePath(model.name, f);
       });
     }
     if (model.video) {
       // Check if it's YouTube
       if (isYouTubeUrl(model.video)) return [model.video];
-      return [model.video];
+      // Use getFullImagePath for local videos
+      return [getFullImagePath(model.name, model.video)];
     }
     // Try common video filenames as fallback
-    return [modelFolder + 'video.mp4'];
-  }, [model?.videoFiles, model?.video, modelFolder]);
+    return [getFullImagePath(model.name, 'video.mp4')];
+  }, [model?.videoFiles, model?.video, model?.name]);
   
   const [activeVideo, setActiveVideo] = useState(0);
 
   // Build gallery images from model folder (all images in folder or from galleryFiles)
+  // The transformed model already has galleryImages with full paths, use those if available
   const galleryImages = useMemo(() => {
     if (!model) return [];
+    // Prefer galleryImages (already transformed to full paths) over galleryFiles
+    if (Array.isArray(model.galleryImages) && model.galleryImages.length > 0) {
+      return model.galleryImages;
+    }
+    // Fallback: build from galleryFiles if galleryImages not available
     if (Array.isArray(model.galleryFiles) && model.galleryFiles.length > 0) {
-      return model.galleryFiles.map((file) => modelFolder + encodeFilename(file));
+      // Use getFullImagePath to ensure full backend URL
+      return model.galleryFiles.map((file) => {
+        return getFullImagePath(model.name, file);
+      });
     }
     // Fallback to available images
     const set = new Set([defaultHero, model.image].filter(Boolean));
     return Array.from(set);
-  }, [model?.galleryFiles, modelFolder, defaultHero, model?.image]);
+  }, [model?.galleryImages, model?.galleryFiles, model?.name, defaultHero, model?.image]);
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const goPrev = () => setCurrentSlide((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
@@ -146,11 +160,20 @@ const ModelDetail = () => {
   const interiorCarouselImages = useMemo(() => {
     if (!model) return [];
     if (model.interiorFiles && Array.isArray(model.interiorFiles) && model.interiorFiles.length > 0) {
-      const interiorFolder = modelFolder + 'Interior/';
-      return model.interiorFiles.map(file => interiorFolder + encodeFilename(file));
+      // Use getFullImagePath with Interior subfolder
+      return model.interiorFiles.map(file => {
+        // If file is already a full path, use it; otherwise build path
+        if (file.startsWith('http://') || file.startsWith('https://')) {
+          return file;
+        }
+        // Build path: backend/images/ModelName/Interior/filename
+        const basePath = getModelImagePath(model.name);
+        const interiorPath = `${basePath}Interior/`;
+        return `${interiorPath}${encodeFilename(file)}`;
+      });
     }
     return [];
-  }, [modelFolder, model?.interiorFiles]);
+  }, [model?.name, model?.interiorFiles]);
 
   const [interiorSlide, setInteriorSlide] = useState(0);
   const [activeNavTab, setActiveNavTab] = useState('overview');
@@ -500,6 +523,15 @@ const ModelDetail = () => {
             src={galleryImages[currentSlide]}
             alt={`${model.name} ${currentSlide + 1}`}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              console.error(`[ModelDetail] ❌ Failed to load gallery image:`, galleryImages[currentSlide]);
+              console.error(`[ModelDetail] Image element:`, e.target);
+              console.error(`[ModelDetail] Current slide:`, currentSlide);
+            }}
+            onLoad={(e) => {
+              console.log(`[ModelDetail] ✅ Successfully loaded gallery image:`, galleryImages[currentSlide]);
+              console.log(`[ModelDetail] Loaded from URL:`, e.target.src);
+            }}
           />
           {/* Arrows */}
           {galleryImages.length > 1 && (
@@ -535,7 +567,14 @@ const ModelDetail = () => {
                     onClick={() => setCurrentSlide(idx)}
                     className={`relative w-20 h-14 rounded-md overflow-hidden border ${idx === currentSlide ? 'border-smoked-saffron' : 'border-white/30'} hover:border-smoked-saffron transition-all`}
                   >
-                    <img src={src} alt={`${model.name} thumb ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img 
+                      src={src} 
+                      alt={`${model.name} thumb ${idx + 1}`} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error(`[ModelDetail] ❌ Failed to load gallery thumbnail ${idx}:`, src);
+                      }}
+                    />
                   </button>
                 ))}
               </div>
@@ -709,7 +748,7 @@ const ModelDetail = () => {
                           parent.appendChild(placeholder);
                         }
                       }}
-                      onLoad={() => {
+                      onLoad={(e) => {
                         console.log('[ModelDetail] ✅ Successfully loaded interiorMainImage:', interiorMainImage);
                         // Remove placeholder if image loads successfully
                         const parent = e.target.parentElement;

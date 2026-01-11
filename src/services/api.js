@@ -14,30 +14,7 @@ console.log('[API] Environment:', import.meta.env.MODE || 'unknown');
 if (import.meta.env.PROD && API_BASE_URL.includes('localhost')) {
   console.error('[API] ⚠️ CRITICAL: Using localhost in production!');
   console.error('[API] Set VITE_API_URL in Netlify environment variables and redeploy!');
-  console.error('[API] Expected: https://tigermarinewbackend.onrender.com/api');
-}
-
-// Keep-alive ping for Render free tier (prevents sleeping)
-if (import.meta.env.PROD && API_BASE_URL.includes('onrender.com')) {
-  // Ping backend every 10 minutes to keep it awake
-  setInterval(async () => {
-    try {
-      await api.healthCheck();
-      console.log('[Keep-Alive] ✅ Backend pinged successfully');
-    } catch (error) {
-      console.warn('[Keep-Alive] ⚠️ Ping failed (backend might be sleeping):', error.message);
-    }
-  }, 10 * 60 * 1000); // Every 10 minutes
-  
-  // Initial ping after 30 seconds (give time for page to load)
-  setTimeout(async () => {
-    try {
-      await api.healthCheck();
-      console.log('[Keep-Alive] ✅ Initial backend ping successful');
-    } catch (error) {
-      console.warn('[Keep-Alive] ⚠️ Initial ping failed:', error.message);
-    }
-  }, 30000); // 30 seconds
+  console.error('[API] Expected format: https://your-backend.railway.app/api');
 }
 
 class ApiService {

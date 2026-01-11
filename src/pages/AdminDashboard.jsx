@@ -107,6 +107,7 @@ const AdminDashboard = () => {
           description: category.description || '',
           image: category.image || '',
           heroImage: category.heroImage || '',
+          mainGroup: category.mainGroup || 'inflatableBoats',
         });
         console.log('[AdminDashboard] Loaded category data:', normalizedData);
         console.log('[AdminDashboard] Category image after normalization:', normalizedData.image);
@@ -393,7 +394,12 @@ const AdminDashboard = () => {
       });
       
       const response = await api.updateCategory(editedData.id, dataToSave);
-      if (response.success) {
+      
+      // Check if update was successful (backend returns {success: true, data: category} or just category)
+      const hasCategoryData = response && (response.id || response.name || response.data?.id || response.data?.name);
+      const hasSuccessFlag = response && response.success === true;
+      
+      if (hasSuccessFlag || hasCategoryData) {
         setMessage({ type: 'success', text: 'Category updated successfully!' });
         
         // Refresh categories list
@@ -404,7 +410,7 @@ const AdminDashboard = () => {
         
         setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       } else {
-        setMessage({ type: 'error', text: response.message || 'Failed to update category' });
+        setMessage({ type: 'error', text: response.message || response.error || 'Failed to update category' });
       }
     } catch (error) {
       console.error('[AdminDashboard] Save category error:', error);
@@ -1588,23 +1594,107 @@ const AdminDashboard = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <span>📖</span>
-                        Description
+                        <span>📂</span>
+                        Main Group
                       </label>
-                      <textarea
-                        value={editedData.description || ''}
-                        onChange={(e) => handleInputChange('description', e.target.value)}
-                        rows={4}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white resize-none"
-                        placeholder="Category description"
-                      />
+                      <select
+                        value={editedData.mainGroup || 'inflatableBoats'}
+                        onChange={(e) => handleInputChange('mainGroup', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                      >
+                        <option value="inflatableBoats">Inflatable Boats</option>
+                        <option value="boats">Boats</option>
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">Determines which main menu section this category appears in</p>
                     </div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    
+                    {/* About Category Section */}
+                    <div className="bg-blue-50 rounded-xl p-6 border-2 border-blue-200 mb-6 col-span-2">
+                      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <span>📝</span>
+                        About Category Section
+                      </h3>
+                      <p className="text-xs text-gray-600 mb-4">
+                        These fields control the "About {editedData.name || 'Category'}" section on the category detail page.
+                      </p>
+                      
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                            <span>📖</span>
+                            About Description
+                          </label>
+                          <p className="text-xs text-gray-500 mb-2">This text appears in the "About {editedData.name || 'Category'}" section on the category detail page.</p>
+                          <textarea
+                            value={editedData.description || ''}
+                            onChange={(e) => handleInputChange('description', e.target.value)}
+                            rows={5}
+                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white resize-none"
+                            placeholder="Enter the description for the 'About' section..."
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <span>🖼️</span>
+                            About Section Image
+                          </label>
+                          <p className="text-xs text-gray-500 mb-2">This image appears on the right side of the "About" section on the category detail page.</p>
+                          <div className="space-y-2">
+                            <input
+                              type="text"
+                              value={editedData.image || ''}
+                              onChange={(e) => handleInputChange('image', e.target.value)}
+                              className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white text-sm"
+                              placeholder="about-category-image.jpg"
+                            />
+                            <label className="block w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer text-center font-medium transition-all shadow-sm hover:shadow-md">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files[0];
+                                  if (!file) return;
+                                  if (!editedData.name) {
+                                    setMessage({ type: 'error', text: 'Please select a category first' });
+                                    e.target.value = '';
+                                    return;
+                                  }
+                                  try {
+                                    const result = await api.uploadFile(file, 'categories', null, null, null, editedData.name);
+                                    // Extract just the filename (backend may return full path)
+                                    const filename = extractFilename(result.filename || result.path || result.url || '');
+                                    handleInputChange('image', filename);
+                                    setMessage({ type: 'success', text: 'About section image uploaded successfully!' });
+                                  } catch (error) {
+                                    setMessage({ type: 'error', text: 'Failed to upload about section image: ' + error.message });
+                                  }
+                                  e.target.value = '';
+                                }}
+                              />
+                              📤 Upload About Image
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                    
+                  {/* Category Images Section */}
+                  <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200 mb-6">
+                      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <span>🖼️</span>
-                        Category Thumbnail Image
-                      </label>
-                      <p className="text-xs text-gray-500 mb-2">Used in: Category cards and listings</p>
+                        Category Images
+                      </h3>
+                      
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <span>🖼️</span>
+                            Category Thumbnail Image
+                          </label>
+                          <p className="text-xs text-gray-500 mb-2">Used in: Category cards and listings</p>
                       <div className="space-y-2">
                         <input
                           type="text"
@@ -1642,6 +1732,7 @@ const AdminDashboard = () => {
                         </label>
                       </div>
                     </div>
+                    
                     <div className="space-y-2">
                       <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <span>🎯</span>
@@ -1685,6 +1776,7 @@ const AdminDashboard = () => {
                         </label>
                       </div>
                     </div>
+                  </div>
                   </div>
                 </div>
 

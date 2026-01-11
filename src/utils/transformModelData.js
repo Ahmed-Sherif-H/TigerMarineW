@@ -84,7 +84,7 @@ export function transformModel(model) {
       }
       // Build path with Interior subfolder
       // Use getModelImagePath to get base path, then add Interior/ and filename
-      const modelFolder = getModelImagePath(model.name); // Returns: ${BACKEND_URL}/images/${folderName}/
+      const modelFolder = getModelImagePath(model.name); // Returns: ${BACKEND_URL}/images/${encodedFolderName}/
       const encodedFilename = encodeFilename(filename);
       const fullPath = modelFolder + 'Interior/' + encodedFilename;
       console.log(`[Transform] ✅ InteriorMainImage: ${model.interiorMainImage} → ${filename} → ${fullPath}`);

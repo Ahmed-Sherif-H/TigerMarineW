@@ -5,15 +5,48 @@
 
 // Get backend URL dynamically (not at module load time)
 function getBackendUrl() {
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-  return API_BASE_URL.replace('/api', ''); // Remove /api to get base backend URL
+  // Try multiple ways to get the API URL
+  let API_BASE_URL = import.meta.env.VITE_API_URL;
+  
+  // If not set, use fallback
+  if (!API_BASE_URL || API_BASE_URL === 'undefined' || API_BASE_URL === '') {
+    API_BASE_URL = 'http://localhost:3001/api';
+    console.warn(`[getBackendUrl] ⚠️ VITE_API_URL not set, using fallback: ${API_BASE_URL}`);
+  }
+  
+  const backendUrl = API_BASE_URL.replace('/api', ''); // Remove /api to get base backend URL
+  
+  // Always log in dev mode
+  if (import.meta.env.DEV) {
+    console.log(`[getBackendUrl] VITE_API_URL from env:`, import.meta.env.VITE_API_URL);
+    console.log(`[getBackendUrl] API_BASE_URL: ${API_BASE_URL}`);
+    console.log(`[getBackendUrl] Backend URL: ${backendUrl}`);
+    console.log(`[getBackendUrl] import.meta.env keys:`, Object.keys(import.meta.env).filter(k => k.startsWith('VITE')));
+  }
+  
+  // Ensure we have a valid URL
+  if (!backendUrl || backendUrl === 'undefined' || !backendUrl.startsWith('http')) {
+    console.error(`[getBackendUrl] ❌ Invalid backend URL: ${backendUrl}`);
+    console.error(`[getBackendUrl] Falling back to: http://localhost:3001`);
+    return 'http://localhost:3001';
+  }
+  
+  return backendUrl;
 }
 
 /**
  * Get the image folder path for a model (pointing to backend)
  */
 export function getModelImagePath(modelName) {
-  const BACKEND_URL = getBackendUrl();
+  let BACKEND_URL = getBackendUrl();
+  
+  // Validate BACKEND_URL - use fallback if invalid
+  if (!BACKEND_URL || !BACKEND_URL.startsWith('http')) {
+    console.error(`[getModelImagePath] ❌ Invalid BACKEND_URL: ${BACKEND_URL}`);
+    console.error(`[getModelImagePath] Using fallback: http://localhost:3001`);
+    BACKEND_URL = 'http://localhost:3001';
+  }
+  
   if (!modelName) return `${BACKEND_URL}/images/`;
   
   // Map model names to folder names
@@ -36,8 +69,11 @@ export function getModelImagePath(modelName) {
   // Try to find in map first
   const folderName = modelFolderMap[modelName] || modelName;
   
+  // Encode folder name for URL (spaces become %20)
+  const encodedFolderName = encodeURIComponent(folderName);
+  
   // Return the path pointing to backend
-  return `${BACKEND_URL}/images/${folderName}/`;
+  return `${BACKEND_URL}/images/${encodedFolderName}/`;
 }
 
 /**
@@ -46,8 +82,15 @@ export function getModelImagePath(modelName) {
 export function getFullImagePath(modelName, filename) {
   if (!filename) return null;
   
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-  const BACKEND_URL = API_BASE_URL.replace('/api', '');
+  // Use getBackendUrl() to ensure consistency
+  let BACKEND_URL = getBackendUrl();
+  
+  // Validate BACKEND_URL - use fallback if invalid
+  if (!BACKEND_URL || !BACKEND_URL.startsWith('http')) {
+    console.error(`[getFullImagePath] ❌ Invalid BACKEND_URL: ${BACKEND_URL}`);
+    BACKEND_URL = 'http://localhost:3001';
+    console.error(`[getFullImagePath] Using fallback: ${BACKEND_URL}`);
+  }
   
   // If filename is already a full URL, return as-is
   if (filename.startsWith('http://') || filename.startsWith('https://')) {
@@ -55,8 +98,25 @@ export function getFullImagePath(modelName, filename) {
   }
   
   // If it's a relative path like /images/..., convert to full backend URL
+  // Need to encode the path parts (folder names with spaces)
   if (filename.startsWith('/images/')) {
-    return `${BACKEND_URL}${filename}`;
+    // Split the path and encode each part
+    const parts = filename.split('/').filter(Boolean);
+    if (parts.length >= 3) {
+      // /images/Folder Name/image.jpg -> encode folder name
+      const encodedParts = parts.map((part, index) => {
+        // Encode folder names (not the 'images' part, and not the filename which will be encoded separately)
+        if (index === 0 || index === parts.length - 1) {
+          // 'images' and filename - encode filename but not 'images'
+          return index === parts.length - 1 ? encodeFilename(part) : part;
+        }
+        // Folder names - encode with encodeURIComponent to handle spaces
+        return encodeURIComponent(part);
+      });
+      return `${BACKEND_URL}/${encodedParts.join('/')}`;
+    }
+    // Fallback: just encode the whole path
+    return `${BACKEND_URL}${encodeURI(filename)}`;
   }
   
   // Otherwise, treat as filename and build the path
@@ -69,7 +129,29 @@ export function getFullImagePath(modelName, filename) {
   
   // Debug logging
   if (import.meta.env.DEV) {
-    console.log(`[Image Path] Model: ${modelName}, File: ${filename}, Path: ${fullPath}`);
+    // Check if encoding is correct (should NOT contain literal spaces)
+    const hasUnencodedSpace = fullPath.includes('MaxLine 38') || fullPath.includes('Infinity 280');
+    const hasEncodedSpace = fullPath.includes('MaxLine%2038') || fullPath.includes('Infinity%20280');
+    
+    // Check if it's a relative path (starts with /) instead of absolute URL
+    const isRelative = fullPath.startsWith('/');
+    const isAbsolute = fullPath.startsWith('http://') || fullPath.startsWith('https://');
+    
+    console.log(`[Image Path] Model: ${modelName}, File: ${filename}`);
+    console.log(`[Image Path] Generated path: ${fullPath}`);
+    console.log(`[Image Path] Is relative: ${isRelative}, Is absolute: ${isAbsolute}`);
+    console.log(`[Image Path] Has unencoded space: ${hasUnencodedSpace}, Has encoded space: ${hasEncodedSpace}`);
+    
+    if (isRelative) {
+      console.error(`[Image Path] ❌ ERROR: Path is relative! Should be absolute backend URL.`);
+      console.error(`[Image Path] BACKEND_URL was: ${getBackendUrl()}`);
+      console.error(`[Image Path] VITE_API_URL is: ${import.meta.env.VITE_API_URL || 'NOT SET'}`);
+    }
+    
+    if (hasUnencodedSpace && !hasEncodedSpace) {
+      console.error(`[Image Path] ❌ ERROR: Path contains unencoded space! This will cause 404 errors.`);
+      console.error(`[Image Path] Expected: ${fullPath.replace(/ /g, '%20')}`);
+    }
   }
   
   return fullPath;

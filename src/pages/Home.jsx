@@ -1,17 +1,26 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import HeroSection from '../components/HeroSection';
 import { useModels } from '../context/ModelsContext';
 import { upcomingModels } from '../data/models';
 import { getModelDisplayName } from '../utils/modelNameUtils';
 import api from '../services/api';
+import ModelCard from '../components/ModelCard';
 
 const Home = () => {
   const { categories, models, loading } = useModels();
   const [selectedModels, setSelectedModels] = useState([]);
   const [events, setEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  
+  // Get boats models (models whose category has mainGroup = 'boats')
+  const boatsModels = useMemo(() => {
+    const boatsCategoryIds = categories
+      .filter(cat => cat.mainGroup === 'boats')
+      .map(cat => cat.id);
+    return models.filter(model => boatsCategoryIds.includes(model.categoryId));
+  }, [categories, models]);
   
   // Get 7 random models when data loads
   useEffect(() => {
@@ -292,72 +301,91 @@ const Home = () => {
             </p>
           </motion.div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-            {categories
-              .filter(category => {
-                // Remove Infinity and Striker from complete collection
-                const name = category.name?.toLowerCase() || '';
-                return !name.includes('infinity') && !name.includes('striker');
-              })
-              .map((category, index) => (
-              <motion.div
-                key={category.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Link to={`/categories/${category.id}`} className="block group h-full">
-                  <div className="relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden h-full flex flex-col border border-gray-100">
-                    {/* Category Image */}
-                    <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={category.image}
-                        alt={category.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      {/* Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                      
-                      {/* Model Count Badge */}
-                      <div className="absolute top-4 right-4">
-                        <div className="bg-smoked-saffron text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-lg">
-                          {category.models.length} Model{category.models.length !== 1 ? 's' : ''}
-                        </div>
-                      </div>
-                      
-                      {/* Category Name */}
-                      <div className="absolute bottom-0 left-0 right-0 p-4">
-                        <h3 className="text-xl md:text-2xl font-light text-white tracking-tight line-clamp-2">
-                          {category.name}
-                        </h3>
-                      </div>
-                    </div>
-                    
-                    {/* Category Info */}
-                    <div className="p-5 flex-1 flex flex-col">
-                      <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2 flex-1">
-                        {category.shortDescription || category.description}
-                      </p>
-                      
-                      {/* CTA Button */}
-                      <div className="flex items-center text-smoked-saffron group-hover:text-midnight-slate transition-colors duration-300 pt-3 border-t border-gray-100">
-                        <span className="text-sm font-medium mr-2">View Models</span>
-                        <svg 
-                          className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
+          {/* Group categories by mainGroup */}
+          {(() => {
+            const inflatableBoatsCategories = categories.filter(cat => 
+              (cat.mainGroup || 'inflatableBoats') === 'inflatableBoats' &&
+              !cat.name?.toLowerCase().includes('infinity') &&
+              !cat.name?.toLowerCase().includes('striker')
+            );
+
+            return (
+              <>
+                {/* Inflatable Boats Section */}
+                {inflatableBoatsCategories.length > 0 && (
+                  <div className="mb-12">
+                    <h3 className="text-2xl md:text-3xl font-light text-midnight-slate mb-6 text-center">
+                      Inflatable Boats
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                      {inflatableBoatsCategories.map((category, index) => (
+                        <motion.div
+                          key={category.id}
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: index * 0.1 }}
+                          viewport={{ once: true }}
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
+                          <Link to={`/categories/${category.id}`} className="block group h-full">
+                            <div className="relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden h-full flex flex-col border border-gray-100">
+                              <div className="relative h-48 overflow-hidden">
+                                <img
+                                  src={category.image}
+                                  alt={category.name}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                                <div className="absolute top-4 right-4">
+                                  <div className="bg-smoked-saffron text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-lg">
+                                    {category.models.length} Model{category.models.length !== 1 ? 's' : ''}
+                                  </div>
+                                </div>
+                                <div className="absolute bottom-0 left-0 right-0 p-4">
+                                  <h3 className="text-xl md:text-2xl font-light text-white tracking-tight line-clamp-2">
+                                    {category.name}
+                                  </h3>
+                                </div>
+                              </div>
+                              <div className="p-5 flex-1 flex flex-col">
+                                <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2 flex-1">
+                                  {category.shortDescription || category.description}
+                                </p>
+                                <div className="flex items-center text-smoked-saffron group-hover:text-midnight-slate transition-colors duration-300 pt-3 border-t border-gray-100">
+                                  <span className="text-sm font-medium mr-2">View Models</span>
+                                  <svg 
+                                    className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+                          </Link>
+                        </motion.div>
+                      ))}
                     </div>
                   </div>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+                )}
+
+                {/* Boats Section - Show models directly, not categories */}
+                {boatsModels.length > 0 && (
+                  <div>
+                    <h3 className="text-2xl md:text-3xl font-light text-midnight-slate mb-6 text-center">
+                      Boats
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {boatsModels.map((model, index) => (
+                        <ModelCard key={model.id} model={model} index={index} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       </section>
 

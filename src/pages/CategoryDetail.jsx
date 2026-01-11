@@ -1,12 +1,36 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ModelCard from '../components/ModelCard';
 import { useModels } from '../context/ModelsContext';
+import { useMemo } from 'react';
 
 const CategoryDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { categories, loading } = useModels();
   const category = categories.find(c => c.id === parseInt(id));
+  
+  // Check if this category is a "Boats" category (should redirect or show different view)
+  const isBoatsCategory = useMemo(() => {
+    return category?.mainGroup === 'boats';
+  }, [category]);
+  
+  // Redirect boats categories - they should show models directly, not as a category page
+  if (category && isBoatsCategory) {
+    // If it's a boats category, redirect to home or show models
+    // For now, we'll just show a message or redirect
+    return (
+      <div className="pt-20 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-light text-midnight-slate mb-4">Boats Collection</h1>
+          <p className="text-gray-600 mb-8">This category contains boat models. Please browse from the main menu.</p>
+          <Link to="/" className="btn-primary">
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
