@@ -11,7 +11,9 @@ function getBackendUrl() {
   // If not set, use fallback
   if (!API_BASE_URL || API_BASE_URL === 'undefined' || API_BASE_URL === '') {
     API_BASE_URL = 'http://localhost:3001/api';
-    console.warn(`[getBackendUrl] ⚠️ VITE_API_URL not set, using fallback: ${API_BASE_URL}`);
+    if (import.meta.env.DEV) {
+      console.warn(`[getBackendUrl] ⚠️ VITE_API_URL not set, using fallback: ${API_BASE_URL}`);
+    }
   }
   
   const backendUrl = API_BASE_URL.replace('/api', ''); // Remove /api to get base backend URL
@@ -26,8 +28,10 @@ function getBackendUrl() {
   
   // Ensure we have a valid URL
   if (!backendUrl || backendUrl === 'undefined' || !backendUrl.startsWith('http')) {
-    console.error(`[getBackendUrl] ❌ Invalid backend URL: ${backendUrl}`);
-    console.error(`[getBackendUrl] Falling back to: http://localhost:3001`);
+    if (import.meta.env.DEV) {
+      console.error(`[getBackendUrl] ❌ Invalid backend URL: ${backendUrl}`);
+      console.error(`[getBackendUrl] Falling back to: http://localhost:3001`);
+    }
     return 'http://localhost:3001';
   }
   
@@ -42,8 +46,10 @@ export function getModelImagePath(modelName) {
   
   // Validate BACKEND_URL - use fallback if invalid
   if (!BACKEND_URL || !BACKEND_URL.startsWith('http')) {
-    console.error(`[getModelImagePath] ❌ Invalid BACKEND_URL: ${BACKEND_URL}`);
-    console.error(`[getModelImagePath] Using fallback: http://localhost:3001`);
+    if (import.meta.env.DEV) {
+      console.error(`[getModelImagePath] ❌ Invalid BACKEND_URL: ${BACKEND_URL}`);
+      console.error(`[getModelImagePath] Using fallback: http://localhost:3001`);
+    }
     BACKEND_URL = 'http://localhost:3001';
   }
   
@@ -87,9 +93,11 @@ export function getFullImagePath(modelName, filename) {
   
   // Validate BACKEND_URL - use fallback if invalid
   if (!BACKEND_URL || !BACKEND_URL.startsWith('http')) {
-    console.error(`[getFullImagePath] ❌ Invalid BACKEND_URL: ${BACKEND_URL}`);
+    if (import.meta.env.DEV) {
+      console.error(`[getFullImagePath] ❌ Invalid BACKEND_URL: ${BACKEND_URL}`);
+      console.error(`[getFullImagePath] Using fallback: http://localhost:3001`);
+    }
     BACKEND_URL = 'http://localhost:3001';
-    console.error(`[getFullImagePath] Using fallback: ${BACKEND_URL}`);
   }
   
   // If filename is already a full URL, return as-is

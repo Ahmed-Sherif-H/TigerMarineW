@@ -34,7 +34,9 @@ export function transformModel(model) {
     };
     const fallbackFilename = fallbackMap[modelName] || `${modelName} - 1.jpg`;
     const path = getFullImagePath(modelName, fallbackFilename);
-    console.log(`[Transform] Using fallback image for ${modelName}: ${fallbackFilename} → ${path}`);
+    if (import.meta.env.DEV) {
+      console.log(`[Transform] Using fallback image for ${modelName}: ${fallbackFilename} → ${path}`);
+    }
     return path;
   };
   
@@ -50,7 +52,10 @@ export function transformModel(model) {
         filename = filename.split('/').pop();
       }
       const path = getFullImagePath(model.name, filename);
-      console.log(`[Transform] Image: ${model.imageFile} → ${filename} → ${path}`);
+      // Only log in development
+      if (import.meta.env.DEV) {
+        console.log(`[Transform] Image: ${model.imageFile} → ${filename} → ${path}`);
+      }
       return path;
     })() : getFallbackImage(model.name),
     heroImage: model.heroImageFile ? (() => {
@@ -59,7 +64,10 @@ export function transformModel(model) {
         filename = filename.split('/').pop();
       }
       const path = getFullImagePath(model.name, filename);
-      console.log(`[Transform] HeroImage: ${model.heroImageFile} → ${filename} → ${path}`);
+      // Only log in development
+      if (import.meta.env.DEV) {
+        console.log(`[Transform] HeroImage: ${model.heroImageFile} → ${filename} → ${path}`);
+      }
       return path;
     })() : getFallbackImage(model.name),
     contentImage: model.contentImageFile ? (() => {
@@ -68,7 +76,10 @@ export function transformModel(model) {
         filename = filename.split('/').pop();
       }
       const path = getFullImagePath(model.name, filename);
-      console.log(`[Transform] ContentImage: ${model.contentImageFile} → ${filename} → ${path}`);
+      // Only log in development
+      if (import.meta.env.DEV) {
+        console.log(`[Transform] ContentImage: ${model.contentImageFile} → ${filename} → ${path}`);
+      }
       return path;
     })() : getFallbackImage(model.name),
     
@@ -88,10 +99,16 @@ export function transformModel(model) {
       const modelFolder = getModelImagePath(model.name); // Returns: ${BACKEND_URL}/images/${encodedFolderName}/
       const encodedFilename = encodeFilename(filename);
       const fullPath = modelFolder + 'Interior/' + encodedFilename;
-      console.log(`[Transform] ✅ InteriorMainImage: ${model.interiorMainImage} → ${filename} → ${fullPath}`);
+      // Only log in development
+      if (import.meta.env.DEV) {
+        console.log(`[Transform] ✅ InteriorMainImage: ${model.interiorMainImage} → ${filename} → ${fullPath}`);
+      }
       return fullPath;
     })() : (() => {
-      console.log(`[Transform] ⚠️ No interiorMainImage for model ${model.name}. Value:`, model.interiorMainImage);
+      // Only log in development
+      if (import.meta.env.DEV) {
+        console.log(`[Transform] ⚠️ No interiorMainImage for model ${model.name}. Value:`, model.interiorMainImage);
+      }
       return null;
     })(),
     
@@ -121,7 +138,10 @@ export function transformModel(model) {
           }
           // Now build the full path from just the filename
           const fullPath = getFullImagePath(model.name, filename);
-          console.log(`[Transform] Gallery file: ${filename} → ${fullPath}`);
+          // Only log in development
+          if (import.meta.env.DEV) {
+            console.log(`[Transform] Gallery file: ${filename} → ${fullPath}`);
+          }
           return fullPath;
         })
       : [getFallbackImage(model.name)], // Use fallback if no gallery files

@@ -27,21 +27,24 @@ const ModelDetail = () => {
       try {
         setLoading(true);
         const modelData = await api.getModelById(id);
-        console.log('Raw model data from API:', modelData);
         // Transform model data to include proper image paths
         const { transformModel } = await import('../utils/transformModelData');
         const transformed = transformModel(modelData);
-        console.log('Transformed model:', transformed);
-        console.log('Image paths:', {
-          image: transformed?.image,
-          heroImage: transformed?.heroImage,
-          contentImage: transformed?.contentImage,
-          imageFile: transformed?.imageFile,
-          heroImageFile: transformed?.heroImageFile,
-          interiorMainImage: transformed?.interiorMainImage,
-          interiorFiles: transformed?.interiorFiles,
-          defaultHero: transformed?.heroImage || transformed?.image
-        });
+        // Only log in development
+        if (import.meta.env.DEV) {
+          console.log('Raw model data from API:', modelData);
+          console.log('Transformed model:', transformed);
+          console.log('Image paths:', {
+            image: transformed?.image,
+            heroImage: transformed?.heroImage,
+            contentImage: transformed?.contentImage,
+            imageFile: transformed?.imageFile,
+            heroImageFile: transformed?.heroImageFile,
+            interiorMainImage: transformed?.interiorMainImage,
+            interiorFiles: transformed?.interiorFiles,
+            defaultHero: transformed?.heroImage || transformed?.image
+          });
+        }
         setModel(transformed);
       } catch (error) {
         console.error('Error loading model:', error);
@@ -137,22 +140,28 @@ const ModelDetail = () => {
   // Note: interiorMainImage is already transformed to full path in transformModelData.js
   const interiorMainImage = useMemo(() => {
     if (!model) {
-      console.log('[ModelDetail] No model for interiorMainImage');
+      if (import.meta.env.DEV) {
+        console.log('[ModelDetail] No model for interiorMainImage');
+      }
       return null;
     }
     // Check for empty string, null, or undefined
     if (!model.interiorMainImage || model.interiorMainImage.trim() === '') {
-      console.log('[ModelDetail] No interiorMainImage field in model. Model keys:', Object.keys(model));
-      console.log('[ModelDetail] Model interiorMainImage value:', model.interiorMainImage);
-      console.log('[ModelDetail] Model raw data:', {
-        interiorMainImage: model.interiorMainImage,
-        interiorFiles: model.interiorFiles,
-        hasInteriorFiles: !!model.interiorFiles?.length
-      });
+      if (import.meta.env.DEV) {
+        console.log('[ModelDetail] No interiorMainImage field in model. Model keys:', Object.keys(model));
+        console.log('[ModelDetail] Model interiorMainImage value:', model.interiorMainImage);
+        console.log('[ModelDetail] Model raw data:', {
+          interiorMainImage: model.interiorMainImage,
+          interiorFiles: model.interiorFiles,
+          hasInteriorFiles: !!model.interiorFiles?.length
+        });
+      }
       return null;
     }
     // interiorMainImage is already a full path from transformModelData
-    console.log('[ModelDetail] ✅ Interior main image path:', model.interiorMainImage);
+    if (import.meta.env.DEV) {
+      console.log('[ModelDetail] ✅ Interior main image path:', model.interiorMainImage);
+    }
     return model.interiorMainImage;
   }, [model?.interiorMainImage]);
 
@@ -524,13 +533,17 @@ const ModelDetail = () => {
             alt={`${model.name} ${currentSlide + 1}`}
             className="w-full h-full object-cover"
             onError={(e) => {
-              console.error(`[ModelDetail] ❌ Failed to load gallery image:`, galleryImages[currentSlide]);
-              console.error(`[ModelDetail] Image element:`, e.target);
-              console.error(`[ModelDetail] Current slide:`, currentSlide);
+              if (import.meta.env.DEV) {
+                console.error(`[ModelDetail] ❌ Failed to load gallery image:`, galleryImages[currentSlide]);
+                console.error(`[ModelDetail] Image element:`, e.target);
+                console.error(`[ModelDetail] Current slide:`, currentSlide);
+              }
             }}
             onLoad={(e) => {
-              console.log(`[ModelDetail] ✅ Successfully loaded gallery image:`, galleryImages[currentSlide]);
-              console.log(`[ModelDetail] Loaded from URL:`, e.target.src);
+              if (import.meta.env.DEV) {
+                console.log(`[ModelDetail] ✅ Successfully loaded gallery image:`, galleryImages[currentSlide]);
+                console.log(`[ModelDetail] Loaded from URL:`, e.target.src);
+              }
             }}
           />
           {/* Arrows */}
@@ -572,7 +585,9 @@ const ModelDetail = () => {
                       alt={`${model.name} thumb ${idx + 1}`} 
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        console.error(`[ModelDetail] ❌ Failed to load gallery thumbnail ${idx}:`, src);
+                        if (import.meta.env.DEV) {
+                          console.error(`[ModelDetail] ❌ Failed to load gallery thumbnail ${idx}:`, src);
+                        }
                       }}
                     />
                   </button>
@@ -732,7 +747,9 @@ const ModelDetail = () => {
                       alt="Interior" 
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        console.error('[ModelDetail] ❌ Failed to load interiorMainImage:', interiorMainImage);
+                        if (import.meta.env.DEV) {
+                          console.error('[ModelDetail] ❌ Failed to load interiorMainImage:', interiorMainImage);
+                        }
                         // Hide broken image and show placeholder
                         e.target.style.display = 'none';
                         const parent = e.target.parentElement;
@@ -749,7 +766,9 @@ const ModelDetail = () => {
                         }
                       }}
                       onLoad={(e) => {
-                        console.log('[ModelDetail] ✅ Successfully loaded interiorMainImage:', interiorMainImage);
+                        if (import.meta.env.DEV) {
+                          console.log('[ModelDetail] ✅ Successfully loaded interiorMainImage:', interiorMainImage);
+                        }
                         // Remove placeholder if image loads successfully
                         const parent = e.target.parentElement;
                         const placeholder = parent?.querySelector('.broken-image-placeholder');
