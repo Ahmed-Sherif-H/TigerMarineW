@@ -62,7 +62,7 @@ export const sideMenuImages = {
   'OP850': 'Open-850.webp',
   'OP750': 'Open-750.webp',
   'OP650': 'Open-650.webp',
-  'Infinity 280': 'Infinity-280.png',
+  'Infinity 280': 'Infinity-280.webp',
   
   // Add new models here:
   // 'NewModel': 'NewModel-sideMenu.png',

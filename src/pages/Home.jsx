@@ -64,6 +64,24 @@ const Home = () => {
   
   const currentModel = selectedModels[currentIndex];
 
+  // Vision carousel state
+  const [visionCarouselIndex, setVisionCarouselIndex] = useState(0);
+  const visionImages = [
+    '/images/aboutUs-carousel1.webp',
+    '/images/aboutUs-carousel2.webp',
+    '/images/aboutUs-carousel3.webp',
+    '/images/aboutUs-carousel4.webp'
+  ];
+
+  // Auto-advance vision carousel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisionCarouselIndex((prev) => (prev + 1) % visionImages.length);
+    }, 3000); // Change image every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [visionImages.length]);
+
   return (
     <div className="pt-20">
       {/* Hero Section */}
@@ -159,14 +177,35 @@ const Home = () => {
               viewport={{ once: true }}
               className="relative aspect-[16/9] bg-gray-200 rounded-2xl overflow-hidden flex-1"
             >
-              <video
-                src="/images/AboutUs.mp4"
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full h-full object-cover"
-              />
+              {/* Image Carousel */}
+              <div className="relative w-full h-full">
+                {visionImages.map((image, index) => (
+                  <img
+                    key={index}
+                    src={image}
+                    alt={`Our Vision ${index + 1}`}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
+                      index === visionCarouselIndex ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  />
+                ))}
+                
+                {/* Carousel Indicators */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
+                  {visionImages.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setVisionCarouselIndex(index)}
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        index === visionCarouselIndex
+                          ? 'w-8 bg-white'
+                          : 'w-2 bg-white/50 hover:bg-white/75'
+                      }`}
+                      aria-label={`Go to image ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>
