@@ -5,10 +5,12 @@
 // Get API URL from environment or use fallback
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
-// Always log the API URL being used (helps debug)
-console.log('[API] Backend URL:', API_BASE_URL);
-console.log('[API] VITE_API_URL env var:', import.meta.env.VITE_API_URL || 'NOT SET');
-console.log('[API] Environment:', import.meta.env.MODE || 'unknown');
+// Always log the API URL being used (helps debug) - only in dev mode
+if (import.meta.env.DEV) {
+  console.log('[API] Backend URL:', API_BASE_URL);
+  console.log('[API] VITE_API_URL env var:', import.meta.env.VITE_API_URL || 'NOT SET');
+  console.log('[API] Environment:', import.meta.env.MODE || 'unknown');
+}
 
 // Warn if using localhost in production
 if (import.meta.env.PROD && API_BASE_URL.includes('localhost')) {
@@ -50,6 +52,7 @@ class ApiService {
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = `${API_BASE_URL}${cleanEndpoint}`;
     
+    // Only log in dev mode to reduce console noise
     if (import.meta.env.DEV) {
       console.log('[API] Fetching:', url);
     }
@@ -418,7 +421,7 @@ class ApiService {
         'Infinity 280': 'Infinity 280'
       };
       mappedModelName = MODEL_FOLDER_MAP[modelName] || modelName;
-      if (mappedModelName !== modelName) {
+      if (mappedModelName !== modelName && import.meta.env.DEV) {
         console.log(`[API] Mapping model name: ${modelName} -> ${mappedModelName}`);
       }
     }
@@ -442,14 +445,16 @@ class ApiService {
     formData.append('file', file);
     
     const url = `${API_BASE_URL}/upload/single`;
-    console.log('[API] Uploading file to:', url);
-    console.log('[API] File:', file.name, 'Size:', file.size);
-    console.log('[API] FormData fields:', {
-      folder,
-      modelName: modelName || 'none',
-      categoryName: categoryName || 'none',
-      subfolder: subfolder || 'none'
-    });
+    if (import.meta.env.DEV) {
+      console.log('[API] Uploading file to:', url);
+      console.log('[API] File:', file.name, 'Size:', file.size);
+      console.log('[API] FormData fields:', {
+        folder,
+        modelName: modelName || 'none',
+        categoryName: categoryName || 'none',
+        subfolder: subfolder || 'none'
+      });
+    }
     
     // Debug: Log FormData entries (for development)
     if (import.meta.env.DEV) {
@@ -502,7 +507,9 @@ class ApiService {
         throw new Error(data.error || `Upload failed: ${response.status}`);
       }
 
-      console.log('[API] Upload successful:', data);
+      if (import.meta.env.DEV) {
+        console.log('[API] Upload successful:', data);
+      }
       return data;
     } catch (error) {
       clearTimeout(timeoutId); // Clear timeout on error
@@ -538,7 +545,9 @@ class ApiService {
     }
 
     const url = `${API_BASE_URL}/upload/multiple`;
-    console.log('[API] Uploading multiple files to:', url);
+    if (import.meta.env.DEV) {
+      console.log('[API] Uploading multiple files to:', url);
+    }
     
     // Get auth token for authenticated requests
     const token = localStorage.getItem('admin_token');

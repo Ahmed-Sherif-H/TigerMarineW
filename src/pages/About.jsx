@@ -5,7 +5,7 @@ const About = () => {
     {
       year: "1998",
       title: "Foundation",
-      description: "Tiger Marine was founded in Monaco with a vision to create the world's most luxurious yachts."
+      description: "Tiger Marine was founded in Monaco with a vision to create the world's most luxurious boats."
     },
     {
       year: "2005",
@@ -25,19 +25,19 @@ const About = () => {
     {
       year: "2023",
       title: "500th Delivery",
-      description: "Celebrated the delivery of our 500th yacht, marking a milestone in our company's history."
+      description: "Celebrated the delivery of our 500th boat, marking a milestone in our company's history."
     }
   ];
 
   const values = [
     {
       title: "Excellence",
-      description: "We never compromise on quality, ensuring every yacht meets the highest standards of craftsmanship and performance.",
+      description: "We never compromise on quality, ensuring every boats meets the highest standards of craftsmanship and performance.",
       icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
     },
     {
       title: "Innovation",
-      description: "We continuously push the boundaries of marine engineering and design to create cutting-edge yachts.",
+      description: "We continuously push the boundaries of marine engineering and design to create cutting-edge boats.",
       icon: "M13 10V3L4 14h7v7l9-11h-7z"
     },
     {
@@ -72,7 +72,7 @@ const About = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-xl text-gray-200 max-w-3xl mx-auto"
           >
-            For over 25 years, we have been crafting the world's most luxurious yachts, 
+            For almost 30 years, we have been crafting the world's most luxurious boats, 
             combining traditional craftsmanship with cutting-edge technology.
           </motion.p>
         </div>
@@ -92,15 +92,10 @@ const About = () => {
                 Our Story
               </h2>
               <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                Founded in 1998 in the heart of Monaco, Tiger Marine began as a small 
-                family business with a simple yet ambitious goal: to create the world's 
-                most luxurious and technologically advanced yachts.
+              Founded in 1996, Tiger Marine has over two decades of expertise in inflatable boat manufacturing. Our long-standing experience is reflected in every detail — from superior performance on the water to uncompromising build quality.
               </p>
               <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                What started as a passion for maritime excellence has grown into a global 
-                brand recognized for uncompromising quality, innovative design, and 
-                exceptional service. Today, Tiger Marine yachts grace the world's most 
-                prestigious marinas and are trusted by discerning mariners worldwide.
+              Each Tiger Marine boat is engineered using only premium European components, carefully selected from the most trusted manufacturers in the industry. This commitment ensures full compliance with CE regulations and guarantees outstanding value, durability, and safety for our customers.
               </p>
               <p className="text-lg text-gray-600 leading-relaxed">
                 Our commitment to excellence extends beyond the vessels we build. We 

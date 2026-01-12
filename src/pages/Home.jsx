@@ -69,7 +69,7 @@ const Home = () => {
       {/* Hero Section */}
       <HeroSection
         title="Experience the Art of Marine Excellence"
-        subtitle="Discover our collection of luxury yachts, crafted with precision and designed for the discerning mariner."
+        subtitle="Discover our collection of luxury boats, crafted with precision and designed for the discerning mariner."
         backgroundImage="/images/DJI_0154.jpg"
       />
 

@@ -175,21 +175,39 @@ export function normalizeModelDataForEdit(modelData) {
   
   return {
     ...modelData,
-    // Extract filenames from main image fields (API returns paths)
-    imageFile: extractFilename(modelData.imageFile || ''),
-    heroImageFile: extractFilename(modelData.heroImageFile || ''),
-    contentImageFile: extractFilename(modelData.contentImageFile || ''),
-    interiorMainImage: extractFilename(modelData.interiorMainImage || ''),
-    // Extract filenames from arrays
-    galleryFiles: extractFilenames(modelData.galleryFiles || []),
-    interiorFiles: extractFilenames(modelData.interiorFiles || []),
-    videoFiles: extractFilenames(modelData.videoFiles || []),
+    // Preserve Cloudinary URLs, extract filenames for legacy paths
+    // extractFilename() already handles this correctly
+    imageFile: modelData.imageFile || '',
+    heroImageFile: modelData.heroImageFile || '',
+    contentImageFile: modelData.contentImageFile || '',
+    interiorMainImage: modelData.interiorMainImage || '',
+    // Preserve Cloudinary URLs in arrays, extract filenames for legacy paths
+    galleryFiles: (modelData.galleryFiles || []).map(file => {
+      // If it's a Cloudinary URL, preserve it
+      if (typeof file === 'string' && (file.includes('cloudinary.com') || file.startsWith('http'))) {
+        return file;
+      }
+      return extractFilename(file);
+    }),
+    interiorFiles: (modelData.interiorFiles || []).map(file => {
+      if (typeof file === 'string' && (file.includes('cloudinary.com') || file.startsWith('http'))) {
+        return file;
+      }
+      return extractFilename(file);
+    }),
+    videoFiles: (modelData.videoFiles || []).map(file => {
+      // Preserve YouTube URLs and Cloudinary URLs
+      if (typeof file === 'string' && (file.includes('youtube.com') || file.includes('youtu.be') || file.includes('cloudinary.com') || file.startsWith('http'))) {
+        return file;
+      }
+      return extractFilename(file);
+    }),
   };
 }
 
 /**
  * Normalize category data for saving to backend
- * Ensures all image fields contain only filenames (not paths)
+ * Preserves Cloudinary URLs, extracts filenames only for legacy paths
  */
 export function normalizeCategoryDataForSave(categoryData) {
   if (!categoryData || typeof categoryData !== 'object') {
@@ -198,15 +216,16 @@ export function normalizeCategoryDataForSave(categoryData) {
   
   return {
     ...categoryData,
-    // Extract filenames from image fields
-    image: extractFilename(categoryData.image || ''),
-    heroImage: extractFilename(categoryData.heroImage || ''),
+    // Preserve Cloudinary URLs, extract filenames for legacy paths
+    // extractFilename() already handles this correctly
+    image: categoryData.image || '',
+    heroImage: categoryData.heroImage || '',
   };
 }
 
 /**
  * Normalize category data when loading from backend
- * Extracts filenames from paths returned by API
+ * Preserves Cloudinary URLs, extracts filenames only for legacy paths
  */
 export function normalizeCategoryDataForEdit(categoryData) {
   if (!categoryData || typeof categoryData !== 'object') {
@@ -215,9 +234,10 @@ export function normalizeCategoryDataForEdit(categoryData) {
   
   return {
     ...categoryData,
-    // Extract filenames from image fields (API returns paths)
-    image: extractFilename(categoryData.image || ''),
-    heroImage: extractFilename(categoryData.heroImage || ''),
+    // Preserve Cloudinary URLs, extract filenames for legacy paths
+    // extractFilename() already handles this correctly
+    image: categoryData.image || '',
+    heroImage: categoryData.heroImage || '',
   };
 }
 

@@ -185,7 +185,8 @@ const AdminDashboard = () => {
         startDate: editedData.startDate,
         endDate: editedData.endDate || null,
         description: editedData.description || '',
-        image: editedData.image ? extractFilename(editedData.image) : '',
+        // Preserve Cloudinary URLs, extract filename only for legacy paths
+        image: editedData.image || '',
         website: editedData.website || '',
         status: editedData.status || 'upcoming',
         order: parseInt(editedData.order) || 0
@@ -249,9 +250,11 @@ const AdminDashboard = () => {
   };
 
   const handleInputChange = (field, value) => {
-    // For image file fields, extract just the filename (not the full path)
+    // For image file fields, preserve Cloudinary URLs, extract filenames only for legacy paths
+    // extractFilename() already handles this - it preserves Cloudinary URLs and full URLs
     if (field === 'imageFile' || field === 'heroImageFile' || field === 'contentImageFile' ||
         field === 'image' || field === 'heroImage' || field === 'interiorMainImage') {
+      // extractFilename preserves Cloudinary URLs, so this is safe
       value = extractFilename(value);
     }
     
@@ -869,9 +872,9 @@ const AdminDashboard = () => {
                               }
                               try {
                                 const result = await api.uploadFile(file, 'images', editedData.name);
-                                // Extract just the filename (backend may return full path)
-                                const filename = extractFilename(result.filename || result.path || result.url || '');
-                                handleInputChange('heroImageFile', filename);
+                                // Extract URL from upload response (handles both old and new format)
+                                const url = extractUploadUrl(result);
+                                handleInputChange('heroImageFile', url);
                                 setMessage({ type: 'success', text: 'Hero banner image uploaded successfully!' });
                               } catch (error) {
                                 setMessage({ type: 'error', text: 'Failed to upload hero image: ' + error.message });
@@ -1706,6 +1709,7 @@ const AdminDashboard = () => {
                                     const result = await api.uploadFile(file, 'categories', null, null, null, editedData.name);
                                     // Extract URL from upload response
                                     const url = extractUploadUrl(result);
+                                    // Store the full Cloudinary URL
                                     handleInputChange('image', url);
                                     setMessage({ type: 'success', text: 'About section image uploaded successfully!' });
                                   } catch (error) {
@@ -1761,6 +1765,7 @@ const AdminDashboard = () => {
                                 const result = await api.uploadFile(file, 'categories', null, null, null, editedData.name);
                                 // Extract URL from upload response
                                 const url = extractUploadUrl(result);
+                                // Store the full Cloudinary URL
                                 handleInputChange('image', url);
                                 setMessage({ type: 'success', text: 'Category thumbnail uploaded successfully!' });
                               } catch (error) {
@@ -1916,7 +1921,7 @@ const AdminDashboard = () => {
                       value={editedData.name || ''}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
-                      placeholder="Monaco Yacht Show"
+                      placeholder="Monaco boat Show"
                     />
                   </div>
                   <div>
@@ -2010,6 +2015,7 @@ const AdminDashboard = () => {
                             // Upload to a general events folder
                             const result = await api.uploadFile(file, 'images', 'Events', null, null, null);
                             const url = extractUploadUrl(result);
+                            // Store the full Cloudinary URL
                             handleInputChange('image', url);
                             setMessage({ type: 'success', text: 'Event image uploaded successfully!' });
                           } catch (error) {

@@ -20,10 +20,12 @@ function getBackendUrl() {
   // Handle both cases: URL ending with /api or /api/
   let backendUrl = API_BASE_URL.replace(/\/api\/?$/, '');
   
-  // Log in both dev and production for debugging image issues
-  console.log(`[getBackendUrl] VITE_API_URL from env:`, import.meta.env.VITE_API_URL);
-  console.log(`[getBackendUrl] API_BASE_URL: ${API_BASE_URL}`);
-  console.log(`[getBackendUrl] Backend URL (for images): ${backendUrl}`);
+  // Log in dev mode only to reduce console noise
+  if (import.meta.env.DEV) {
+    console.log(`[getBackendUrl] VITE_API_URL from env:`, import.meta.env.VITE_API_URL);
+    console.log(`[getBackendUrl] API_BASE_URL: ${API_BASE_URL}`);
+    console.log(`[getBackendUrl] Backend URL (for images): ${backendUrl}`);
+  }
   
   // Ensure we have a valid URL
   if (!backendUrl || backendUrl === 'undefined' || !backendUrl.startsWith('http')) {

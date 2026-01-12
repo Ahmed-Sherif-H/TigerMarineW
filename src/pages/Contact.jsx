@@ -79,7 +79,7 @@ const Contact = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-xl text-gray-200 max-w-3xl mx-auto"
           >
-            Get in touch with our team to discuss your Tiger Marine yacht 
+            Get in touch with our team to discuss your Tiger Marine boat 
             requirements and schedule a consultation.
           </motion.p>
         </div>

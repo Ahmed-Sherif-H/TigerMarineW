@@ -114,7 +114,7 @@ const Dealers = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-xl text-gray-200 max-w-3xl mx-auto"
           >
-            Find your nearest Tiger Marine dealer and experience our luxury yachts 
+            Find your nearest Tiger Marine dealer and experience our luxury boats 
             with personalized service and support.
           </motion.p>
         </div>
@@ -414,7 +414,7 @@ const Dealers = () => {
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
               Contact your nearest dealer to schedule a viewing, test drive, 
-              or consultation about your next Tiger Marine yacht.
+              or consultation about your next Tiger Marine boat.
             </p>
             <a
               href="/contact"
