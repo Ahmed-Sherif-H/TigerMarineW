@@ -24,6 +24,7 @@ export const MODEL_FOLDER_MAP = {
  * Extract just the filename from a path or filename
  * Handles: "/images/TopLine850/image.jpg" -> "image.jpg"
  *          "image.jpg" -> "image.jpg"
+ *          Cloudinary URLs -> returns URL as-is (don't extract filename)
  */
 export function extractFilename(pathOrFilename) {
   if (!pathOrFilename || typeof pathOrFilename !== 'string') {
@@ -33,6 +34,11 @@ export function extractFilename(pathOrFilename) {
   const trimmed = pathOrFilename.trim();
   if (!trimmed) return '';
   
+  // If it's a Cloudinary URL or full URL, return it as-is (don't extract filename)
+  if (trimmed.includes('cloudinary.com') || trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  
   // If it contains a slash, extract the last part (filename)
   if (trimmed.includes('/')) {
     return trimmed.split('/').pop().trim();
@@ -40,6 +46,29 @@ export function extractFilename(pathOrFilename) {
   
   // Otherwise, it's already just a filename
   return trimmed;
+}
+
+/**
+ * Extract URL from upload response
+ * Handles both old format { filename, path } and new format { url, public_id, filename }
+ * Returns the URL if available, otherwise falls back to filename
+ */
+export function extractUploadUrl(uploadResponse) {
+  if (!uploadResponse) return '';
+  
+  // New Cloudinary format: { url, public_id, filename }
+  if (uploadResponse.url) {
+    return uploadResponse.url;
+  }
+  
+  // Old format: { filename, path }
+  // If path is a Cloudinary URL, use it
+  if (uploadResponse.path && (uploadResponse.path.includes('cloudinary.com') || uploadResponse.path.startsWith('http'))) {
+    return uploadResponse.path;
+  }
+  
+  // Fallback to filename (for backward compatibility with legacy data)
+  return uploadResponse.filename || uploadResponse.path || '';
 }
 
 /**
@@ -102,15 +131,32 @@ export function normalizeModelDataForSave(modelData) {
   
   return {
     ...modelData,
-    // Extract filenames from main image fields
-    imageFile: extractFilename(modelData.imageFile || ''),
-    heroImageFile: extractFilename(modelData.heroImageFile || ''),
-    contentImageFile: extractFilename(modelData.contentImageFile || ''),
-    interiorMainImage: extractFilename(modelData.interiorMainImage || ''),
-    // Extract filenames from arrays
-    galleryFiles: extractFilenames(modelData.galleryFiles || []),
-    interiorFiles: extractFilenames(modelData.interiorFiles || []),
-    videoFiles: extractFilenames(modelData.videoFiles || []),
+    // Preserve Cloudinary URLs, extract filenames for legacy paths
+    imageFile: modelData.imageFile || '',
+    heroImageFile: modelData.heroImageFile || '',
+    contentImageFile: modelData.contentImageFile || '',
+    interiorMainImage: modelData.interiorMainImage || '',
+    // Preserve Cloudinary URLs in arrays, extract filenames for legacy paths
+    galleryFiles: (modelData.galleryFiles || []).map(file => {
+      // If it's a Cloudinary URL, preserve it
+      if (typeof file === 'string' && (file.includes('cloudinary.com') || file.startsWith('http'))) {
+        return file;
+      }
+      return extractFilename(file);
+    }),
+    interiorFiles: (modelData.interiorFiles || []).map(file => {
+      if (typeof file === 'string' && (file.includes('cloudinary.com') || file.startsWith('http'))) {
+        return file;
+      }
+      return extractFilename(file);
+    }),
+    videoFiles: (modelData.videoFiles || []).map(file => {
+      // Preserve YouTube URLs and Cloudinary URLs
+      if (typeof file === 'string' && (file.includes('youtube.com') || file.includes('youtu.be') || file.includes('cloudinary.com') || file.startsWith('http'))) {
+        return file;
+      }
+      return extractFilename(file);
+    }),
     // Convert features to standardFeatures format
     standardFeatures: standardFeatures,
     // Remove features field to avoid confusion (backend expects standardFeatures)

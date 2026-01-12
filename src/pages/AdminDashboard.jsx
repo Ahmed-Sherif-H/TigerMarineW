@@ -8,7 +8,8 @@ import {
   normalizeModelDataForEdit,
   normalizeCategoryDataForSave,
   normalizeCategoryDataForEdit,
-  extractFilename 
+  extractFilename,
+  extractUploadUrl
 } from '../utils/backendConfig';
 import { isYouTubeUrl } from '../utils/youtubeUtils';
 
@@ -824,10 +825,10 @@ const AdminDashboard = () => {
                               try {
                                 const result = await api.uploadFile(file, 'images', editedData.name);
                                 console.log('[AdminDashboard] Upload result:', result);
-                                // Extract just the filename (backend may return full path)
-                                const filename = extractFilename(result.filename || result.path || result.url || result.file || '');
-                                console.log('[AdminDashboard] Extracted filename:', filename);
-                                handleInputChange('imageFile', filename);
+                                // Extract URL from upload response (handles both old and new format)
+                                const url = extractUploadUrl(result);
+                                console.log('[AdminDashboard] Extracted URL:', url);
+                                handleInputChange('imageFile', url);
                                 setMessage({ type: 'success', text: 'Thumbnail image uploaded successfully!' });
                               } catch (error) {
                                 setMessage({ type: 'error', text: 'Failed to upload thumbnail image: ' + error.message });
@@ -911,9 +912,9 @@ const AdminDashboard = () => {
                               }
                               try {
                                 const result = await api.uploadFile(file, 'images', editedData.name);
-                                // Extract just the filename (backend may return full path)
-                                const filename = extractFilename(result.filename || result.path || result.url || '');
-                                handleInputChange('contentImageFile', filename);
+                                // Extract URL from upload response
+                                const url = extractUploadUrl(result);
+                                handleInputChange('contentImageFile', url);
                                 setMessage({ type: 'success', text: 'Content section image uploaded successfully!' });
                               } catch (error) {
                                 setMessage({ type: 'error', text: 'Failed to upload content image: ' + error.message });
@@ -1238,10 +1239,10 @@ const AdminDashboard = () => {
                           for (const file of files) {
                             const result = await api.uploadFile(file, 'images', editedData.name);
                             console.log('[AdminDashboard] Gallery upload result:', result);
-                            // Extract just the filename (backend may return full path)
-                            const filename = extractFilename(result.filename || result.path || result.url || result.file || '');
-                            console.log('[AdminDashboard] Extracted gallery filename:', filename);
-                            uploadedFiles.push(filename);
+                            // Extract URL from upload response
+                            const url = extractUploadUrl(result);
+                            console.log('[AdminDashboard] Extracted gallery URL:', url);
+                            uploadedFiles.push(url);
                           }
                           
                           const newGallery = [...(editedData.galleryFiles || []), ...uploadedFiles];
@@ -1308,26 +1309,19 @@ const AdminDashboard = () => {
                           try {
                             const result = await api.uploadFile(file, 'images', editedData.name, null, 'Interior');
                             console.log('[AdminDashboard] Upload result for interiorMainImage:', result);
-                            console.log('[AdminDashboard] Upload result keys:', Object.keys(result || {}));
-                            console.log('[AdminDashboard] Upload result.filename:', result?.filename);
-                            console.log('[AdminDashboard] Upload result.path:', result?.path);
+                            // Extract URL from upload response
+                            const url = extractUploadUrl(result);
+                            console.log('[AdminDashboard] Extracted URL for interiorMainImage:', url);
                             
-                            // Extract just the filename (backend may return full path)
-                            // Backend returns: { success: true, filename: "image.jpg", path: "full/path/to/image.jpg" }
-                            const filename = extractFilename(result?.filename || result?.path || result?.url || result?.file || '');
-                            console.log('[AdminDashboard] Extracted filename for interiorMainImage:', filename);
-                            console.log('[AdminDashboard] Extracted filename type:', typeof filename);
-                            console.log('[AdminDashboard] Extracted filename length:', filename?.length);
-                            
-                            if (!filename || filename.trim() === '') {
-                              console.error('[AdminDashboard] ❌ Extracted filename is empty!');
-                              setMessage({ type: 'error', text: 'Failed to extract filename from upload result. Please try again.' });
+                            if (!url || url.trim() === '') {
+                              console.error('[AdminDashboard] ❌ Extracted URL is empty!');
+                              setMessage({ type: 'error', text: 'Failed to extract URL from upload result. Please try again.' });
                               return;
                             }
                             
-                            // Store the filename in interiorMainImage field
-                            console.log('[AdminDashboard] Calling handleInputChange with:', { field: 'interiorMainImage', value: filename });
-                            handleInputChange('interiorMainImage', filename);
+                            // Store the URL in interiorMainImage field
+                            console.log('[AdminDashboard] Calling handleInputChange with:', { field: 'interiorMainImage', value: url });
+                            handleInputChange('interiorMainImage', url);
                             
                             // Verify it was set
                             setTimeout(() => {
@@ -1409,9 +1403,9 @@ const AdminDashboard = () => {
                           
                           for (const file of files) {
                             const result = await api.uploadFile(file, 'images', editedData.name, null, 'Interior');
-                            // Extract just the filename (backend may return full path)
-                            const filename = extractFilename(result.filename || result.path || result.url || '');
-                            uploadedFiles.push(filename);
+                            // Extract URL from upload response
+                            const url = extractUploadUrl(result);
+                            uploadedFiles.push(url);
                           }
                           
                           const newInterior = [...(editedData.interiorFiles || []), ...uploadedFiles];
@@ -1529,9 +1523,9 @@ const AdminDashboard = () => {
                           
                           for (const file of files) {
                             const result = await api.uploadFile(file, 'images', editedData.name);
-                            // Extract just the filename (backend may return full path)
-                            const filename = extractFilename(result.filename || result.path || result.url || '');
-                            uploadedFiles.push(filename);
+                            // Extract URL from upload response
+                            const url = extractUploadUrl(result);
+                            uploadedFiles.push(url);
                           }
                           
                           const newVideos = [...(editedData.videoFiles || []), ...uploadedFiles];
@@ -1710,9 +1704,9 @@ const AdminDashboard = () => {
                                   }
                                   try {
                                     const result = await api.uploadFile(file, 'categories', null, null, null, editedData.name);
-                                    // Extract just the filename (backend may return full path)
-                                    const filename = extractFilename(result.filename || result.path || result.url || '');
-                                    handleInputChange('image', filename);
+                                    // Extract URL from upload response
+                                    const url = extractUploadUrl(result);
+                                    handleInputChange('image', url);
                                     setMessage({ type: 'success', text: 'About section image uploaded successfully!' });
                                   } catch (error) {
                                     setMessage({ type: 'error', text: 'Failed to upload about section image: ' + error.message });
@@ -1765,9 +1759,9 @@ const AdminDashboard = () => {
                               }
                               try {
                                 const result = await api.uploadFile(file, 'categories', null, null, null, editedData.name);
-                                // Extract just the filename (backend may return full path)
-                                const filename = extractFilename(result.filename || result.path || result.url || '');
-                                handleInputChange('image', filename);
+                                // Extract URL from upload response
+                                const url = extractUploadUrl(result);
+                                handleInputChange('image', url);
                                 setMessage({ type: 'success', text: 'Category thumbnail uploaded successfully!' });
                               } catch (error) {
                                 setMessage({ type: 'error', text: 'Failed to upload category image: ' + error.message });
@@ -1809,9 +1803,9 @@ const AdminDashboard = () => {
                               }
                               try {
                                 const result = await api.uploadFile(file, 'categories', null, null, null, editedData.name);
-                                // Extract just the filename (backend may return full path)
-                                const filename = extractFilename(result.filename || result.path || result.url || '');
-                                handleInputChange('heroImage', filename);
+                                // Extract URL from upload response
+                                const url = extractUploadUrl(result);
+                                handleInputChange('heroImage', url);
                                 setMessage({ type: 'success', text: 'Category hero banner uploaded successfully!' });
                               } catch (error) {
                                 setMessage({ type: 'error', text: 'Failed to upload category hero image: ' + error.message });
@@ -2015,8 +2009,8 @@ const AdminDashboard = () => {
                           try {
                             // Upload to a general events folder
                             const result = await api.uploadFile(file, 'images', 'Events', null, null, null);
-                            const filename = extractFilename(result.filename || result.path || '');
-                            handleInputChange('image', filename);
+                            const url = extractUploadUrl(result);
+                            handleInputChange('image', url);
                             setMessage({ type: 'success', text: 'Event image uploaded successfully!' });
                           } catch (error) {
                             setMessage({ type: 'error', text: 'Failed to upload image: ' + error.message });

@@ -16,15 +16,14 @@ function getBackendUrl() {
     }
   }
   
-  const backendUrl = API_BASE_URL.replace('/api', ''); // Remove /api to get base backend URL
+  // Remove /api to get base backend URL
+  // Handle both cases: URL ending with /api or /api/
+  let backendUrl = API_BASE_URL.replace(/\/api\/?$/, '');
   
-  // Always log in dev mode
-  if (import.meta.env.DEV) {
-    console.log(`[getBackendUrl] VITE_API_URL from env:`, import.meta.env.VITE_API_URL);
-    console.log(`[getBackendUrl] API_BASE_URL: ${API_BASE_URL}`);
-    console.log(`[getBackendUrl] Backend URL: ${backendUrl}`);
-    console.log(`[getBackendUrl] import.meta.env keys:`, Object.keys(import.meta.env).filter(k => k.startsWith('VITE')));
-  }
+  // Log in both dev and production for debugging image issues
+  console.log(`[getBackendUrl] VITE_API_URL from env:`, import.meta.env.VITE_API_URL);
+  console.log(`[getBackendUrl] API_BASE_URL: ${API_BASE_URL}`);
+  console.log(`[getBackendUrl] Backend URL (for images): ${backendUrl}`);
   
   // Ensure we have a valid URL
   if (!backendUrl || backendUrl === 'undefined' || !backendUrl.startsWith('http')) {
@@ -84,9 +83,15 @@ export function getModelImagePath(modelName) {
 
 /**
  * Generate full image path from model name and filename
+ * Handles Cloudinary URLs, legacy filenames, and local paths
  */
 export function getFullImagePath(modelName, filename) {
   if (!filename) return null;
+  
+  // If filename is already a full URL (Cloudinary or other), return as-is
+  if (filename.startsWith('http://') || filename.startsWith('https://')) {
+    return filename;
+  }
   
   // Use getBackendUrl() to ensure consistency
   let BACKEND_URL = getBackendUrl();
@@ -98,11 +103,6 @@ export function getFullImagePath(modelName, filename) {
       console.error(`[getFullImagePath] Using fallback: http://localhost:3001`);
     }
     BACKEND_URL = 'http://localhost:3001';
-  }
-  
-  // If filename is already a full URL, return as-is
-  if (filename.startsWith('http://') || filename.startsWith('https://')) {
-    return filename;
   }
   
   // If it's a relative path like /images/..., convert to full backend URL
@@ -135,31 +135,24 @@ export function getFullImagePath(modelName, filename) {
   
   const fullPath = `${basePath}${encodedFilename}`;
   
-  // Debug logging
-  if (import.meta.env.DEV) {
-    // Check if encoding is correct (should NOT contain literal spaces)
-    const hasUnencodedSpace = fullPath.includes('MaxLine 38') || fullPath.includes('Infinity 280');
-    const hasEncodedSpace = fullPath.includes('MaxLine%2038') || fullPath.includes('Infinity%20280');
-    
-    // Check if it's a relative path (starts with /) instead of absolute URL
-    const isRelative = fullPath.startsWith('/');
-    const isAbsolute = fullPath.startsWith('http://') || fullPath.startsWith('https://');
-    
+  // Debug logging - always log errors, log details in dev
+  const hasUnencodedSpace = fullPath.includes('MaxLine 38') || fullPath.includes('Infinity 280');
+  const hasEncodedSpace = fullPath.includes('MaxLine%2038') || fullPath.includes('Infinity%20280');
+  const isRelative = fullPath.startsWith('/');
+  const isAbsolute = fullPath.startsWith('http://') || fullPath.startsWith('https://');
+  
+  // Always log errors, even in production
+  if (isRelative || (hasUnencodedSpace && !hasEncodedSpace)) {
+    console.error(`[Image Path] ❌ ERROR: Model: ${modelName}, File: ${filename}`);
+    console.error(`[Image Path] Generated path: ${fullPath}`);
+    console.error(`[Image Path] Is relative: ${isRelative}, Is absolute: ${isAbsolute}`);
+    console.error(`[Image Path] Has unencoded space: ${hasUnencodedSpace}`);
+    console.error(`[Image Path] Backend URL: ${getBackendUrl()}`);
+    console.error(`[Image Path] VITE_API_URL: ${import.meta.env.VITE_API_URL || 'NOT SET'}`);
+  } else if (import.meta.env.DEV) {
     console.log(`[Image Path] Model: ${modelName}, File: ${filename}`);
     console.log(`[Image Path] Generated path: ${fullPath}`);
-    console.log(`[Image Path] Is relative: ${isRelative}, Is absolute: ${isAbsolute}`);
-    console.log(`[Image Path] Has unencoded space: ${hasUnencodedSpace}, Has encoded space: ${hasEncodedSpace}`);
-    
-    if (isRelative) {
-      console.error(`[Image Path] ❌ ERROR: Path is relative! Should be absolute backend URL.`);
-      console.error(`[Image Path] BACKEND_URL was: ${getBackendUrl()}`);
-      console.error(`[Image Path] VITE_API_URL is: ${import.meta.env.VITE_API_URL || 'NOT SET'}`);
-    }
-    
-    if (hasUnencodedSpace && !hasEncodedSpace) {
-      console.error(`[Image Path] ❌ ERROR: Path contains unencoded space! This will cause 404 errors.`);
-      console.error(`[Image Path] Expected: ${fullPath.replace(/ /g, '%20')}`);
-    }
+    console.log(`[Image Path] Is absolute: ${isAbsolute}`);
   }
   
   return fullPath;

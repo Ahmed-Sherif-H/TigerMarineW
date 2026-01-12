@@ -43,11 +43,15 @@ export function transformModel(model) {
   // Transform image files to full paths
   const transformed = {
     ...model,
-    // Main images - generate full paths, use fallback if null
-    // Extract filename from path if backend returns full path
+    // Main images - handle Cloudinary URLs, legacy filenames, and paths
     image: model.imageFile ? (() => {
-      let filename = model.imageFile;
+      const imageFile = model.imageFile;
+      // If it's already a Cloudinary URL or full URL, use it directly
+      if (imageFile.startsWith('http://') || imageFile.startsWith('https://')) {
+        return imageFile;
+      }
       // If it's a path like "/images/Open650/image.jpg", extract just "image.jpg"
+      let filename = imageFile;
       if (filename.includes('/')) {
         filename = filename.split('/').pop();
       }
@@ -59,7 +63,12 @@ export function transformModel(model) {
       return path;
     })() : getFallbackImage(model.name),
     heroImage: model.heroImageFile ? (() => {
-      let filename = model.heroImageFile;
+      const heroImageFile = model.heroImageFile;
+      // If it's already a Cloudinary URL or full URL, use it directly
+      if (heroImageFile.startsWith('http://') || heroImageFile.startsWith('https://')) {
+        return heroImageFile;
+      }
+      let filename = heroImageFile;
       if (filename.includes('/')) {
         filename = filename.split('/').pop();
       }
@@ -71,7 +80,12 @@ export function transformModel(model) {
       return path;
     })() : getFallbackImage(model.name),
     contentImage: model.contentImageFile ? (() => {
-      let filename = model.contentImageFile;
+      const contentImageFile = model.contentImageFile;
+      // If it's already a Cloudinary URL or full URL, use it directly
+      if (contentImageFile.startsWith('http://') || contentImageFile.startsWith('https://')) {
+        return contentImageFile;
+      }
+      let filename = contentImageFile;
       if (filename.includes('/')) {
         filename = filename.split('/').pop();
       }
@@ -89,7 +103,15 @@ export function transformModel(model) {
     contentImageFile: model.contentImageFile || '',
     // Transform interiorMainImage to full path (in Interior subfolder)
     interiorMainImage: (model.interiorMainImage && model.interiorMainImage.trim() !== '') ? (() => {
-      let filename = model.interiorMainImage;
+      const interiorMainImage = model.interiorMainImage;
+      // If it's already a Cloudinary URL or full URL, use it directly
+      if (interiorMainImage.startsWith('http://') || interiorMainImage.startsWith('https://')) {
+        if (import.meta.env.DEV) {
+          console.log(`[Transform] ✅ InteriorMainImage (Cloudinary URL): ${interiorMainImage}`);
+        }
+        return interiorMainImage;
+      }
+      let filename = interiorMainImage;
       // Extract filename from path if backend returns full path
       if (filename.includes('/')) {
         filename = filename.split('/').pop();
@@ -132,6 +154,12 @@ export function transformModel(model) {
       ? (model.galleryFiles || []).map(file => {
           // Extract filename from path if needed
           let filename = typeof file === 'string' ? file : (file?.filename || file);
+          
+          // If it's already a Cloudinary URL or full URL, use it directly
+          if (filename && (filename.startsWith('http://') || filename.startsWith('https://'))) {
+            return filename;
+          }
+          
           // If it's a path like "/images/Open650/image.jpg", extract just "image.jpg"
           if (filename.includes('/')) {
             filename = filename.split('/').pop();
@@ -198,13 +226,19 @@ export function transformModel(model) {
     interiorImages: (model.interiorFiles || []).map(file => {
       let filename = typeof file === 'string' ? file : (file?.filename || file);
       if (!filename) return null;
+      
+      // If it's already a Cloudinary URL or full URL, use it directly
+      if (filename.startsWith('http://') || filename.startsWith('https://')) {
+        return filename;
+      }
+      
       // Extract filename from path if it's a path
       if (filename.includes('/')) {
         filename = filename.split('/').pop();
       }
       
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-      const BACKEND_URL = API_BASE_URL.replace('/api', '');
+      const BACKEND_URL = API_BASE_URL.replace(/\/api\/?$/, '');
       const basePath = getModelImagePath(model.name);
       return `${basePath}Interior/${encodeFilename(filename)}`;
     }).filter(Boolean),
