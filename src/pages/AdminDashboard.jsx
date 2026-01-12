@@ -159,7 +159,8 @@ const AdminDashboard = () => {
         ...eventData,
         startDate: eventData.startDate ? new Date(eventData.startDate).toISOString().slice(0, 16) : '',
         endDate: eventData.endDate ? new Date(eventData.endDate).toISOString().slice(0, 16) : '',
-        image: eventData.image ? extractFilename(eventData.image) : ''
+        // Preserve Cloudinary URLs as-is (don't extract filename)
+        image: eventData.image || ''
       };
       setEditedData(formattedData);
     } catch (error) {
@@ -186,6 +187,7 @@ const AdminDashboard = () => {
         endDate: editedData.endDate || null,
         description: editedData.description || '',
         // Preserve Cloudinary URLs, extract filename only for legacy paths
+        // Preserve Cloudinary URLs as-is (don't extract filename)
         image: editedData.image || '',
         website: editedData.website || '',
         status: editedData.status || 'upcoming',
@@ -2012,9 +2014,12 @@ const AdminDashboard = () => {
                           const file = e.target.files[0];
                           if (!file) return;
                           try {
-                            // Upload to a general events folder
-                            const result = await api.uploadFile(file, 'images', 'Events', null, null, null);
+                            // Upload to events folder in Cloudinary
+                            // Using 'events' as the folder name (not 'Events') for consistency
+                            const result = await api.uploadFile(file, 'images', 'events', null, null, null);
                             const url = extractUploadUrl(result);
+                            console.log('[AdminDashboard] Event upload result:', result);
+                            console.log('[AdminDashboard] Extracted event URL:', url);
                             // Store the full Cloudinary URL
                             handleInputChange('image', url);
                             setMessage({ type: 'success', text: 'Event image uploaded successfully!' });

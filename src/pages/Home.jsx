@@ -484,7 +484,7 @@ const Home = () => {
                         <div className="relative h-48 overflow-hidden bg-gradient-to-br from-midnight-slate to-gray-800">
                           {event.image ? (
                             <img
-                              src={event.image.startsWith('http') ? event.image : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${event.image.startsWith('/') ? '' : '/'}${event.image}`}
+                              src={event.image.startsWith('http://') || event.image.startsWith('https://') ? event.image : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${event.image.startsWith('/') ? '' : '/'}${event.image}`}
                               alt={event.name}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                               onError={(e) => {

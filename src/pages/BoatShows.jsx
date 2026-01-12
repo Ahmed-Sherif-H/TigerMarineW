@@ -49,9 +49,11 @@ const BoatShows = () => {
 
   const getEventImage = (event) => {
     if (event.image) {
-      if (event.image.startsWith('http')) {
+      // If it's a Cloudinary URL or any full URL, use it directly
+      if (event.image.startsWith('http://') || event.image.startsWith('https://')) {
         return event.image;
       }
+      // Legacy support: build Railway backend path for old filenames
       const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001';
       return `${baseUrl}${event.image.startsWith('/') ? '' : '/'}${event.image}`;
     }

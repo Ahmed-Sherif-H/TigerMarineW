@@ -333,23 +333,45 @@ export function transformCategory(category, models) {
     return `${BACKEND_URL}/images/categories/${category.name}/${encodeFilename(filename)}`;
   };
   
-  // Extract filenames from paths if backend returns paths
+  // Preserve Cloudinary URLs, extract filenames only for legacy paths
   const categoryImage = category.image ? (() => {
     let filename = category.image;
+    // If it's already a Cloudinary URL or full URL, use it directly
+    if (filename.startsWith('http://') || filename.startsWith('https://')) {
+      if (import.meta.env.DEV) {
+        console.log(`[Transform] ✅ CategoryImage (Cloudinary URL): ${filename}`);
+      }
+      return filename;
+    }
     // If it's a path, extract just the filename
     if (filename.includes('/')) {
       filename = filename.split('/').pop();
     }
-    return getCategoryImagePath(filename);
+    const path = getCategoryImagePath(filename);
+    if (import.meta.env.DEV) {
+      console.log(`[Transform] CategoryImage (legacy): ${category.image} → ${filename} → ${path}`);
+    }
+    return path;
   })() : `${BACKEND_URL}/images/categories/${category.name}/${category.name}.jpg`;
   
   const categoryHeroImage = category.heroImage ? (() => {
     let filename = category.heroImage;
+    // If it's already a Cloudinary URL or full URL, use it directly
+    if (filename.startsWith('http://') || filename.startsWith('https://')) {
+      if (import.meta.env.DEV) {
+        console.log(`[Transform] ✅ CategoryHeroImage (Cloudinary URL): ${filename}`);
+      }
+      return filename;
+    }
     // If it's a path, extract just the filename
     if (filename.includes('/')) {
       filename = filename.split('/').pop();
     }
-    return getCategoryImagePath(filename);
+    const path = getCategoryImagePath(filename);
+    if (import.meta.env.DEV) {
+      console.log(`[Transform] CategoryHeroImage (legacy): ${category.heroImage} → ${filename} → ${path}`);
+    }
+    return path;
   })() : categoryImage;
   
   return {
