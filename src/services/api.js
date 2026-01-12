@@ -225,11 +225,13 @@ class ApiService {
   }
 
   async updateEvent(id, eventData) {
-    console.log('[API] Updating event:', id);
+    if (import.meta.env.DEV) {
+      console.log('[API] Updating event:', id);
+    }
+    // Don't stringify body here - fetch method handles it
     return this.fetch(`/events/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(eventData)
+      body: eventData
     });
   }
 

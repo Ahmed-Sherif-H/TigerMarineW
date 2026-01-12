@@ -186,7 +186,6 @@ const AdminDashboard = () => {
         startDate: editedData.startDate,
         endDate: editedData.endDate || null,
         description: editedData.description || '',
-        // Preserve Cloudinary URLs, extract filename only for legacy paths
         // Preserve Cloudinary URLs as-is (don't extract filename)
         image: editedData.image || '',
         website: editedData.website || '',
@@ -210,7 +209,17 @@ const AdminDashboard = () => {
       setTimeout(() => setMessage({ type: '', text: '' }), 2000);
     } catch (error) {
       console.error('[AdminDashboard] Error saving event:', error);
-      setMessage({ type: 'error', text: 'Failed to save event: ' + error.message });
+      // Check if it's an authentication error
+      if (error.message.includes('Authentication expired') || error.message.includes('401') || error.message.includes('Unauthorized')) {
+        setMessage({ type: 'error', text: 'Your session has expired. Please refresh the page and login again.' });
+        // Optionally redirect to login after a delay
+        setTimeout(() => {
+          logout();
+          navigate('/login');
+        }, 2000);
+      } else {
+        setMessage({ type: 'error', text: 'Failed to save event: ' + error.message });
+      }
     } finally {
       setIsSaving(false);
     }

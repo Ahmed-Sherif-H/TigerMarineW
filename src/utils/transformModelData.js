@@ -333,7 +333,7 @@ export function transformCategory(category, models) {
     return `${BACKEND_URL}/images/categories/${category.name}/${encodeFilename(filename)}`;
   };
   
-  // Preserve Cloudinary URLs, extract filenames only for legacy paths
+  // Preserve Cloudinary URLs, handle legacy filenames
   const categoryImage = category.image ? (() => {
     let filename = category.image;
     // If it's already a Cloudinary URL or full URL, use it directly
@@ -343,16 +343,35 @@ export function transformCategory(category, models) {
       }
       return filename;
     }
-    // If it's a path, extract just the filename
+    
+    // If it's a Cloudinary URL but missing protocol, add https://
+    if (filename.includes('cloudinary.com')) {
+      const cloudinaryUrl = filename.startsWith('//') ? `https:${filename}` : `https://${filename}`;
+      if (import.meta.env.DEV) {
+        console.log(`[Transform] ✅ CategoryImage (Cloudinary URL - fixed): ${cloudinaryUrl}`);
+      }
+      return cloudinaryUrl;
+    }
+    
+    // Legacy filename - try to build Cloudinary URL first, then fallback to Railway
+    // Extract filename if it's a path
     if (filename.includes('/')) {
       filename = filename.split('/').pop();
     }
+    
+    // Try Cloudinary URL format first (if file was uploaded to Cloudinary)
+    // Format: https://res.cloudinary.com/{cloud_name}/image/upload/v{version}/categories/{categoryName}/{filename}
+    // But we don't know the version, so we'll try the Railway path as fallback
+    // Note: If images are broken, they need to be re-uploaded to get Cloudinary URLs
+    
+    // Build Railway backend path for legacy support
     const path = getCategoryImagePath(filename);
     if (import.meta.env.DEV) {
-      console.log(`[Transform] CategoryImage (legacy): ${category.image} → ${filename} → ${path}`);
+      console.log(`[Transform] ⚠️ CategoryImage (legacy filename - needs re-upload): ${category.image} → ${filename} → ${path}`);
+      console.log(`[Transform] 💡 Tip: Re-upload this image from the dashboard to get a Cloudinary URL`);
     }
     return path;
-  })() : `${BACKEND_URL}/images/categories/${category.name}/${category.name}.jpg`;
+  })() : null;
   
   const categoryHeroImage = category.heroImage ? (() => {
     let filename = category.heroImage;
@@ -363,13 +382,26 @@ export function transformCategory(category, models) {
       }
       return filename;
     }
-    // If it's a path, extract just the filename
+    
+    // If it's a Cloudinary URL but missing protocol, add https://
+    if (filename.includes('cloudinary.com')) {
+      const cloudinaryUrl = filename.startsWith('//') ? `https:${filename}` : `https://${filename}`;
+      if (import.meta.env.DEV) {
+        console.log(`[Transform] ✅ CategoryHeroImage (Cloudinary URL - fixed): ${cloudinaryUrl}`);
+      }
+      return cloudinaryUrl;
+    }
+    
+    // Legacy filename - extract if path
     if (filename.includes('/')) {
       filename = filename.split('/').pop();
     }
+    
+    // Build Railway backend path for legacy support
     const path = getCategoryImagePath(filename);
     if (import.meta.env.DEV) {
-      console.log(`[Transform] CategoryHeroImage (legacy): ${category.heroImage} → ${filename} → ${path}`);
+      console.log(`[Transform] ⚠️ CategoryHeroImage (legacy filename - needs re-upload): ${category.heroImage} → ${filename} → ${path}`);
+      console.log(`[Transform] 💡 Tip: Re-upload this image from the dashboard to get a Cloudinary URL`);
     }
     return path;
   })() : categoryImage;
