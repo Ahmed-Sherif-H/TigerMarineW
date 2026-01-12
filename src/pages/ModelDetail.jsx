@@ -166,13 +166,18 @@ const ModelDetail = () => {
   }, [model?.interiorMainImage]);
 
   // Get interior carousel images (array for the right side)
+  // Use interiorImages which is already transformed with Cloudinary URLs
   const interiorCarouselImages = useMemo(() => {
     if (!model) return [];
+    // Use interiorImages which already contains Cloudinary URLs or full paths
+    if (model.interiorImages && Array.isArray(model.interiorImages) && model.interiorImages.length > 0) {
+      return model.interiorImages.filter(Boolean); // Filter out any null values
+    }
+    // Fallback to interiorFiles if interiorImages is not available (legacy support)
     if (model.interiorFiles && Array.isArray(model.interiorFiles) && model.interiorFiles.length > 0) {
-      // Use getFullImagePath with Interior subfolder
       return model.interiorFiles.map(file => {
-        // If file is already a full path, use it; otherwise build path
-        if (file.startsWith('http://') || file.startsWith('https://')) {
+        // If file is already a full path/Cloudinary URL, use it; otherwise build path
+        if (file && (file.startsWith('http://') || file.startsWith('https://'))) {
           return file;
         }
         // Build path: backend/images/ModelName/Interior/filename
@@ -182,7 +187,7 @@ const ModelDetail = () => {
       });
     }
     return [];
-  }, [model?.name, model?.interiorFiles]);
+  }, [model?.interiorImages, model?.interiorFiles, model?.name]);
 
   const [interiorSlide, setInteriorSlide] = useState(0);
   const [activeNavTab, setActiveNavTab] = useState('overview');

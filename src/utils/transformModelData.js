@@ -211,6 +211,10 @@ export function transformModel(model) {
     
     interiorFiles: (model.interiorFiles || []).map(file => {
       if (typeof file === 'string') {
+        // If it's a Cloudinary URL, preserve it
+        if (file.startsWith('http://') || file.startsWith('https://')) {
+          return file;
+        }
         // Extract filename from path if it's a path
         if (file.includes('/')) {
           return file.split('/').pop();
@@ -219,6 +223,10 @@ export function transformModel(model) {
       }
       if (file && file.filename) {
         const f = file.filename;
+        // If it's a Cloudinary URL, preserve it
+        if (f.startsWith('http://') || f.startsWith('https://')) {
+          return f;
+        }
         return f.includes('/') ? f.split('/').pop() : f;
       }
       return file;
@@ -229,6 +237,9 @@ export function transformModel(model) {
       
       // If it's already a Cloudinary URL or full URL, use it directly
       if (filename.startsWith('http://') || filename.startsWith('https://')) {
+        if (import.meta.env.DEV) {
+          console.log(`[Transform] ✅ InteriorImage (Cloudinary URL): ${filename}`);
+        }
         return filename;
       }
       
@@ -237,10 +248,15 @@ export function transformModel(model) {
         filename = filename.split('/').pop();
       }
       
+      // Build Railway backend path for legacy filenames
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
       const BACKEND_URL = API_BASE_URL.replace(/\/api\/?$/, '');
       const basePath = getModelImagePath(model.name);
-      return `${basePath}Interior/${encodeFilename(filename)}`;
+      const fullPath = `${basePath}Interior/${encodeFilename(filename)}`;
+      if (import.meta.env.DEV) {
+        console.log(`[Transform] InteriorImage (legacy): ${file} → ${filename} → ${fullPath}`);
+      }
+      return fullPath;
     }).filter(Boolean),
     
     // Transform specs from array to object if needed
