@@ -458,15 +458,21 @@ class ApiService {
       }
     }
     
+    // Get auth token for authenticated requests
+    const token = localStorage.getItem('admin_token');
+    
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    let timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for uploads
+    
     try {
-      // Create abort controller for timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for uploads
-      
       const response = await fetch(url, {
         method: 'POST',
         body: formData,
         // Don't set Content-Type header - browser will set it with boundary
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
         credentials: 'include', // Include credentials for CORS
         signal: controller.signal,
       });
@@ -485,6 +491,12 @@ class ApiService {
         throw new Error(`Invalid response format: ${response.status} - ${text}`);
       }
 
+      // Handle 401 Unauthorized - token expired or invalid
+      if (response.status === 401) {
+        localStorage.removeItem('admin_token');
+        throw new Error('Authentication expired. Please login again.');
+      }
+
       if (!response.ok) {
         console.error('[API] Upload failed:', data);
         throw new Error(data.error || `Upload failed: ${response.status}`);
@@ -493,7 +505,7 @@ class ApiService {
       console.log('[API] Upload successful:', data);
       return data;
     } catch (error) {
-      if (timeoutId) clearTimeout(timeoutId); // Clear timeout on error
+      clearTimeout(timeoutId); // Clear timeout on error
       
       console.error('[API] Upload error details:', {
         url,
@@ -528,10 +540,16 @@ class ApiService {
     const url = `${API_BASE_URL}/upload/multiple`;
     console.log('[API] Uploading multiple files to:', url);
     
+    // Get auth token for authenticated requests
+    const token = localStorage.getItem('admin_token');
+    
     try {
       const response = await fetch(url, {
         method: 'POST',
         body: formData,
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
         credentials: 'include', // Include credentials for CORS
       });
 
@@ -543,6 +561,12 @@ class ApiService {
       } else {
         const text = await response.text();
         throw new Error(`Invalid response format: ${response.status} - ${text}`);
+      }
+
+      // Handle 401 Unauthorized - token expired or invalid
+      if (response.status === 401) {
+        localStorage.removeItem('admin_token');
+        throw new Error('Authentication expired. Please login again.');
       }
 
       if (!response.ok) {
