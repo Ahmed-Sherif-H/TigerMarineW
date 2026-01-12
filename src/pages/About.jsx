@@ -3,29 +3,35 @@ import { motion } from 'framer-motion';
 const About = () => {
   const milestones = [
     {
-      year: "1998",
+      year: "1996",
       title: "Foundation",
-      description: "Tiger Marine was founded in Monaco with a vision to create the world's most luxurious boats."
+      location: "Cairo, Egypt",
+      description: "Tiger Marine was founded in Cairo, Egypt, marking the beginning of our journey in inflatable boat manufacturing."
     },
     {
       year: "2005",
       title: "First Flagship",
-      description: "Launched our first flagship model, the Tiger 60, setting new standards in luxury yachting."
+      description: "The historic 650TL was launched, setting new standards in luxury yachting and establishing our reputation for excellence."
     },
     {
       year: "2012",
       title: "Global Expansion",
-      description: "Opened our first international offices in Miami, Sydney, and Dubai."
+      description: "Established a full network of international dealers, bringing Tiger Marine boats to customers worldwide."
     },
     {
       year: "2018",
-      title: "Innovation Award",
-      description: "Received the International Marine Innovation Award for our advanced hull design technology."
+      title: "New Range Introduction",
+      description: "A new range of boats was introduced, expanding our collection with innovative designs and advanced features."
     },
     {
       year: "2023",
-      title: "500th Delivery",
-      description: "Celebrated the delivery of our 500th boat, marking a milestone in our company's history."
+      title: "10,000 Boats Delivered",
+      description: "Celebrated a major milestone with the delivery of our 10,000th boat, demonstrating our commitment to quality and customer satisfaction."
+    },
+    {
+      year: "2025",
+      title: "Super Luxury Models",
+      description: "Introducing a new line of super luxury models, pushing the boundaries of design and performance."
     }
   ];
 
@@ -204,7 +210,10 @@ const About = () => {
                   <div className={`w-1/2 ${index % 2 === 0 ? 'pr-8 text-right' : 'pl-8 text-left'}`}>
                     <div className="bg-white rounded-2xl shadow-lg p-8">
                       <div className="text-3xl font-bold text-gold mb-2">{milestone.year}</div>
-                      <h3 className="text-2xl font-semibold text-midnight-slate mb-3">{milestone.title}</h3>
+                      <h3 className="text-2xl font-semibold text-midnight-slate mb-2">{milestone.title}</h3>
+                      {milestone.location && (
+                        <p className="text-sm text-gray-500 mb-3">{milestone.location}</p>
+                      )}
                       <p className="text-gray-600">{milestone.description}</p>
                     </div>
                   </div>

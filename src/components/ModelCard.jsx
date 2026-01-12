@@ -25,6 +25,7 @@ const ModelCard = ({ model, index = 0 }) => {
                 src={model.image}
                 alt={model.name}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                loading="lazy"
               />
             </div>
             

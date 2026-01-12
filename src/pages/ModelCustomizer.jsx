@@ -32,10 +32,6 @@ const ModelCustomizer = () => {
   const [baseImage, setBaseImage] = useState(null);
   const [partImages, setPartImages] = useState({});
   const [loading, setLoading] = useState(true);
-  const [showInquiryModal, setShowInquiryModal] = useState(false);
-  const [inquiryData, setInquiryData] = useState({ name: '', email: '', phone: '', message: '' });
-  const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
-  const [inquiryMessage, setInquiryMessage] = useState({ type: '', text: '' });
   
   // Collapsible sections state - all open by default
   const [openSections, setOpenSections] = useState(new Set());
@@ -49,7 +45,8 @@ const ModelCustomizer = () => {
 
     const folder = getCustomizerFolder(model.name);
     if (!folder) {
-      setLoading(false);
+      // Redirect to model detail page if customizer is not available
+      navigate(`/models/${model.id}`);
       return;
     }
 
@@ -148,41 +145,6 @@ const ModelCustomizer = () => {
     setSelectedColors(initialSelections);
   };
 
-  const handleInquirySubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmittingInquiry(true);
-    setInquiryMessage({ type: '', text: '' });
-
-    try {
-      const response = await api.submitCustomizerInquiry({
-        name: inquiryData.name,
-        email: inquiryData.email,
-        phone: inquiryData.phone,
-        modelName: fullModelName,
-        selectedColors,
-        message: inquiryData.message
-      });
-
-      if (response.success) {
-        setInquiryMessage({ type: 'success', text: 'Inquiry sent successfully! We will contact you soon.' });
-        setInquiryData({ name: '', email: '', phone: '', message: '' });
-        setTimeout(() => {
-          setShowInquiryModal(false);
-          setInquiryMessage({ type: '', text: '' });
-        }, 2000);
-      } else {
-        setInquiryMessage({ type: 'error', text: response.error || 'Failed to send inquiry. Please try again.' });
-      }
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('Inquiry error:', error);
-      }
-      const errorMessage = error.message || 'Failed to send inquiry. Please try again.';
-      setInquiryMessage({ type: 'error', text: errorMessage });
-    } finally {
-      setIsSubmittingInquiry(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -498,11 +460,16 @@ const ModelCustomizer = () => {
               </div>
             </div>
 
-            {/* BOTTOM: Summary & Actions */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 p-6">
-              {/* Your Selections */}
-              <h3 className="text-lg font-medium text-midnight-slate mb-4">Your selections</h3>
-              <div className="space-y-2 mb-6">
+            {/* BOTTOM: Summary Display */}
+            <div className="bg-gradient-to-br from-white via-gray-50/30 to-white backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 p-4">
+              {/* Your Selections Header */}
+              <div className="mb-3">
+                <h3 className="text-sm font-medium text-midnight-slate mb-1">Your selections</h3>
+                <div className="w-12 h-0.5 bg-smoked-saffron"></div>
+              </div>
+              
+              {/* Selections Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {Object.entries(selectedColors).map(([partKey, color]) => {
                   const part = customizerParts.find(p => p.key === partKey);
                   if (!part) return null;
@@ -510,160 +477,43 @@ const ModelCustomizer = () => {
                   const label = partLabels[partKey] || part.label;
                   
                   return (
-                    <button
+                    <div
                       key={partKey}
-                      onClick={() => scrollToSection(partKey)}
-                      className="w-full flex items-center justify-between p-3 bg-gray-50/50 hover:bg-gray-100/50 rounded-lg border border-gray-200 transition-all group"
+                      className="group relative p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 hover:border-smoked-saffron/30 hover:shadow-sm transition-all duration-300"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         <div
-                          className="w-5 h-5 rounded-full border border-gray-300 shadow-sm"
+                          className="w-4 h-4 rounded-full border border-gray-300 shadow-sm group-hover:shadow transition-shadow flex-shrink-0"
                           style={{ backgroundColor: colorHex }}
                         />
-                        <span className="text-sm text-gray-700 font-medium">{label}:</span>
-                        <span className="text-sm text-midnight-slate font-semibold">{color}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[10px] text-gray-500 uppercase tracking-wide">{label}</div>
+                          <div className="text-xs font-semibold text-midnight-slate truncate">{color}</div>
+                        </div>
+                        <button
+                          onClick={() => scrollToSection(partKey)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-smoked-saffron rounded hover:bg-gray-50"
+                          aria-label={`Edit ${label}`}
+                        >
+                          <svg
+                            className="w-3.5 h-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
                       </div>
-                      <svg
-                        className="w-4 h-4 text-gray-400 group-hover:text-smoked-saffron transition-colors"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
+                    </div>
                   );
                 })}
-              </div>
-
-              {/* Call to Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-                <button className="flex-1 px-6 py-3 bg-smoked-saffron text-white rounded-xl hover:bg-smoked-saffron/90 font-medium transition-all shadow-md hover:shadow-lg">
-                  Request Quote
-                </button>
-                <button
-                  onClick={() => setShowInquiryModal(true)}
-                  className="flex-1 px-6 py-3 border-2 border-smoked-saffron text-smoked-saffron rounded-xl hover:bg-smoked-saffron/5 font-medium transition-all"
-                >
-                  Send Inquiry
-                </button>
-                <button className="flex-1 px-6 py-3 text-gray-700 hover:bg-gray-100 rounded-xl font-medium transition-all">
-                  Save Configuration
-                </button>
               </div>
             </div>
           </main>
         </div>
       </div>
 
-      {/* Inquiry Modal */}
-      {showInquiryModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-          >
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-2xl font-light text-midnight-slate">Send Inquiry</h2>
-              <button
-                onClick={() => {
-                  setShowInquiryModal(false);
-                  setInquiryMessage({ type: '', text: '' });
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleInquirySubmit} className="p-6 space-y-4">
-              {inquiryMessage.text && (
-                <div className={`p-4 rounded-lg ${
-                  inquiryMessage.type === 'success' 
-                    ? 'bg-green-50 text-green-800 border border-green-200' 
-                    : 'bg-red-50 text-red-800 border border-red-200'
-                }`}>
-                  {inquiryMessage.text}
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={inquiryData.name}
-                  onChange={(e) => setInquiryData({ ...inquiryData, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={inquiryData.email}
-                  onChange={(e) => setInquiryData({ ...inquiryData, email: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone
-                </label>
-                <input
-                  type="tel"
-                  value={inquiryData.phone}
-                  onChange={(e) => setInquiryData({ ...inquiryData, phone: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Additional Message
-                </label>
-                <textarea
-                  rows={4}
-                  value={inquiryData.message}
-                  onChange={(e) => setInquiryData({ ...inquiryData, message: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Tell us about your customization preferences..."
-                />
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowInquiryModal(false);
-                    setInquiryMessage({ type: '', text: '' });
-                  }}
-                  className="flex-1 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingInquiry}
-                  className="flex-1 px-6 py-3 bg-smoked-saffron text-white rounded-lg hover:bg-smoked-saffron/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmittingInquiry ? 'Sending...' : 'Send Inquiry'}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 };

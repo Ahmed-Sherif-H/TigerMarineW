@@ -10,6 +10,26 @@ const CategoryDetail = () => {
   const { categories, loading } = useModels();
   const category = categories.find(c => c.id === parseInt(id));
   
+  // Get hero description based on category name
+  const getHeroDescription = (categoryName) => {
+    if (!categoryName) return '';
+    
+    const name = categoryName.toLowerCase();
+    if (name.includes('maxline')) {
+      return 'Designed for luxury cruising with uncompromising comfort and innovation.';
+    } else if (name.includes('topline')) {
+      return 'The perfect family cruiser, designed for comfort and shared moments.';
+    } else if (name.includes('proline')) {
+      return 'Performance-driven design for adventure, sport, and versatility.';
+    } else if (name.includes('sportline')) {
+      return 'Dynamic performance with sporty elegance and agility.';
+    } else if (name.includes('open')) {
+      return 'Open spaces, effortless movement, and everyday freedom on the water.';
+    }
+    // Fallback to category description if no match
+    return category?.description || '';
+  };
+  
   // Check if this category is a "Boats" category (should redirect or show different view)
   const isBoatsCategory = useMemo(() => {
     return category?.mainGroup === 'boats';
@@ -85,7 +105,7 @@ const CategoryDetail = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-2xl text-gray-200 mb-8"
           >
-            {category.description}
+            {getHeroDescription(category.name)}
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}

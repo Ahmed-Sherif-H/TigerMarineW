@@ -187,6 +187,7 @@ const Home = () => {
                     className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
                       index === visionCarouselIndex ? 'opacity-100' : 'opacity-0'
                     }`}
+                    loading={index === 0 ? "eager" : "lazy"}
                   />
                 ))}
                 
@@ -236,6 +237,8 @@ const Home = () => {
               alt={currentModel?.name || "Inflatable Boat"}
               className="w-full h-full object-cover transition-opacity duration-700"
               key={currentIndex}
+              loading="eager"
+              fetchPriority="high"
             />
           </div>
           
@@ -372,6 +375,7 @@ const Home = () => {
                                   src={category.image}
                                   alt={category.name}
                                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                  loading="lazy"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                                 <div className="absolute top-4 right-4">
@@ -526,6 +530,7 @@ const Home = () => {
                               src={event.image.startsWith('http://') || event.image.startsWith('https://') ? event.image : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${event.image.startsWith('/') ? '' : '/'}${event.image}`}
                               alt={event.name}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                              loading="lazy"
                               onError={(e) => {
                                 e.target.style.display = 'none';
                               }}
@@ -613,6 +618,7 @@ const Home = () => {
             src="/images/DJI_0216.jpg"
             alt="Experience Our Models"
             className="w-full h-full object-cover"
+            loading="lazy"
           />
         </div>
         <div className="absolute inset-0 bg-black/40" />

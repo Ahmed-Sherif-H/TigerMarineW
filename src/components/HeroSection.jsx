@@ -19,8 +19,24 @@ const HeroSection = ({
           muted
           loop
           playsInline
+          preload="auto"
+          onCanPlay={(e) => {
+            // Ensure video plays when ready
+            e.target.play().catch(() => {
+              // Autoplay might be blocked, but video will play when user interacts
+            });
+          }}
+          onEnded={(e) => {
+            // Force loop if it doesn't loop automatically
+            e.target.currentTime = 0;
+            e.target.play().catch(() => {});
+          }}
+          onError={(e) => {
+            console.error('Video loading error:', e);
+          }}
         >
-          <source src="/images/video.mp4" type="video/mp4" />
+          <source src="https://res.cloudinary.com/dtmcjepgn/video/upload/v1768258298/video_i1ssrs.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
         </video>
         {overlay && (
           <div className="absolute inset-0 bg-gradient-to-r from-black/00 via-black/20 to-black/00" />
@@ -99,13 +115,17 @@ const HeroSection = ({
             transition={{ duration: 1, delay: 0.7 }}
             className="flex flex-col sm:flex-row gap-6 items-start"
           >
-            <Link
-              to="/categories"
+            <a
+              href="#complete-collection"
               className="group relative px-8 py-4 bg-white text-midnight-slate font-semibold text-base rounded-full hover:bg-gray-100 hover:text-midnight-slate transform hover:scale-105 transition-all duration-500 shadow-2xl hover:shadow-white/30 border-2 border-white/20"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('complete-collection')?.scrollIntoView({ behavior: 'smooth' });
+              }}
             >
               <span className="relative z-10 tracking-wide">Explore Models</span>
               <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            </Link>
+            </a>
             <Link
               to="/contact"
               className="group px-8 py-4 border-2 border-white/80 text-white font-semibold text-base rounded-full hover:bg-white hover:text-midnight-slate transform hover:scale-105 transition-all duration-500 backdrop-blur-sm bg-white/5 hover:bg-white/90 tracking-wide"

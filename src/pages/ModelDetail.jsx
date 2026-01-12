@@ -967,15 +967,17 @@ const ModelDetail = () => {
                 ← Back to Categories
               </Link>
             )}
-            <div className="text-center">
-              <p className="text-gray-600 mb-2">Ready to customize your {fullModelName}?</p>
-              <Link
-                to={`/models/${model.id}/customize`}
-                className="btn-primary inline-block"
-              >
-                Start Customization
-              </Link>
-            </div>
+            {getCustomizerFolder(model.name) && (
+              <div className="text-center">
+                <p className="text-gray-600 mb-2">Ready to customize your {fullModelName}?</p>
+                <Link
+                  to={`/models/${model.id}/customize`}
+                  className="btn-primary inline-block"
+                >
+                  Start Customization
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </section>

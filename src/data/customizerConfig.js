@@ -41,8 +41,28 @@ export const customizerParts = [
 
 /**
  * Get customizer folder path for a model
+ * Uses placeholder graphics for models that don't have custom graphics yet
+ * Returns null for models that don't support customization (e.g., Infinity)
  */
 export const getCustomizerFolder = (modelName) => {
+  // Models that don't support customization
+  const disabledModels = ['Infinity 280'];
+  if (disabledModels.includes(modelName)) {
+    return null;
+  }
+  
+  // Map models without graphics to placeholder models
+  const placeholderMap = {
+    'TL750': 'TopLine850',  // 750TL uses 850TL graphics
+    'ML38': 'TopLine950',   // MaxLine uses 950TL graphics
+  };
+  
+  // Check if this model should use a placeholder
+  if (placeholderMap[modelName]) {
+    return `/Customizer-images/${placeholderMap[modelName]}`;
+  }
+  
+  // Otherwise, use the model's own folder if it exists
   const folder = customizerFolders[modelName];
   if (!folder) return null;
   return `/Customizer-images/${folder}`;
