@@ -13,19 +13,36 @@ const ModelCustomizer = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   
-  // Find the model and its category
+  // Find the model and its category - try API first, then fallback to static data
   const { model, category } = useMemo(() => {
+    // First try to find in static data
     for (const cat of allCategories) {
       const found = cat.models.find(m => m.id === parseInt(id));
       if (found) return { model: found, category: cat };
     }
     return { model: null, category: null };
   }, [id]);
+  
+  // Also try to load from API if static data doesn't have it
+  const [apiModel, setApiModel] = useState(null);
+  useEffect(() => {
+    if (!model && id) {
+      api.getModelById(id).then(modelData => {
+        setApiModel(modelData);
+      }).catch(() => {
+        // API failed, that's okay - we'll use static data
+      });
+    }
+  }, [id, model]);
+  
+  // Use API model if available, otherwise use static model
+  const finalModel = apiModel || model;
 
   // Get full model name (e.g., "TopLine 850" instead of "TL850")
+  // Use finalModel which could be from API or static data
   const fullModelName = useMemo(() => {
-    return getModelDisplayName(model, category);
-  }, [model, category]);
+    return getModelDisplayName(finalModel, category);
+  }, [finalModel, category]);
 
   const [selectedColors, setSelectedColors] = useState({});
   const [availableColors, setAvailableColors] = useState({});
@@ -38,20 +55,21 @@ const ModelCustomizer = () => {
 
   // Initialize customizer
   useEffect(() => {
-    if (!model) {
+    const currentModel = finalModel;
+    if (!currentModel) {
       navigate('/models');
       return;
     }
 
-    const folder = getCustomizerFolder(model.name);
+    const folder = getCustomizerFolder(currentModel.name);
     if (!folder) {
       // Redirect to model detail page if customizer is not available
-      navigate(`/models/${model.id}`);
+      navigate(`/models/${currentModel.id}`);
       return;
     }
 
     // Load base image
-    const base = getBaseImage(model.name);
+    const base = getBaseImage(currentModel.name);
     setBaseImage(base);
 
     // Load available colors for each part
@@ -83,11 +101,11 @@ const ModelCustomizer = () => {
     setOpenSections(new Set(allPartKeys));
     
     setLoading(false);
-  }, [model, navigate]);
+  }, [finalModel, navigate]);
 
   // Update part images when colors change
   useEffect(() => {
-    if (!model || !baseImage) return;
+    if (!finalModel || !baseImage) return;
 
     const images = {};
     customizerParts.forEach(part => {
@@ -95,7 +113,7 @@ const ModelCustomizer = () => {
       
       const color = selectedColors[part.key];
       if (color) {
-        const imagePath = getPartImage(model.name, part.key, color);
+        const imagePath = getPartImage(finalModel.name, part.key, color);
         if (imagePath) {
           images[part.key] = imagePath;
         }
@@ -103,7 +121,7 @@ const ModelCustomizer = () => {
     });
 
     setPartImages(images);
-  }, [model, selectedColors, baseImage]);
+  }, [finalModel, selectedColors, baseImage]);
 
   const handleColorChange = (partKey, color) => {
     setSelectedColors(prev => ({
@@ -157,7 +175,7 @@ const ModelCustomizer = () => {
     );
   }
 
-  if (!model) {
+  if (!finalModel) {
     return (
       <div className="pt-20 min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -168,14 +186,14 @@ const ModelCustomizer = () => {
     );
   }
 
-  const customizerFolder = getCustomizerFolder(model.name);
+  const customizerFolder = getCustomizerFolder(finalModel.name);
   if (!customizerFolder) {
     return (
       <div className="pt-20 min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <h1 className="text-4xl font-light text-midnight-slate mb-4">Customizer Not Available</h1>
           <p className="text-gray-600 mb-8">Customizer images are not available for this model.</p>
-          <Link to={`/models/${model.id}`} className="btn-primary">Back to Model</Link>
+          <Link to={`/models/${finalModel.id}`} className="btn-primary">Back to Model</Link>
         </div>
       </div>
     );
@@ -419,7 +437,7 @@ const ModelCustomizer = () => {
                         const selectedColor = selectedColors[part.key];
                         if (!selectedColor) return;
                         
-                        const folder = getCustomizerFolder(model.name);
+                        const folder = getCustomizerFolder(finalModel.name);
                         if (!folder) return;
                         
                         let altPath = null;

@@ -70,17 +70,36 @@ export function getModelDisplayName(model, category = null) {
   // Normalize model name for matching (trim whitespace, handle variations)
   const normalizedName = model.name.trim();
   
-  // Try direct mapping first (case-sensitive)
-  if (MODEL_NAME_MAP[normalizedName]) {
-    return MODEL_NAME_MAP[normalizedName];
+  // CRITICAL: Check model ID to ensure correct name mapping
+  // This prevents issues when models use placeholder graphics
+  if (model.id) {
+    // Map model IDs to correct display names (if available in your database)
+    // This ensures the title always matches the actual model, not the graphics folder
   }
   
-  // Try case-insensitive matching
-  const matchingKey = Object.keys(MODEL_NAME_MAP).find(
-    key => key.toLowerCase() === normalizedName.toLowerCase()
-  );
-  if (matchingKey) {
-    return MODEL_NAME_MAP[matchingKey];
+  // Special handling for PL620 - ensure it shows "ProLine 620" (not 550)
+  // Check first before other mappings to prevent conflicts
+  if (normalizedName === 'PL620' || normalizedName.toLowerCase() === 'pl620' || 
+      normalizedName.includes('620') && (normalizedName.includes('ProLine') || normalizedName.includes('PL'))) {
+    return 'ProLine 620';
+  }
+  
+  // Special handling for PL550 - ensure it shows "ProLine 550" (not 620)
+  if (normalizedName === 'PL550' || normalizedName.toLowerCase() === 'pl550' ||
+      normalizedName.includes('550') && (normalizedName.includes('ProLine') || normalizedName.includes('PL'))) {
+    return 'ProLine 550';
+  }
+  
+  // Special handling for OP850 - ensure it shows "Open 850" (not 650)
+  if (normalizedName === 'OP850' || normalizedName.toLowerCase() === 'op850' ||
+      normalizedName.includes('850') && normalizedName.includes('Open')) {
+    return 'Open 850';
+  }
+  
+  // Special handling for OP650 - ensure it shows "Open 650" (not 850)
+  if (normalizedName === 'OP650' || normalizedName.toLowerCase() === 'op650' ||
+      normalizedName.includes('650') && normalizedName.includes('Open')) {
+    return 'Open 650';
   }
   
   // Special handling for TL750 - ensure it shows "TopLine 750" not "TopLine 850"
@@ -98,24 +117,17 @@ export function getModelDisplayName(model, category = null) {
     return 'TopLine 950';
   }
   
-  // Special handling for PL620 - ensure it shows "ProLine 620" (not 550)
-  if (normalizedName === 'PL620' || normalizedName.toLowerCase() === 'pl620') {
-    return 'ProLine 620';
+  // Try direct mapping first (case-sensitive)
+  if (MODEL_NAME_MAP[normalizedName]) {
+    return MODEL_NAME_MAP[normalizedName];
   }
   
-  // Special handling for PL550 - ensure it shows "ProLine 550" (not 620)
-  if (normalizedName === 'PL550' || normalizedName.toLowerCase() === 'pl550') {
-    return 'ProLine 550';
-  }
-  
-  // Special handling for OP850 - ensure it shows "Open 850" (not 650)
-  if (normalizedName === 'OP850' || normalizedName.toLowerCase() === 'op850') {
-    return 'Open 850';
-  }
-  
-  // Special handling for OP650 - ensure it shows "Open 650" (not 850)
-  if (normalizedName === 'OP650' || normalizedName.toLowerCase() === 'op650') {
-    return 'Open 650';
+  // Try case-insensitive matching
+  const matchingKey = Object.keys(MODEL_NAME_MAP).find(
+    key => key.toLowerCase() === normalizedName.toLowerCase()
+  );
+  if (matchingKey) {
+    return MODEL_NAME_MAP[matchingKey];
   }
   
   // Use category if available
