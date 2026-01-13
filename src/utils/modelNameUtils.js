@@ -98,6 +98,26 @@ export function getModelDisplayName(model, category = null) {
     return 'TopLine 950';
   }
   
+  // Special handling for PL620 - ensure it shows "ProLine 620" (not 550)
+  if (normalizedName === 'PL620' || normalizedName.toLowerCase() === 'pl620') {
+    return 'ProLine 620';
+  }
+  
+  // Special handling for PL550 - ensure it shows "ProLine 550" (not 620)
+  if (normalizedName === 'PL550' || normalizedName.toLowerCase() === 'pl550') {
+    return 'ProLine 550';
+  }
+  
+  // Special handling for OP850 - ensure it shows "Open 850" (not 650)
+  if (normalizedName === 'OP850' || normalizedName.toLowerCase() === 'op850') {
+    return 'Open 850';
+  }
+  
+  // Special handling for OP650 - ensure it shows "Open 650" (not 850)
+  if (normalizedName === 'OP650' || normalizedName.toLowerCase() === 'op650') {
+    return 'Open 650';
+  }
+  
   // Use category if available
   const catName = category?.name || model.categoryName;
   if (catName) {
