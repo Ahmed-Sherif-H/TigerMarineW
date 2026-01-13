@@ -5,33 +5,142 @@ const About = () => {
     {
       year: "1996",
       title: "Foundation",
-      location: "Cairo, Egypt",
-      description: "Tiger Marine was founded in Cairo, Egypt, marking the beginning of our journey in inflatable boat manufacturing."
+      description: "Founded in Cairo, Egypt as a small workshop with only 6 workers. Created a market for inflatable boats in Egypt, starting from zero market sales."
+    },
+    {
+      year: "1997",
+      title: "Production Begins",
+      description: "Production began with fully inflatable boat models."
+    },
+    {
+      year: "1998",
+      title: "First Export & Expansion",
+      description: "First export of boats was made. Moved to a new facility spanning 2000 Sq. meters and employing 30 workers."
+    },
+    {
+      year: "1999",
+      title: "First RIB Production",
+      description: "First RIB (Rigid Inflatable Boat) production was introduced, featuring a boat of 4.8 meters."
+    },
+    {
+      year: "2000",
+      title: "European Dealer Network",
+      description: "A new dealer network was established in Europe."
+    },
+    {
+      year: "2001",
+      title: "Market Leadership",
+      description: "Became the number one supplier for the Navy, police, and diving market in Egypt."
+    },
+    {
+      year: "2003",
+      title: "First Best-Seller",
+      description: "The first best-seller, the 650 TopLine, was introduced."
+    },
+    {
+      year: "2004",
+      title: "Hypalon Fabric Tubes",
+      description: "Manufacturing of Hypalon fabric tubes commenced."
     },
     {
       year: "2005",
-      title: "First Flagship",
-      description: "The historic 650TL was launched, setting new standards in luxury yachting and establishing our reputation for excellence."
+      title: "First Generation RIBs",
+      description: "The first generation of the RIBs model range was created."
+    },
+    {
+      year: "2006",
+      title: "Dusseldorf Boat Show",
+      description: "Participated for the first time in the Dusseldorf boat show."
+    },
+    {
+      year: "2007",
+      title: "European Components",
+      description: "Shift towards using European components for the entire product range."
+    },
+    {
+      year: "2008",
+      title: "Larger Facility",
+      description: "Moved to a new, larger facility of 5000 Sq. meters."
+    },
+    {
+      year: "2009",
+      title: "Production Milestone",
+      description: "Production capacity reached 300 boats per year."
+    },
+    {
+      year: "2010",
+      title: "New Markets",
+      description: "New markets were opened in Australia and Asia."
+    },
+    {
+      year: "2011",
+      title: "European Hub",
+      description: "A new European hub was opened in Rotterdam, in collaboration with Tiger Marine Center."
     },
     {
       year: "2012",
-      title: "Global Expansion",
-      description: "Established a full network of international dealers, bringing Tiger Marine boats to customers worldwide."
+      title: "Second Generation Models",
+      description: "The second generation of the models range was introduced."
+    },
+    {
+      year: "2013",
+      title: "Larger Models",
+      description: "New, larger models with more sophisticated designs were added."
+    },
+    {
+      year: "2015",
+      title: "28 Models in Production",
+      description: "Reached 28 models in production across all model categories."
+    },
+    {
+      year: "2016",
+      title: "European Success",
+      description: "Achieved more production, more export, and more success in new European markets."
     },
     {
       year: "2018",
-      title: "New Range Introduction",
-      description: "A new range of boats was introduced, expanding our collection with innovative designs and advanced features."
+      title: "IMCI Certification",
+      description: "All models received IMCI (International Marine Certification Institute) certification with category C."
+    },
+    {
+      year: "2019",
+      title: "Fiberglass Production & Third Generation",
+      description: "A new 4000 Sq. meters facility was added specifically for fiberglass production. The third generation of models was introduced."
+    },
+    {
+      year: "2020",
+      title: "Worldwide Dealer Network",
+      description: "A full worldwide dealer network became operational."
+    },
+    {
+      year: "2021",
+      title: "Large Operation Facility",
+      description: "Large operation facility and management were added."
+    },
+    {
+      year: "2022",
+      title: "10,000 Boats Sold",
+      description: "Sales reached 10,000 boats."
     },
     {
       year: "2023",
-      title: "10,000 Boats Delivered",
-      description: "Celebrated a major milestone with the delivery of our 10,000th boat, demonstrating our commitment to quality and customer satisfaction."
+      title: "Fourth Generation Models",
+      description: "The fourth generation of models was introduced, with the existing range built in CAD 3D."
+    },
+    {
+      year: "2024",
+      title: "Growing Workforce",
+      description: "The workforce reached 120 workers across both factories."
     },
     {
       year: "2025",
-      title: "Super Luxury Models",
-      description: "Introducing a new line of super luxury models, pushing the boundaries of design and performance."
+      title: "MAXLINE Series",
+      description: "The new MAXLINE series of cabin RIBs, including a 38-footer, was introduced."
+    },
+    {
+      year: "2026",
+      title: "Full GRP Range",
+      description: "The full GRP (Glass Reinforced Plastic) range was added to Tiger Marine for the first time ever."
     }
   ];
 
@@ -120,9 +229,10 @@ const About = () => {
             >
               <div className="aspect-[4/3] bg-gray-200 rounded-2xl overflow-hidden">
                 <img
-                  src="/api/placeholder/800/600"
-                  alt="Tiger Marine History"
+                  src="/images/Factory.jpg"
+                  alt="Tiger Marine Factory"
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
               </div>
               <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-gold rounded-full opacity-20"></div>
@@ -174,56 +284,115 @@ const About = () => {
       </section>
 
       {/* Timeline */}
-      <section className="section-padding">
+      <section className="section-padding bg-gradient-to-b from-white to-gray-50">
         <div className="container-custom">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-12"
           >
             <h2 className="text-4xl md:text-5xl font-light text-midnight-slate mb-6">
               Our Journey
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Key milestones in our 25-year history of maritime excellence.
+              Three decades of growth, innovation, and excellence in maritime manufacturing.
             </p>
           </motion.div>
 
-          <div className="relative">
-            {/* Timeline Line */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gold"></div>
+          <div className="relative max-w-6xl mx-auto">
+            {/* Vertical Timeline Line */}
+            <div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-gradient-to-b from-smoked-saffron via-gold to-smoked-saffron"></div>
             
-            <div className="space-y-12">
-              {milestones.map((milestone, index) => (
+            {/* Group milestones by periods */}
+            {[
+              {
+                period: "1996-2000",
+                title: "Foundation Years",
+                milestones: milestones.filter(m => parseInt(m.year) >= 1996 && parseInt(m.year) <= 2000)
+              },
+              {
+                period: "2001-2010",
+                title: "Growth Phase",
+                milestones: milestones.filter(m => parseInt(m.year) >= 2001 && parseInt(m.year) <= 2010)
+              },
+              {
+                period: "2011-2020",
+                title: "Global Expansion",
+                milestones: milestones.filter(m => parseInt(m.year) >= 2011 && parseInt(m.year) <= 2020)
+              },
+              {
+                period: "2021-2026",
+                title: "Innovation Era",
+                milestones: milestones.filter(m => parseInt(m.year) >= 2021)
+              }
+            ].map((periodGroup, periodIndex) => (
+              <div key={periodIndex} className="mb-8">
+                {/* Period Header */}
                 <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.8, delay: index * 0.2 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
                   viewport={{ once: true }}
-                  className={`flex items-center ${
-                    index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'
-                  }`}
+                  className="relative mb-4"
                 >
-                  <div className={`w-1/2 ${index % 2 === 0 ? 'pr-8 text-right' : 'pl-8 text-left'}`}>
-                    <div className="bg-white rounded-2xl shadow-lg p-8">
-                      <div className="text-3xl font-bold text-gold mb-2">{milestone.year}</div>
-                      <h3 className="text-2xl font-semibold text-midnight-slate mb-2">{milestone.title}</h3>
-                      {milestone.location && (
-                        <p className="text-sm text-gray-500 mb-3">{milestone.location}</p>
-                      )}
-                      <p className="text-gray-600">{milestone.description}</p>
+                  <div className="text-center mb-3">
+                    <h3 className="text-xl md:text-2xl font-semibold text-midnight-slate mb-1">
+                      {periodGroup.title}
+                    </h3>
+                    <p className="text-sm text-gray-500">{periodGroup.period}</p>
+                  </div>
+                  <div className="flex justify-center">
+                    <div className="w-12 h-12 bg-smoked-saffron rounded-full border-4 border-white shadow-lg flex items-center justify-center z-20">
+                      <span className="text-white font-bold text-xs">{periodGroup.period.split('-')[0]}</span>
                     </div>
                   </div>
-                  
-                  <div className="w-8 h-8 bg-gold rounded-full border-4 border-white shadow-lg z-10"></div>
-                  
-                  <div className="w-1/2"></div>
                 </motion.div>
-              ))}
-            </div>
+
+                {/* Period Milestones */}
+                <div className="space-y-2">
+                  {periodGroup.milestones.map((milestone, index) => {
+                    const globalIndex = milestones.indexOf(milestone);
+                    return (
+                      <motion.div
+                        key={milestone.year}
+                        initial={{ opacity: 0, x: globalIndex % 2 === 0 ? -30 : 30 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: index * 0.03 }}
+                        viewport={{ once: true }}
+                        className={`relative flex items-center ${
+                          globalIndex % 2 === 0 ? 'flex-row' : 'flex-row-reverse'
+                        }`}
+                      >
+                        {/* Content Card */}
+                        <div className={`w-[48%] ${globalIndex % 2 === 0 ? 'pr-6 text-right' : 'pl-6 text-left'}`}>
+                          <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-3 border-l-2 border-smoked-saffron">
+                            <div className={`flex items-center gap-2 mb-1 ${globalIndex % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+                              <span className="text-xs font-bold text-smoked-saffron">{milestone.year}</span>
+                              <h4 className="text-xs md:text-sm font-semibold text-midnight-slate">
+                                {milestone.title}
+                              </h4>
+                            </div>
+                            <p className="text-xs text-gray-600 leading-snug">
+                              {milestone.description}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Timeline Dot */}
+                        <div className="relative z-10 flex-shrink-0 w-[4%] flex items-center justify-center">
+                          <div className="w-3 h-3 bg-smoked-saffron rounded-full border-2 border-white shadow-sm"></div>
+                        </div>
+                        
+                        {/* Empty space for alternating layout */}
+                        <div className="w-[48%]"></div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

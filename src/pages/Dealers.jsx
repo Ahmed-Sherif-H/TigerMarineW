@@ -9,25 +9,31 @@ const DealersMap = ({ dealers }) => {
     .filter(d => d.address)
     .map(d => `${d.address}, ${d.country}`);
 
-  // Create Google Maps search URL (works without API key)
-  const firstDealer = dealerAddresses[0] || '';
-  const mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(firstDealer)}`;
+  // Create Google Maps search URL (works without API key for external link)
+  const mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('Tiger Marine Dealers Worldwide')}`;
+  
+  // Create individual dealer links
+  const dealerLinks = dealerAddresses.map((address, index) => {
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    return { address, url, id: index };
+  });
 
   return (
     <div className="w-full h-full relative bg-gray-100">
-      {/* Map iframe - Using OpenStreetMap which is free */}
+      {/* Google Maps iframe - Using search view (no API key required) */}
       <iframe
-        src="https://www.openstreetmap.org/export/embed.html?bbox=-180,-90,180,90&layer=mapnik&zoom=2"
+        src={`https://www.google.com/maps?q=${encodeURIComponent('Tiger Marine Dealers')}&hl=en&z=2&output=embed`}
         width="100%"
         height="100%"
         style={{ border: 0 }}
         allowFullScreen
         loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
         className="w-full h-full"
         title="Dealers Map"
       />
       
-      {/* Overlay with dealer count and link */}
+      {/* Overlay with dealer count and links */}
       <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg max-w-xs">
         <h3 className="font-semibold text-midnight-slate mb-2">Dealer Locations</h3>
         <p className="text-sm text-gray-600 mb-3">
@@ -37,13 +43,32 @@ const DealersMap = ({ dealers }) => {
           href={mapSearchUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-sm text-smoked-saffron hover:text-midnight-slate transition-colors font-medium"
+          className="inline-flex items-center gap-2 text-sm text-smoked-saffron hover:text-midnight-slate transition-colors font-medium mb-2"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
           View all locations in Google Maps
         </a>
+        {dealerLinks.length > 0 && dealerLinks.length <= 5 && (
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <p className="text-xs text-gray-500 mb-2">Quick links:</p>
+            <div className="space-y-1">
+              {dealerLinks.slice(0, 5).map((link) => (
+                <a
+                  key={link.id}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-xs text-gray-600 hover:text-smoked-saffron transition-colors truncate"
+                  title={link.address}
+                >
+                  {link.address.split(',')[0]}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

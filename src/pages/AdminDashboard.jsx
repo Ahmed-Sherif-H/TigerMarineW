@@ -319,11 +319,11 @@ const AdminDashboard = () => {
     }));
   };
 
-  const handleOptionalFeatureChange = (optId, field, value) => {
+  const handleOptionalFeatureChange = (index, field, value) => {
     setEditedData(prev => ({
       ...prev,
-      optionalFeatures: prev.optionalFeatures.map(opt =>
-        opt.id === optId ? { ...opt, [field]: value } : opt
+      optionalFeatures: prev.optionalFeatures.map((opt, idx) =>
+        idx === index ? { ...opt, [field]: value } : opt
       )
     }));
   };
@@ -1099,14 +1099,14 @@ const AdminDashboard = () => {
                     </div>
                     <div className="space-y-4">
                       {editedData.optionalFeatures.map((opt, index) => (
-                        <div key={opt.id || index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div key={`opt-${index}-${opt.id || 'new'}`} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                             <div>
                               <label className="block text-xs font-semibold text-gray-500 mb-1">Name</label>
                               <input
                                 type="text"
                                 value={opt.name || ''}
-                                onChange={(e) => handleOptionalFeatureChange(opt.id, 'name', e.target.value)}
+                                onChange={(e) => handleOptionalFeatureChange(index, 'name', e.target.value)}
                                 className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
                                 placeholder="Feature name"
                               />
@@ -1116,7 +1116,7 @@ const AdminDashboard = () => {
                               <input
                                 type="text"
                                 value={opt.description || ''}
-                                onChange={(e) => handleOptionalFeatureChange(opt.id, 'description', e.target.value)}
+                                onChange={(e) => handleOptionalFeatureChange(index, 'description', e.target.value)}
                                 className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
                                 placeholder="Description"
                               />
@@ -1126,7 +1126,7 @@ const AdminDashboard = () => {
                               <input
                                 type="text"
                                 value={opt.category || ''}
-                                onChange={(e) => handleOptionalFeatureChange(opt.id, 'category', e.target.value)}
+                                onChange={(e) => handleOptionalFeatureChange(index, 'category', e.target.value)}
                                 className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
                                 placeholder="Category"
                               />
@@ -1137,7 +1137,7 @@ const AdminDashboard = () => {
                                 <input
                                   type="text"
                                   value={opt.price || ''}
-                                  onChange={(e) => handleOptionalFeatureChange(opt.id, 'price', e.target.value)}
+                                  onChange={(e) => handleOptionalFeatureChange(index, 'price', e.target.value)}
                                   className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
                                   placeholder="Price"
                                 />

@@ -70,7 +70,9 @@ const Home = () => {
     '/images/aboutUs-carousel1.webp',
     '/images/aboutUs-carousel2.webp',
     '/images/aboutUs-carousel3.webp',
-    '/images/aboutUs-carousel4.webp'
+    '/images/aboutUs-carousel4.webp',
+    '/images/aboutUs-carousel5.jpg',
+    '/images/aboutUs-carousel6.jpg'
   ];
 
   // Auto-advance vision carousel

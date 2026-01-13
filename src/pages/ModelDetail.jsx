@@ -924,6 +924,14 @@ const ModelDetail = () => {
                 const strValue = String(value).trim();
                 return strValue !== '' && strValue !== 'N/A' && strValue !== 'N/A ';
               })
+              .sort(([keyA], [keyB]) => {
+                // Sort so "length" (case-insensitive) appears first
+                const keyALower = keyA.toLowerCase();
+                const keyBLower = keyB.toLowerCase();
+                if (keyALower === 'length') return -1;
+                if (keyBLower === 'length') return 1;
+                return 0; // Keep original order for others
+              })
               .map(([key, value], index) => {
                 // Format key: "Length" -> "Length", "MaxHP" -> "Max HP", "TubeDiameter" -> "Tube Diameter"
                 const formattedKey = key.replace(/([A-Z])/g, ' $1').trim();
