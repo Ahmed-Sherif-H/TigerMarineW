@@ -40,7 +40,34 @@ const ModelCustomizer = () => {
 
   // Get full model name (e.g., "TopLine 850" instead of "TL850")
   // Use finalModel which could be from API or static data
+  // IMPORTANT: For models with swapped graphics, determine title from graphics folder, not model name
   const fullModelName = useMemo(() => {
+    if (!finalModel) return '';
+    
+    // Get the graphics folder being used
+    const graphicsFolder = getCustomizerFolder(finalModel.name);
+    
+    // For ProLine models with swapped graphics, determine title from folder
+    if (graphicsFolder) {
+      // PL620 uses ProLine550 graphics, so if folder contains ProLine550, show "ProLine 620"
+      if (graphicsFolder.includes('ProLine550')) {
+        return 'ProLine 620';
+      }
+      // PL550 uses ProLine620 graphics, so if folder contains ProLine620, show "ProLine 550"
+      if (graphicsFolder.includes('ProLine620')) {
+        return 'ProLine 550';
+      }
+      // OP850 uses Open650 graphics, so if folder contains Open650, show "Open 850"
+      if (graphicsFolder.includes('Open650')) {
+        return 'Open 850';
+      }
+      // OP650 uses Open850 graphics, so if folder contains Open850, show "Open 650"
+      if (graphicsFolder.includes('Open850')) {
+        return 'Open 650';
+      }
+    }
+    
+    // For all other models, use the standard display name function
     return getModelDisplayName(finalModel, category);
   }, [finalModel, category]);
 
