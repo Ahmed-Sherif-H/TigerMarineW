@@ -471,12 +471,6 @@ const About = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <a
-                href="/models"
-                className="btn-secondary text-lg px-8 py-4 hover:scale-105 transform transition-all duration-300"
-              >
-                View Our Models
-              </a>
-              <a
                 href="/contact"
                 className="btn-outline text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-midnight-slate transform transition-all duration-300"
               >

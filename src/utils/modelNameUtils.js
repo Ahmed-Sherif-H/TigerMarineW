@@ -9,6 +9,14 @@ const MODEL_NAME_MAP = {
   'TL850': 'TopLine 850',
   'TL750': 'TopLine 750',
   'TL650': 'TopLine 650',
+  'TopLine 950': 'TopLine 950',
+  'TopLine 850': 'TopLine 850',
+  'TopLine 750': 'TopLine 750',
+  'TopLine 650': 'TopLine 650',
+  'TopLine950': 'TopLine 950',
+  'TopLine850': 'TopLine 850',
+  'TopLine750': 'TopLine 750',
+  'TopLine650': 'TopLine 650',
   'PL620': 'ProLine 620',
   'PL550': 'ProLine 550',
   'SL520': 'SportLine 520',
@@ -59,18 +67,44 @@ export function getFullModelName(shortName, categoryName = null) {
 export function getModelDisplayName(model, category = null) {
   if (!model || !model.name) return '';
   
-  // Try direct mapping first
-  if (MODEL_NAME_MAP[model.name]) {
-    return MODEL_NAME_MAP[model.name];
+  // Normalize model name for matching (trim whitespace, handle variations)
+  const normalizedName = model.name.trim();
+  
+  // Try direct mapping first (case-sensitive)
+  if (MODEL_NAME_MAP[normalizedName]) {
+    return MODEL_NAME_MAP[normalizedName];
+  }
+  
+  // Try case-insensitive matching
+  const matchingKey = Object.keys(MODEL_NAME_MAP).find(
+    key => key.toLowerCase() === normalizedName.toLowerCase()
+  );
+  if (matchingKey) {
+    return MODEL_NAME_MAP[matchingKey];
+  }
+  
+  // Special handling for TL750 - ensure it shows "TopLine 750" not "TopLine 850"
+  if (normalizedName === 'TL750' || normalizedName.toLowerCase() === 'tl750') {
+    return 'TopLine 750';
+  }
+  
+  // Special handling for TL850 - ensure it shows "TopLine 850" not "TopLine 950"
+  if (normalizedName === 'TL850' || normalizedName.toLowerCase() === 'tl850') {
+    return 'TopLine 850';
+  }
+  
+  // Special handling for TL950 - ensure it shows "TopLine 950"
+  if (normalizedName === 'TL950' || normalizedName.toLowerCase() === 'tl950') {
+    return 'TopLine 950';
   }
   
   // Use category if available
   const catName = category?.name || model.categoryName;
   if (catName) {
-    return getFullModelName(model.name, catName);
+    return getFullModelName(normalizedName, catName);
   }
   
   // Fallback
-  return model.name;
+  return normalizedName;
 }
 

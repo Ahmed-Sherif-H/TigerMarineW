@@ -285,12 +285,6 @@ const Contact = () => {
                 >
                   Find a Dealer
                 </a>
-                <a
-                  href="/models"
-                  className="block w-full btn-primary text-center py-4 hover:scale-105 transform transition-all duration-300"
-                >
-                  View Our Models
-                </a>
               </motion.div>
             </motion.div>
           </div>

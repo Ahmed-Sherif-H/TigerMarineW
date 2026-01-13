@@ -1124,16 +1124,6 @@ export const dealers = [
     website: "http://www.donarboats.hr/hr"
   },
   {
-    id: 2,
-    country: "Portugal",
-    company: "Portugal Boats",
-    address: "Edificio Vilamarina, Loja 38, 8125-406 Vilamoura, Portugal",
-    telephone: null,
-    fax: null,
-    email: "frank@portugal-boats.com",
-    website: "http://www.portugal-boats.com"
-  },
-  {
     id: 3,
     country: "France",
     company: "Boats Distribution",
@@ -1162,16 +1152,6 @@ export const dealers = [
     fax: null,
     email: null,
     website: "http://www.tigermarinecenter.nl"
-  },
-  {
-    id: 6,
-    country: "Germany",
-    company: "Bootszentrum",
-    address: "Tükeslih 13, 24887 Silberstedt, Germany",
-    telephone: null,
-    fax: null,
-    email: null,
-    website: "http://www.bootszentrum.de"
   },
   {
     id: 7,
@@ -1224,16 +1204,6 @@ export const dealers = [
     website: null
   },
   {
-    id: 12,
-    country: "Norway",
-    company: "Holmen Marine AS",
-    address: "Fekjan 80, 1394 Nesbru, Norway",
-    telephone: "+47 481 15 481",
-    fax: null,
-    email: "post@tigermarine.no",
-    website: "https://tigermarine.no"
-  },
-  {
     id: 13,
     country: "Cyprus",
     company: "MD Pro Line Boat Sales",
@@ -1272,26 +1242,6 @@ export const dealers = [
     fax: null,
     email: null,
     website: "https://www.tigermarineboats.com/"
-  },
-  {
-    id: 17,
-    country: "Ireland",
-    company: "Outdoor Hub Limited",
-    address: "Lisnaskea Business Centre, Lisnaskea, Enniskillen BT92 0PE, UK",
-    telephone: null,
-    fax: null,
-    email: null,
-    website: "http://www.outdoor-hub.ie"
-  },
-  {
-    id: 18,
-    country: "Ireland",
-    company: "Malahide Marina",
-    address: "The Marina, Malahide, Co. Dublin, Ireland",
-    telephone: null,
-    fax: null,
-    email: null,
-    website: "http://www.malahidemarina.net"
   },
   {
     id: 19,

@@ -12,17 +12,17 @@ export const customizerFolders = {
   'TL650': 'TopLine650',
   
   // ProLine
-  'PL620': 'ProLine620',
-  'PL550': 'ProLine550',
+  'PL620': 'ProLine550',  // Fixed: PL620 uses ProLine550 graphics
+  'PL550': 'ProLine620',  // Fixed: PL550 uses ProLine620 graphics
   
   // SportLine
   'SL520': 'SportLine520',
   'SL480': 'SportLine480',
   
   // Open
-  'OP850': 'Open850',
+  'OP850': 'Open650',  // Fixed: OP850 uses Open650 graphics
   'OP750': 'Open750',
-  'OP650': 'Open650',
+  'OP650': 'Open850',  // Fixed: OP650 uses Open850 graphics
   
   // Add more models as needed
 };
