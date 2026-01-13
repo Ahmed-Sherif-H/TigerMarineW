@@ -242,6 +242,50 @@ class ApiService {
     });
   }
 
+  // ========== DEALERS ==========
+  async getAllDealers() {
+    if (import.meta.env.DEV) {
+      console.log('[API] Fetching all dealers');
+    }
+    return this.fetch('/dealers');
+  }
+
+  async getDealerById(id) {
+    if (import.meta.env.DEV) {
+      console.log('[API] Fetching dealer by ID:', id);
+    }
+    return this.fetch(`/dealers/${id}`);
+  }
+
+  async createDealer(dealerData) {
+    if (import.meta.env.DEV) {
+      console.log('[API] Creating dealer');
+    }
+    return this.fetch('/dealers', {
+      method: 'POST',
+      body: dealerData
+    });
+  }
+
+  async updateDealer(id, dealerData) {
+    if (import.meta.env.DEV) {
+      console.log('[API] Updating dealer:', id);
+    }
+    return this.fetch(`/dealers/${id}`, {
+      method: 'PUT',
+      body: dealerData
+    });
+  }
+
+  async deleteDealer(id) {
+    if (import.meta.env.DEV) {
+      console.log('[API] Deleting dealer:', id);
+    }
+    return this.fetch(`/dealers/${id}`, {
+      method: 'DELETE'
+    });
+  }
+
   // ========== INQUIRIES ==========
   async submitContactForm(data) {
     // Use longer timeout for form submissions (backend might be sleeping + email sending)

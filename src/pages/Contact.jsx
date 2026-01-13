@@ -54,7 +54,11 @@ const Contact = () => {
       title: "Headquarters",
       address: "Factory No. 62, 100 Fadan ZoneBadr Industrial City – Cairo – Egypt",
       phone: "+202 23108045 - +20100 4004079",
-      email: "info@tigermarine.com"
+      email: "info@tigermarine.com",
+      additionalEmails: [
+        "sales@tigermarine.com",
+        "export@tigermarine.com"
+      ]
     },
 
   ];
@@ -249,6 +253,19 @@ const Contact = () => {
                         </svg>
                         <span className="text-gray-600">{info.email}</span>
                       </div>
+                      
+                      {info.additionalEmails && info.additionalEmails.length > 0 && (
+                        <>
+                          {info.additionalEmails.map((email, emailIndex) => (
+                            <div key={emailIndex} className="flex items-center space-x-3">
+                              <svg className="w-5 h-5 text-gold flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                              </svg>
+                              <span className="text-gray-600">{email}</span>
+                            </div>
+                          ))}
+                        </>
+                      )}
                     </div>
                   </motion.div>
                 ))}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useModels } from '../context/ModelsContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import { dealers as staticDealers } from '../data/models';
 import { 
   normalizeModelDataForSave, 
   normalizeModelDataForEdit,
@@ -21,8 +22,11 @@ const AdminDashboard = () => {
   const [selectedModelId, setSelectedModelId] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [selectedEventId, setSelectedEventId] = useState('');
+  const [selectedDealerId, setSelectedDealerId] = useState('');
   const [events, setEvents] = useState([]);
+  const [dealers, setDealers] = useState([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const [isLoadingDealers, setIsLoadingDealers] = useState(false);
   const [editedData, setEditedData] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [isSaving, setIsSaving] = useState(false);
@@ -62,6 +66,22 @@ const AdminDashboard = () => {
       setEditedData(null);
     }
   }, [selectedEventId, activeTab]);
+
+  // Load dealers when dealers tab is active
+  useEffect(() => {
+    if (activeTab === 'dealers') {
+      loadDealers();
+    }
+  }, [activeTab]);
+
+  // Load dealer data when selection changes
+  useEffect(() => {
+    if (selectedDealerId && activeTab === 'dealers') {
+      loadDealerData(selectedDealerId);
+    } else if (!selectedDealerId && activeTab === 'dealers') {
+      setEditedData(null);
+    }
+  }, [selectedDealerId, activeTab]);
 
   const loadModelData = async (id) => {
     setIsLoadingModel(true);
@@ -589,7 +609,7 @@ const AdminDashboard = () => {
         {/* Tabs */}
         <div className="mb-6 bg-white rounded-xl shadow-sm p-2 border border-gray-200">
           <nav className="flex space-x-2">
-            {['models', 'categories', 'events', 'export'].map((tab) => (
+            {['models', 'categories', 'events', 'dealers', 'export'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => {
@@ -597,6 +617,7 @@ const AdminDashboard = () => {
                   setSelectedModelId('');
                   setSelectedCategoryId('');
                   setSelectedEventId('');
+                  setSelectedDealerId('');
                   setEditedData(null);
                   setMessage({ type: '', text: '' });
                 }}
@@ -609,6 +630,7 @@ const AdminDashboard = () => {
                 {tab === 'models' && '📦 '}
                 {tab === 'categories' && '📁 '}
                 {tab === 'events' && '📅 '}
+                {tab === 'dealers' && '🏢 '}
                 {tab === 'export' && '📤 '}
                 {tab}
               </button>
@@ -2054,6 +2076,177 @@ const AdminDashboard = () => {
                   <button
                     onClick={() => {
                       setSelectedEventId('');
+                      setEditedData(null);
+                    }}
+                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Dealers Tab */}
+        {activeTab === 'dealers' && (
+          <div className="space-y-6">
+            {/* Dealer Selector Card */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <span>🔍</span>
+                  Select Dealer to Edit
+                </label>
+                <button
+                  onClick={handleNewDealer}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all text-sm font-medium"
+                >
+                  ➕ New Dealer
+                </button>
+              </div>
+              {isLoadingDealers ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="text-sm text-gray-500 mt-2">Loading dealers...</p>
+                </div>
+              ) : (
+                <select
+                  value={selectedDealerId}
+                  onChange={(e) => {
+                    setSelectedDealerId(e.target.value);
+                    if (e.target.value) {
+                      loadDealerData(e.target.value);
+                    } else {
+                      setEditedData(null);
+                    }
+                  }}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                >
+                  <option value="">-- Select a dealer --</option>
+                  {dealers.map((dealer) => (
+                    <option key={dealer.id} value={dealer.id}>
+                      {dealer.company} - {dealer.country}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {dealers.length > 0 && (
+                <p className="mt-2 text-xs text-gray-500">
+                  {dealers.length} dealer{dealers.length !== 1 ? 's' : ''} available
+                </p>
+              )}
+            </div>
+
+            {/* Dealer Editor Card */}
+            {editedData && (
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 space-y-6">
+                <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <span>🏢</span>
+                    {editedData.id ? 'Edit Dealer' : 'Create New Dealer'}
+                  </h2>
+                  {editedData.id && (
+                    <button
+                      onClick={handleDeleteDealer}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all text-sm font-medium"
+                    >
+                      🗑️ Delete
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Company Name *</label>
+                    <input
+                      type="text"
+                      value={editedData.company || ''}
+                      onChange={(e) => handleInputChange('company', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                      placeholder="Donar Boats"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Country *</label>
+                    <input
+                      type="text"
+                      value={editedData.country || ''}
+                      onChange={(e) => handleInputChange('country', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                      placeholder="Croatia"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Address</label>
+                    <input
+                      type="text"
+                      value={editedData.address || ''}
+                      onChange={(e) => handleInputChange('address', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                      placeholder="Riva 1, 52100 Pula, Croatia"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Telephone</label>
+                    <input
+                      type="text"
+                      value={editedData.telephone || ''}
+                      onChange={(e) => handleInputChange('telephone', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                      placeholder="+385 98 802 328"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Fax</label>
+                    <input
+                      type="text"
+                      value={editedData.fax || ''}
+                      onChange={(e) => handleInputChange('fax', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                      placeholder="+385 52 350 822"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                    <input
+                      type="email"
+                      value={editedData.email || ''}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                      placeholder="donarboats@gmail.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Website</label>
+                    <input
+                      type="url"
+                      value={editedData.website || ''}
+                      onChange={(e) => handleInputChange('website', e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                      placeholder="http://www.donarboats.hr/hr"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Note:</strong> If the backend API for dealers is not yet set up, changes will be saved locally but will be lost on page refresh. 
+                    To persist changes permanently, the backend needs to implement dealer endpoints (GET, POST, PUT, DELETE /api/dealers).
+                  </p>
+                </div>
+
+                <div className="flex gap-4 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={handleSaveDealer}
+                    disabled={isSaving || !editedData.company || !editedData.country}
+                    className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-medium shadow-sm hover:shadow-md"
+                  >
+                    {isSaving ? '💾 Saving...' : '💾 Save Dealer'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedDealerId('');
                       setEditedData(null);
                     }}
                     className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
