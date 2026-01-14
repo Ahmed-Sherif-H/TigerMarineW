@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import ModelCard from '../components/ModelCard';
 import { useModels } from '../context/ModelsContext';
 import { useMemo } from 'react';
+import { sortModelsByNumberDesc } from '../utils/modelNameUtils';
 
 const CategoryDetail = () => {
   const { id } = useParams();
@@ -215,7 +216,7 @@ const CategoryDetail = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {category.models.map((model, index) => (
+            {sortModelsByNumberDesc(category.models).map((model, index) => (
               <ModelCard key={model.id} model={model} index={index} />
             ))}
           </div>

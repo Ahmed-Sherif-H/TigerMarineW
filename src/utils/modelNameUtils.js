@@ -164,3 +164,41 @@ export function getModelDisplayName(model, category = null) {
   return normalizedName;
 }
 
+/**
+ * Extract numeric value from model name for sorting
+ * @param {string} modelName - Model name (e.g., "TL950", "ProLine 620")
+ * @returns {number} Numeric value, or 0 if no number found
+ */
+export function extractModelNumber(modelName) {
+  if (!modelName) return 0;
+  const match = modelName.match(/\d+/);
+  return match ? parseInt(match[0], 10) : 0;
+}
+
+/**
+ * Sort models by their number in descending order (950 → 650)
+ * Models without numbers will be sorted alphabetically at the end
+ * @param {Array} models - Array of model objects
+ * @returns {Array} Sorted array of models
+ */
+export function sortModelsByNumberDesc(models) {
+  if (!models || !Array.isArray(models)) return models;
+  
+  return [...models].sort((a, b) => {
+    const numA = extractModelNumber(a.name);
+    const numB = extractModelNumber(b.name);
+    
+    // If both have numbers, sort descending (950 → 650)
+    if (numA > 0 && numB > 0) {
+      return numB - numA; // Descending order
+    }
+    
+    // If only one has a number, prioritize it
+    if (numA > 0) return -1;
+    if (numB > 0) return 1;
+    
+    // If neither has a number, sort alphabetically
+    return (a.name || '').localeCompare(b.name || '');
+  });
+}
+

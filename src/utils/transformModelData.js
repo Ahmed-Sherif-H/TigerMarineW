@@ -307,7 +307,18 @@ export function transformModels(models) {
 export function transformCategory(category, models) {
   const categoryModels = models
     .filter(m => m.categoryId === category.id)
-    .map(transformModel);
+    .map(transformModel)
+    .sort((a, b) => {
+      // Sort by number in descending order (950 → 650)
+      const numA = (a.name || '').match(/\d+/);
+      const numB = (b.name || '').match(/\d+/);
+      if (numA && numB) {
+        return parseInt(numB[0], 10) - parseInt(numA[0], 10); // Descending
+      }
+      if (numA) return -1;
+      if (numB) return 1;
+      return (a.name || '').localeCompare(b.name || '');
+    });
   
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
   const BACKEND_URL = API_BASE_URL.replace('/api', '');

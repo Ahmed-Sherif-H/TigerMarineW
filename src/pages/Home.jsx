@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import HeroSection from '../components/HeroSection';
 import { useModels } from '../context/ModelsContext';
 import { upcomingModels } from '../data/models';
-import { getModelDisplayName } from '../utils/modelNameUtils';
+import { getModelDisplayName, sortModelsByNumberDesc } from '../utils/modelNameUtils';
 import api from '../services/api';
 import ModelCard from '../components/ModelCard';
 
@@ -15,11 +15,13 @@ const Home = () => {
   const [loadingEvents, setLoadingEvents] = useState(true);
   
   // Get boats models (models whose category has mainGroup = 'boats')
+  // Sort them in descending order by number (950 → 650)
   const boatsModels = useMemo(() => {
     const boatsCategoryIds = categories
       .filter(cat => cat.mainGroup === 'boats')
       .map(cat => cat.id);
-    return models.filter(model => boatsCategoryIds.includes(model.categoryId));
+    const filteredModels = models.filter(model => boatsCategoryIds.includes(model.categoryId));
+    return sortModelsByNumberDesc(filteredModels);
   }, [categories, models]);
   
   // Get 7 random models when data loads
