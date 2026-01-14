@@ -11,9 +11,9 @@ export const customizerFolders = {
   'TL750': 'TopLine750',
   'TL650': 'TopLine650',
   
-  // ProLine
-  'PL620': 'ProLine620',  // PL620 uses its own graphics
-  'PL550': 'ProLine550',  // PL550 uses its own graphics
+  // ProLine - SWAPPED
+  'PL620': 'ProLine550',  // PL620 uses ProLine550 graphics
+  'PL550': 'ProLine620',  // PL550 uses ProLine620 graphics
   
   // SportLine
   'SL520': 'SportLine520',
