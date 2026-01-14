@@ -77,17 +77,18 @@ export function getModelDisplayName(model, category = null) {
     // This ensures the title always matches the actual model, not the graphics folder
   }
   
-  // Special handling for PL620 - ensure it shows "ProLine 620" (not 550)
-  // Check first before other mappings to prevent conflicts
-  if (normalizedName === 'PL620' || normalizedName.toLowerCase() === 'pl620' || 
-      normalizedName.includes('620') && (normalizedName.includes('ProLine') || normalizedName.includes('PL'))) {
-    return 'ProLine 620';
+  // Special handling for PL550 - ensure it shows "ProLine 550" (not 620)
+  // Check PL550 FIRST to prevent conflicts with PL620
+  if (normalizedName === 'PL550' || normalizedName.toLowerCase() === 'pl550' ||
+      (normalizedName.includes('550') && (normalizedName.includes('ProLine') || normalizedName.includes('PL') || normalizedName.includes('proline')))) {
+    return 'ProLine 550';
   }
   
-  // Special handling for PL550 - ensure it shows "ProLine 550" (not 620)
-  if (normalizedName === 'PL550' || normalizedName.toLowerCase() === 'pl550' ||
-      normalizedName.includes('550') && (normalizedName.includes('ProLine') || normalizedName.includes('PL'))) {
-    return 'ProLine 550';
+  // Special handling for PL620 - ensure it shows "ProLine 620" (not 550)
+  // Check after PL550 to prevent conflicts
+  if (normalizedName === 'PL620' || normalizedName.toLowerCase() === 'pl620' || 
+      (normalizedName.includes('620') && (normalizedName.includes('ProLine') || normalizedName.includes('PL') || normalizedName.includes('proline')))) {
+    return 'ProLine 620';
   }
   
   // Special handling for OP850 - ensure it shows "Open 850" (not 650)

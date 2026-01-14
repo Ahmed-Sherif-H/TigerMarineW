@@ -43,7 +43,22 @@ const ModelCustomizer = () => {
   const fullModelName = useMemo(() => {
     if (!finalModel) return '';
     
-    // Use the standard display name function - all models now use their correct folders
+    // Force correct name for ProLine models - check PL550 FIRST to prevent conflicts
+    if (finalModel.name) {
+      const modelName = finalModel.name.trim();
+      // Check for PL550 specifically - prioritize this check
+      if (modelName === 'PL550' || modelName.toLowerCase() === 'pl550' || 
+          (modelName.includes('550') && (modelName.includes('ProLine') || modelName.includes('PL') || modelName.toLowerCase().includes('proline')))) {
+        return 'ProLine 550';
+      }
+      // Check for PL620
+      if (modelName === 'PL620' || modelName.toLowerCase() === 'pl620' || 
+          (modelName.includes('620') && (modelName.includes('ProLine') || modelName.includes('PL') || modelName.toLowerCase().includes('proline')))) {
+        return 'ProLine 620';
+      }
+    }
+    
+    // Use the standard display name function for all other models
     return getModelDisplayName(finalModel, category);
   }, [finalModel, category]);
 
@@ -81,7 +96,7 @@ const ModelCustomizer = () => {
 
     // Default colors for each part
     const defaultColors = {
-      deckFloor: 'White',
+      deckFloor: 'Beige',
       sideFender: 'Gray',
       tubeDecoration: 'Black',
       fiberglass: 'White',
@@ -171,7 +186,7 @@ const ModelCustomizer = () => {
   const handleReset = () => {
     // Default colors for each part
     const defaultColors = {
-      deckFloor: 'White',
+      deckFloor: 'Beige',
       sideFender: 'Gray',
       tubeDecoration: 'Black',
       fiberglass: 'White',
