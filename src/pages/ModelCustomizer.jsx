@@ -40,34 +40,10 @@ const ModelCustomizer = () => {
 
   // Get full model name (e.g., "TopLine 850" instead of "TL850")
   // Use finalModel which could be from API or static data
-  // IMPORTANT: For models with swapped graphics, determine title from graphics folder, not model name
   const fullModelName = useMemo(() => {
     if (!finalModel) return '';
     
-    // Get the graphics folder being used
-    const graphicsFolder = getCustomizerFolder(finalModel.name);
-    
-    // For ProLine models with swapped graphics, determine title from folder
-    if (graphicsFolder) {
-      // PL620 uses ProLine550 graphics, so if folder contains ProLine550, show "ProLine 620"
-      if (graphicsFolder.includes('ProLine550')) {
-        return 'ProLine 620';
-      }
-      // PL550 uses ProLine620 graphics, so if folder contains ProLine620, show "ProLine 550"
-      if (graphicsFolder.includes('ProLine620')) {
-        return 'ProLine 550';
-      }
-      // OP850 uses Open650 graphics, so if folder contains Open650, show "Open 850"
-      if (graphicsFolder.includes('Open650')) {
-        return 'Open 850';
-      }
-      // OP650 uses Open850 graphics, so if folder contains Open850, show "Open 650"
-      if (graphicsFolder.includes('Open850')) {
-        return 'Open 650';
-      }
-    }
-    
-    // For all other models, use the standard display name function
+    // Use the standard display name function - all models now use their correct folders
     return getModelDisplayName(finalModel, category);
   }, [finalModel, category]);
 
@@ -103,6 +79,16 @@ const ModelCustomizer = () => {
     const colors = {};
     const initialSelections = {};
 
+    // Default colors for each part
+    const defaultColors = {
+      deckFloor: 'White',
+      sideFender: 'Gray',
+      tubeDecoration: 'Black',
+      fiberglass: 'White',
+      tube: 'White',
+      upholestry: 'Beige'
+    };
+
     customizerParts.forEach(part => {
       if (part.key === 'base') {
         return;
@@ -112,8 +98,12 @@ const ModelCustomizer = () => {
       const partColors = getAvailableColors(part.key);
       colors[part.key] = partColors;
       
-      // Set default selection (first color)
-      if (partColors.length > 0) {
+      // Set default selection - use specified default or fallback to first color
+      const defaultColor = defaultColors[part.key];
+      if (defaultColor && partColors.includes(defaultColor)) {
+        initialSelections[part.key] = defaultColor;
+      } else if (partColors.length > 0) {
+        // Fallback to first color if default not available
         initialSelections[part.key] = partColors[0];
       }
     });
@@ -179,11 +169,26 @@ const ModelCustomizer = () => {
   };
 
   const handleReset = () => {
+    // Default colors for each part
+    const defaultColors = {
+      deckFloor: 'White',
+      sideFender: 'Gray',
+      tubeDecoration: 'Black',
+      fiberglass: 'White',
+      tube: 'White',
+      upholestry: 'Beige'
+    };
+
     const initialSelections = {};
     customizerParts.forEach(part => {
       if (part.key === 'base') return;
       const partColors = availableColors[part.key] || [];
-      if (partColors.length > 0) {
+      
+      // Use specified default or fallback to first color
+      const defaultColor = defaultColors[part.key];
+      if (defaultColor && partColors.includes(defaultColor)) {
+        initialSelections[part.key] = defaultColor;
+      } else if (partColors.length > 0) {
         initialSelections[part.key] = partColors[0];
       }
     });
