@@ -4,7 +4,9 @@
  */
 
 // Map of short model names to full display names
+// Includes all possible variations to ensure correct mapping
 const MODEL_NAME_MAP = {
+  // TopLine variations
   'TL950': 'TopLine 950',
   'TL850': 'TopLine 850',
   'TL750': 'TopLine 750',
@@ -17,14 +19,45 @@ const MODEL_NAME_MAP = {
   'TopLine850': 'TopLine 850',
   'TopLine750': 'TopLine 750',
   'TopLine650': 'TopLine 650',
+  'Topline 950': 'TopLine 950',
+  'Topline 850': 'TopLine 850',
+  'Topline 750': 'TopLine 750',
+  'Topline 650': 'TopLine 650',
+  
+  // ProLine variations - CRITICAL: These must be correct
   'PL620': 'ProLine 620',
   'PL550': 'ProLine 550',
+  'ProLine 620': 'ProLine 620',
+  'ProLine 550': 'ProLine 550',
+  'ProLine620': 'ProLine 620',
+  'ProLine550': 'ProLine 550',
+  'Proline 620': 'ProLine 620',
+  'Proline 550': 'ProLine 550',
+  'Proline620': 'ProLine 620',
+  'Proline550': 'ProLine 550',
+  
+  // SportLine variations
   'SL520': 'SportLine 520',
   'SL480': 'SportLine 480',
+  'SportLine 520': 'SportLine 520',
+  'SportLine 480': 'SportLine 480',
+  
+  // Open variations
   'OP850': 'Open 850',
   'OP750': 'Open 750',
   'OP650': 'Open 650',
+  'Open 850': 'Open 850',
+  'Open 750': 'Open 750',
+  'Open 650': 'Open 650',
+  'Open850': 'Open 850',
+  'Open750': 'Open 750',
+  'Open650': 'Open 650',
+  
+  // MaxLine
   'ML38': 'MaxLine 38',
+  'MaxLine 38': 'MaxLine 38',
+  
+  // Infinity
   'Infinity 280': 'Infinity 280'
 };
 
@@ -70,60 +103,13 @@ export function getModelDisplayName(model, category = null) {
   // Normalize model name for matching (trim whitespace, handle variations)
   const normalizedName = model.name.trim();
   
-  // CRITICAL: Check model ID to ensure correct name mapping
-  // This prevents issues when models use placeholder graphics
-  if (model.id) {
-    // Map model IDs to correct display names (if available in your database)
-    // This ensures the title always matches the actual model, not the graphics folder
-  }
-  
-  // Special handling for PL550 - ensure it shows "ProLine 550" (not 620)
-  // Check PL550 FIRST to prevent conflicts with PL620
-  if (normalizedName === 'PL550' || normalizedName.toLowerCase() === 'pl550' ||
-      (normalizedName.includes('550') && (normalizedName.includes('ProLine') || normalizedName.includes('PL') || normalizedName.includes('proline')))) {
-    return 'ProLine 550';
-  }
-  
-  // Special handling for PL620 - ensure it shows "ProLine 620" (not 550)
-  // Check after PL550 to prevent conflicts
-  if (normalizedName === 'PL620' || normalizedName.toLowerCase() === 'pl620' || 
-      (normalizedName.includes('620') && (normalizedName.includes('ProLine') || normalizedName.includes('PL') || normalizedName.includes('proline')))) {
-    return 'ProLine 620';
-  }
-  
-  // Special handling for OP850 - ensure it shows "Open 850" (not 650)
-  if (normalizedName === 'OP850' || normalizedName.toLowerCase() === 'op850' ||
-      normalizedName.includes('850') && normalizedName.includes('Open')) {
-    return 'Open 850';
-  }
-  
-  // Special handling for OP650 - ensure it shows "Open 650" (not 850)
-  if (normalizedName === 'OP650' || normalizedName.toLowerCase() === 'op650' ||
-      normalizedName.includes('650') && normalizedName.includes('Open')) {
-    return 'Open 650';
-  }
-  
-  // Special handling for TL750 - ensure it shows "TopLine 750" not "TopLine 850"
-  if (normalizedName === 'TL750' || normalizedName.toLowerCase() === 'tl750') {
-    return 'TopLine 750';
-  }
-  
-  // Special handling for TL850 - ensure it shows "TopLine 850" not "TopLine 950"
-  if (normalizedName === 'TL850' || normalizedName.toLowerCase() === 'tl850') {
-    return 'TopLine 850';
-  }
-  
-  // Special handling for TL950 - ensure it shows "TopLine 950"
-  if (normalizedName === 'TL950' || normalizedName.toLowerCase() === 'tl950') {
-    return 'TopLine 950';
-  }
-  
-  // Try direct mapping first (case-sensitive)
+  // DIRECT MAPPING FIRST - Most reliable
+  // Check exact matches first (case-sensitive)
   if (MODEL_NAME_MAP[normalizedName]) {
     return MODEL_NAME_MAP[normalizedName];
   }
   
-  // Try case-insensitive matching
+  // Check case-insensitive matches
   const matchingKey = Object.keys(MODEL_NAME_MAP).find(
     key => key.toLowerCase() === normalizedName.toLowerCase()
   );
@@ -131,13 +117,50 @@ export function getModelDisplayName(model, category = null) {
     return MODEL_NAME_MAP[matchingKey];
   }
   
-  // Use category if available
+  // NUMBER-BASED DETECTION - For models with numbers (550, 620, 850, 650, etc.)
+  // Extract number from model name
+  const numberMatch = normalizedName.match(/\d+/);
+  const number = numberMatch ? numberMatch[0] : '';
+  
+  if (number) {
+    // ProLine models - check for 550 or 620
+    if (number === '550' && (normalizedName.includes('ProLine') || normalizedName.includes('PL') || normalizedName.toLowerCase().includes('proline'))) {
+      return 'ProLine 550';
+    }
+    if (number === '620' && (normalizedName.includes('ProLine') || normalizedName.includes('PL') || normalizedName.toLowerCase().includes('proline'))) {
+      return 'ProLine 620';
+    }
+    
+    // Open models - check for 650 or 850
+    if (number === '650' && normalizedName.toLowerCase().includes('open')) {
+      return 'Open 650';
+    }
+    if (number === '850' && normalizedName.toLowerCase().includes('open')) {
+      return 'Open 850';
+    }
+    
+    // TopLine models
+    if (number === '750' && (normalizedName.includes('TopLine') || normalizedName.includes('TL') || normalizedName.toLowerCase().includes('topline'))) {
+      return 'TopLine 750';
+    }
+    if (number === '850' && (normalizedName.includes('TopLine') || normalizedName.includes('TL') || normalizedName.toLowerCase().includes('topline'))) {
+      return 'TopLine 850';
+    }
+    if (number === '950' && (normalizedName.includes('TopLine') || normalizedName.includes('TL') || normalizedName.toLowerCase().includes('topline'))) {
+      return 'TopLine 950';
+    }
+  }
+  
+  // Use category if available to construct name
   const catName = category?.name || model.categoryName;
+  if (catName && number) {
+    return `${catName} ${number}`;
+  }
   if (catName) {
     return getFullModelName(normalizedName, catName);
   }
   
-  // Fallback
+  // Fallback: return normalized name
   return normalizedName;
 }
 
