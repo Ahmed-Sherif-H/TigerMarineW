@@ -174,11 +174,11 @@ const AdminDashboard = () => {
   const loadEventData = async (id) => {
     try {
       const eventData = await api.getEventById(id);
-      // Format dates for input fields (YYYY-MM-DDTHH:mm)
+      // Format dates for input fields (YYYY-MM-DD only, no time)
       const formattedData = {
         ...eventData,
-        startDate: eventData.startDate ? new Date(eventData.startDate).toISOString().slice(0, 16) : '',
-        endDate: eventData.endDate ? new Date(eventData.endDate).toISOString().slice(0, 16) : '',
+        startDate: eventData.startDate ? new Date(eventData.startDate).toISOString().slice(0, 10) : '',
+        endDate: eventData.endDate ? new Date(eventData.endDate).toISOString().slice(0, 10) : '',
         // Preserve Cloudinary URLs as-is (don't extract filename)
         image: eventData.image || ''
       };
@@ -200,11 +200,21 @@ const AdminDashboard = () => {
     
     setIsSaving(true);
     try {
+      // Format dates: if date-only (YYYY-MM-DD), add time to make it a full datetime
+      // Backend expects ISO datetime strings, so we'll set time to midnight
+      const formatDateForBackend = (dateString) => {
+        if (!dateString) return null;
+        // If it's already a full datetime, return as-is
+        if (dateString.includes('T')) return dateString;
+        // If it's just a date (YYYY-MM-DD), add time at midnight
+        return `${dateString}T00:00:00.000Z`;
+      };
+      
       const dataToSave = {
         name: editedData.name,
         location: editedData.location,
-        startDate: editedData.startDate,
-        endDate: editedData.endDate || null,
+        startDate: formatDateForBackend(editedData.startDate),
+        endDate: editedData.endDate ? formatDateForBackend(editedData.endDate) : null,
         description: editedData.description || '',
         // Preserve Cloudinary URLs as-is (don't extract filename)
         image: editedData.image || '',
@@ -1970,7 +1980,7 @@ const AdminDashboard = () => {
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date *</label>
                     <input
-                      type="datetime-local"
+                      type="date"
                       value={editedData.startDate || ''}
                       onChange={(e) => handleInputChange('startDate', e.target.value)}
                       className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
@@ -1979,7 +1989,7 @@ const AdminDashboard = () => {
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">End Date</label>
                     <input
-                      type="datetime-local"
+                      type="date"
                       value={editedData.endDate || ''}
                       onChange={(e) => handleInputChange('endDate', e.target.value)}
                       className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"

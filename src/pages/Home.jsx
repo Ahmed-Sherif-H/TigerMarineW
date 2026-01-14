@@ -619,7 +619,7 @@ const Home = () => {
       <section className="relative h-screen">
         <div className="absolute inset-0">
           <img
-            src="/images/DJI_0216.jpg"
+            src="/images/DJI_0778.webp"
             alt="Experience Our Models"
             className="w-full h-full object-cover"
             loading="lazy"

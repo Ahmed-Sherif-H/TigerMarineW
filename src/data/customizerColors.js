@@ -6,7 +6,7 @@
 
 // Common colors found across all models
 export const availableColorsByPart = {
-  deckFloor: ['Beige', 'Black', 'Brown', 'Gray', 'White'],
+  deckFloor: ['Beige', 'Black', 'Brown', 'Gray'],
   fiberglass: ['Black', 'Gray', 'White', 'Dark Gray'],
   sideFender: ['Black', 'Gray'],
   tube: ['Black', 'Dark Gray', 'Light Gray', 'White'],
