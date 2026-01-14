@@ -216,11 +216,13 @@ class ApiService {
   }
 
   async createEvent(eventData) {
-    console.log('[API] Creating event');
+    if (import.meta.env.DEV) {
+      console.log('[API] Creating event');
+    }
+    // Don't stringify body here - fetch method handles it
     return this.fetch('/events', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(eventData)
+      body: eventData
     });
   }
 

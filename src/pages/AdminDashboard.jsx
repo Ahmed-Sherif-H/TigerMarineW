@@ -198,6 +198,17 @@ const AdminDashboard = () => {
   const handleSaveEvent = async () => {
     if (!editedData) return;
     
+    // Check if user is authenticated before saving
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      setMessage({ type: 'error', text: 'You are not authenticated. Please login again.' });
+      setTimeout(() => {
+        logout();
+        navigate('/login');
+      }, 2000);
+      return;
+    }
+    
     setIsSaving(true);
     try {
       // Format dates: if date-only (YYYY-MM-DD), add time to make it a full datetime

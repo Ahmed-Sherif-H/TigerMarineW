@@ -294,7 +294,8 @@ const ModelDetail = () => {
               {model.shortDescription}
             </p>
           )}
-          {getCustomizerFolder(model.name) && (
+          {/* Customizer button hidden temporarily */}
+          {false && getCustomizerFolder(model.name) && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -867,8 +868,8 @@ const ModelDetail = () => {
         </div>
       </section>
 
-      {/* 9) Customization CTA */}
-      {getCustomizerFolder(model.name) && (
+      {/* 9) Customization CTA - Hidden temporarily */}
+      {false && getCustomizerFolder(model.name) && (
         <section className="section-padding bg-gradient-to-br from-midnight-slate to-gray-800 text-white">
           <div className="container-custom">
             <motion.div
@@ -975,7 +976,8 @@ const ModelDetail = () => {
                 ← Back to Categories
               </Link>
             )}
-            {getCustomizerFolder(model.name) && (
+            {/* Customizer link hidden temporarily */}
+            {false && getCustomizerFolder(model.name) && (
               <div className="text-center">
                 <p className="text-gray-600 mb-2">Ready to customize your {fullModelName}?</p>
                 <Link
