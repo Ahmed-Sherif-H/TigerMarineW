@@ -43,7 +43,30 @@ const ModelCustomizer = () => {
   const fullModelName = useMemo(() => {
     if (!finalModel) return '';
     
-    // Force correct name for ProLine models - check PL550 FIRST to prevent conflicts
+    // CRITICAL: Determine title from graphics folder being used, not model name
+    // This ensures correct title even if database has wrong model name
+    const graphicsFolder = getCustomizerFolder(finalModel.name);
+    
+    if (graphicsFolder) {
+      // If using ProLine550 graphics folder, it's PL550 model
+      if (graphicsFolder.includes('ProLine550') || graphicsFolder.includes('ProLine 550')) {
+        return 'ProLine 550';
+      }
+      // If using ProLine620 graphics folder, it's PL620 model
+      if (graphicsFolder.includes('ProLine620') || graphicsFolder.includes('ProLine 620')) {
+        return 'ProLine 620';
+      }
+      // If using Open650 graphics folder, it's OP650 model
+      if (graphicsFolder.includes('Open650') || graphicsFolder.includes('Open 650')) {
+        return 'Open 650';
+      }
+      // If using Open850 graphics folder, it's OP850 model
+      if (graphicsFolder.includes('Open850') || graphicsFolder.includes('Open 850')) {
+        return 'Open 850';
+      }
+    }
+    
+    // Fallback: Check model name directly
     if (finalModel.name) {
       const modelName = finalModel.name.trim();
       // Check for PL550 specifically - prioritize this check
