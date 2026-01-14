@@ -39,9 +39,36 @@ const ModelCustomizer = () => {
   const finalModel = apiModel || model;
 
   // Get full model name (e.g., "TopLine 850" instead of "TL850")
-  // Simplified: Just use the standard display name function - it handles all model name variations
+  // Title should match the graphics folder being used, not the model name
   const fullModelName = useMemo(() => {
     if (!finalModel) return '';
+    
+    // Get the graphics folder being used
+    const graphicsFolder = getCustomizerFolder(finalModel.name);
+    
+    if (graphicsFolder) {
+      // Derive title from graphics folder for swapped models
+      // PL620 uses ProLine550 graphics → show "ProLine 550"
+      if (graphicsFolder.includes('ProLine550')) {
+        return 'ProLine 550';
+      }
+      // PL550 uses ProLine620 graphics → show "ProLine 620"
+      if (graphicsFolder.includes('ProLine620')) {
+        return 'ProLine 620';
+      }
+      // For other models, check folder name and derive title
+      if (graphicsFolder.includes('TopLine950')) return 'TopLine 950';
+      if (graphicsFolder.includes('TopLine850')) return 'TopLine 850';
+      if (graphicsFolder.includes('TopLine750')) return 'TopLine 750';
+      if (graphicsFolder.includes('TopLine650')) return 'TopLine 650';
+      if (graphicsFolder.includes('Open850')) return 'Open 850';
+      if (graphicsFolder.includes('Open750')) return 'Open 750';
+      if (graphicsFolder.includes('Open650')) return 'Open 650';
+      if (graphicsFolder.includes('SportLine520')) return 'SportLine 520';
+      if (graphicsFolder.includes('SportLine480')) return 'SportLine 480';
+    }
+    
+    // Fallback to standard display name
     return getModelDisplayName(finalModel, category);
   }, [finalModel, category]);
 

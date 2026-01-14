@@ -19,10 +19,10 @@ export const customizerFolders = {
   'SL520': 'SportLine520',
   'SL480': 'SportLine480',
   
-  // Open
-  'OP850': 'Open850',  // OP850 uses its own graphics
+  // Open - SWAPPED
+  'OP850': 'Open650',  // OP850 uses Open650 graphics
   'OP750': 'Open750',
-  'OP650': 'Open650',  // OP650 uses its own graphics
+  'OP650': 'Open850',  // OP650 uses Open850 graphics
   
   // Add more models as needed
 };
