@@ -24,10 +24,15 @@ const BoatShows = () => {
     loadEvents();
   }, []);
 
-  const filteredEvents = events.filter(event => {
-    if (filter === 'all') return true;
-    return event.status === filter;
-  });
+  const filteredEvents = events
+    .filter(event => {
+      if (filter === 'all') return true;
+      return event.status === filter;
+    })
+    .sort((a, b) => {
+      // Sort by start date (earliest first)
+      return new Date(a.startDate) - new Date(b.startDate);
+    });
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);

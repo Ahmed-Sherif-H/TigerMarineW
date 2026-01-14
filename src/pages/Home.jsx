@@ -72,7 +72,9 @@ const Home = () => {
     '/images/aboutUs-carousel1.webp',
     '/images/aboutUs-carousel2.webp',
     '/images/aboutUs-carousel3.webp',
+
     '/images/aboutUs-carousel4.webp',
+    '/images/aboutUs-carousel1.webp',
     '/images/aboutUs-carousel5.jpg',
     '/images/aboutUs-carousel6.jpg'
   ];
@@ -81,7 +83,7 @@ const Home = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setVisionCarouselIndex((prev) => (prev + 1) % visionImages.length);
-    }, 3000); // Change image every 3 seconds
+    }, 8000); // Change image every 3 seconds
 
     return () => clearInterval(interval);
   }, [visionImages.length]);
