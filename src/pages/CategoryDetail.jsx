@@ -335,15 +335,6 @@ const CategoryDetail = () => {
             >
               ← Back to Categories
             </Link>
-            <div className="text-center">
-              <p className="text-gray-600 mb-2">Interested in customizing your {category.name}?</p>
-              <a
-                href="/color-fabric"
-                className="btn-primary"
-              >
-                Start Customization
-              </a>
-            </div>
           </div>
         </div>
       </section>

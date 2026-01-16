@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useModels } from '../context/ModelsContext';
@@ -10,6 +10,14 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hoveredCategory, setHoveredCategory] = useState(null);
   const [hoveredModel, setHoveredModel] = useState(null);
+  
+  // Clear hover states when menu closes
+  useEffect(() => {
+    if (!isMenuOpen) {
+      setHoveredCategory(null);
+      setHoveredModel(null);
+    }
+  }, [isMenuOpen]);
   
   // Group categories by mainGroup (only for Inflatable Boats)
   const inflatableBoats = useMemo(() => {
@@ -43,6 +51,9 @@ const Navbar = () => {
 
   const closeMenu = () => {
     setIsMenuOpen(false);
+    // Clear hover states when menu closes
+    setHoveredCategory(null);
+    setHoveredModel(null);
   };
 
   return (
