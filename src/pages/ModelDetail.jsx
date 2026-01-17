@@ -127,8 +127,38 @@ const ModelDetail = () => {
   }, [model?.galleryImages, model?.galleryFiles, model?.name, defaultHero, model?.image]);
 
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isFullScreenGallery, setIsFullScreenGallery] = useState(false);
   const goPrev = () => setCurrentSlide((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
   const goNext = () => setCurrentSlide((prev) => (prev + 1) % galleryImages.length);
+  
+  // Swipe handlers for mobile/tablet
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  
+  const minSwipeDistance = 50;
+  
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+  
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+  
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe) {
+      goNext();
+    }
+    if (isRightSwipe) {
+      goPrev();
+    }
+  };
 
   // Get all optional features (display all, not just first 4)
   const allOptionalFeatures = useMemo(() => {
@@ -533,7 +563,18 @@ const ModelDetail = () => {
 
       {/* 5) Full Width Image Carousel */}
       <section id="gallery" className="relative w-full">
-        <div className="relative h-[85vh] w-full overflow-hidden">
+        <div 
+          className="relative h-[85vh] w-full overflow-hidden cursor-pointer md:cursor-default"
+          onClick={() => {
+            // Open full screen on mobile/tablet only
+            if (window.innerWidth < 1024) {
+              setIsFullScreenGallery(true);
+            }
+          }}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
           <img
             src={galleryImages[currentSlide]}
             alt={`${model.name} ${currentSlide + 1}`}
@@ -556,7 +597,10 @@ const ModelDetail = () => {
           {galleryImages.length > 1 && (
             <>
               <button
-                onClick={goPrev}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goPrev();
+                }}
                 className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 text-midnight-slate rounded-full p-3 hover:bg-white transition"
                 aria-label="Previous image"
               >
@@ -565,7 +609,10 @@ const ModelDetail = () => {
                 </svg>
               </button>
               <button
-                onClick={goNext}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goNext();
+                }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 text-midnight-slate rounded-full p-3 hover:bg-white transition"
                 aria-label="Next image"
               >
@@ -583,7 +630,10 @@ const ModelDetail = () => {
                 {galleryImages.map((src, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setCurrentSlide(idx)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentSlide(idx);
+                    }}
                     className={`relative w-20 h-14 rounded-md overflow-hidden border ${idx === currentSlide ? 'border-smoked-saffron' : 'border-white/30'} hover:border-smoked-saffron transition-all`}
                   >
                     <img 
@@ -603,6 +653,104 @@ const ModelDetail = () => {
           )}
         </div>
       </section>
+
+      {/* Full Screen Gallery Modal for Mobile/Tablet */}
+      {isFullScreenGallery && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black z-[9999] flex flex-col md:hidden"
+          onClick={() => setIsFullScreenGallery(false)}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => setIsFullScreenGallery(false)}
+            className="absolute top-4 right-4 z-50 bg-white/20 hover:bg-white/30 text-white rounded-full p-3 transition-all"
+            aria-label="Close gallery"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          {/* Image Counter */}
+          <div className="absolute top-4 left-4 z-50 bg-black/50 text-white px-4 py-2 rounded-full text-sm font-medium">
+            {currentSlide + 1} / {galleryImages.length}
+          </div>
+          
+          {/* Main Image */}
+          <div 
+            className="flex-1 flex items-center justify-center relative p-4"
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            <img
+              src={galleryImages[currentSlide]}
+              alt={`${model.name} ${currentSlide + 1}`}
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
+          
+          {/* Navigation Arrows */}
+          {galleryImages.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goPrev();
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-white/20 hover:bg-white/30 text-white rounded-full p-4 transition-all"
+                aria-label="Previous image"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goNext();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-white/20 hover:bg-white/30 text-white rounded-full p-4 transition-all"
+                aria-label="Next image"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
+          )}
+          
+          {/* Thumbnail Strip at Bottom */}
+          {galleryImages.length > 1 && (
+            <div className="absolute bottom-4 left-0 right-0 z-50 px-4">
+              <div className="flex gap-2 overflow-x-auto justify-center pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {galleryImages.map((src, idx) => (
+                  <button
+                    key={idx}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentSlide(idx);
+                    }}
+                    className={`relative w-16 h-12 rounded-md overflow-hidden border-2 flex-shrink-0 transition-all ${
+                      idx === currentSlide ? 'border-white scale-110' : 'border-white/30'
+                    }`}
+                  >
+                    <img 
+                      src={src} 
+                      alt={`${model.name} thumb ${idx + 1}`} 
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </motion.div>
+      )}
 
       {/* 6) Image Left, Text Right - Boat Features */}
       {/*<section className="section-padding bg-white">

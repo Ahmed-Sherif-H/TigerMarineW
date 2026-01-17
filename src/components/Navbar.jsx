@@ -19,6 +19,12 @@ const Navbar = () => {
     }
   }, [isMenuOpen]);
   
+  // Detect if device is mobile (small screen + touch) to prevent hover
+  // Tablets can have hover, so we only prevent on small mobile screens
+  const isMobileDevice = typeof window !== 'undefined' && 
+    window.innerWidth < 640 && 
+    ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  
   // Group categories by mainGroup (only for Inflatable Boats)
   const inflatableBoats = useMemo(() => {
     return categories.filter(cat => (cat.mainGroup || 'inflatableBoats') === 'inflatableBoats');
@@ -176,8 +182,19 @@ const Navbar = () => {
                                 >
                                   <motion.div
                                     className="group p-2 rounded hover:bg-gray-50 transition-all duration-300 cursor-pointer"
-                                    onMouseEnter={() => setHoveredCategory(category)}
-                                    whileHover={{ x: 2 }}
+                                    onMouseEnter={() => {
+                                      // Allow hover on desktop and tablet, prevent on mobile
+                                      if (!isMobileDevice) {
+                                        setHoveredCategory(category);
+                                      }
+                                    }}
+                                    onTouchStart={() => {
+                                      // On mobile, clear hover to prevent preview
+                                      if (isMobileDevice) {
+                                        setHoveredCategory(null);
+                                      }
+                                    }}
+                                    whileHover={!isMobileDevice ? { x: 2 } : {}}
                                   >
                                     <h4 className="text-black font-medium text-sm group-hover:text-gray-600 transition-colors duration-300">
                                       {category.name}
@@ -193,8 +210,19 @@ const Navbar = () => {
                                 >
                                   <motion.div
                                     className="group p-2 rounded hover:bg-gray-50 transition-all duration-300 cursor-pointer"
-                                    onMouseEnter={() => setHoveredModel(model)}
-                                    whileHover={{ x: 2 }}
+                                    onMouseEnter={() => {
+                                      // Allow hover on desktop and tablet, prevent on mobile
+                                      if (!isMobileDevice) {
+                                        setHoveredModel(model);
+                                      }
+                                    }}
+                                    onTouchStart={() => {
+                                      // On mobile, clear hover to prevent preview
+                                      if (isMobileDevice) {
+                                        setHoveredModel(null);
+                                      }
+                                    }}
+                                    whileHover={!isMobileDevice ? { x: 2 } : {}}
                                   >
                                     <h4 className="text-black font-medium text-sm group-hover:text-gray-600 transition-colors duration-300">
                                       {getModelDisplayName(model)}
