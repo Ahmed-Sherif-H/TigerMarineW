@@ -220,7 +220,35 @@ const ModelDetail = () => {
   }, [model?.interiorImages, model?.interiorFiles, model?.name]);
 
   const [interiorSlide, setInteriorSlide] = useState(0);
+  const [isFullScreenInterior, setIsFullScreenInterior] = useState(false);
   const [activeNavTab, setActiveNavTab] = useState('overview');
+  
+  // Swipe handlers for interior carousel
+  const [interiorTouchStart, setInteriorTouchStart] = useState(null);
+  const [interiorTouchEnd, setInteriorTouchEnd] = useState(null);
+  
+  const onInteriorTouchStart = (e) => {
+    setInteriorTouchEnd(null);
+    setInteriorTouchStart(e.targetTouches[0].clientX);
+  };
+  
+  const onInteriorTouchMove = (e) => {
+    setInteriorTouchEnd(e.targetTouches[0].clientX);
+  };
+  
+  const onInteriorTouchEnd = () => {
+    if (!interiorTouchStart || !interiorTouchEnd) return;
+    const distance = interiorTouchStart - interiorTouchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe) {
+      goInteriorNext();
+    }
+    if (isRightSwipe) {
+      goInteriorPrev();
+    }
+  };
   
   // Scroll spy to highlight active section
   useEffect(() => {
@@ -944,7 +972,18 @@ const ModelDetail = () => {
               </div>
               {/* Right carousel - interior carousel images */}
               <div className="relative w-full lg:w-[70%]" style={{ height: '600px' }}>
-                <div className="relative h-full w-full bg-gray-200 rounded-2xl overflow-hidden shadow-lg">
+                <div 
+                  className="relative h-full w-full bg-gray-200 rounded-2xl overflow-hidden shadow-lg cursor-pointer md:cursor-default"
+                  onClick={() => {
+                    // Open full screen on mobile/tablet only
+                    if (window.innerWidth < 1024 && interiorCarouselImages.length > 0) {
+                      setIsFullScreenInterior(true);
+                    }
+                  }}
+                  onTouchStart={onInteriorTouchStart}
+                  onTouchMove={onInteriorTouchMove}
+                  onTouchEnd={onInteriorTouchEnd}
+                >
                   {interiorCarouselImages.length > 0 ? (
                     <>
                       <img 
@@ -956,7 +995,10 @@ const ModelDetail = () => {
                       {interiorCarouselImages.length > 1 && (
                         <>
                           <button
-                            onClick={goInteriorPrev}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              goInteriorPrev();
+                            }}
                             className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 text-midnight-slate rounded-full p-3 hover:bg-white transition shadow-lg"
                             aria-label="Previous image"
                           >
@@ -965,7 +1007,10 @@ const ModelDetail = () => {
                             </svg>
                           </button>
                           <button
-                            onClick={goInteriorNext}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              goInteriorNext();
+                            }}
                             className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 text-midnight-slate rounded-full p-3 hover:bg-white transition shadow-lg"
                             aria-label="Next image"
                           >
@@ -981,7 +1026,10 @@ const ModelDetail = () => {
                           {interiorCarouselImages.map((_, idx) => (
                             <button
                               key={idx}
-                              onClick={() => setInteriorSlide(idx)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setInteriorSlide(idx);
+                              }}
                               className={`w-2.5 h-2.5 rounded-full transition ${
                                 interiorSlide === idx ? 'bg-smoked-saffron' : 'bg-white/60'
                               }`}
@@ -1049,6 +1097,104 @@ const ModelDetail = () => {
             </motion.div>
           </div>
         </section>
+      )}
+
+      {/* Full Screen Interior Gallery Modal for Mobile/Tablet */}
+      {isFullScreenInterior && interiorCarouselImages.length > 0 && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black z-[9999] flex flex-col md:hidden"
+          onClick={() => setIsFullScreenInterior(false)}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => setIsFullScreenInterior(false)}
+            className="absolute top-4 right-4 z-50 bg-white/20 hover:bg-white/30 text-white rounded-full p-3 transition-all"
+            aria-label="Close interior gallery"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          {/* Image Counter */}
+          <div className="absolute top-4 left-4 z-50 bg-black/50 text-white px-4 py-2 rounded-full text-sm font-medium">
+            {interiorSlide + 1} / {interiorCarouselImages.length}
+          </div>
+          
+          {/* Main Image */}
+          <div 
+            className="flex-1 flex items-center justify-center relative p-4"
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={onInteriorTouchStart}
+            onTouchMove={onInteriorTouchMove}
+            onTouchEnd={onInteriorTouchEnd}
+          >
+            <img
+              src={interiorCarouselImages[interiorSlide] || interiorCarouselImages[0]}
+              alt={`Interior ${interiorSlide + 1}`}
+              className="max-w-full max-h-full object-contain"
+            />
+          </div>
+          
+          {/* Navigation Arrows */}
+          {interiorCarouselImages.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goInteriorPrev();
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-white/20 hover:bg-white/30 text-white rounded-full p-4 transition-all"
+                aria-label="Previous interior image"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goInteriorNext();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-white/20 hover:bg-white/30 text-white rounded-full p-4 transition-all"
+                aria-label="Next interior image"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
+          )}
+          
+          {/* Thumbnail Strip at Bottom */}
+          {interiorCarouselImages.length > 1 && (
+            <div className="absolute bottom-4 left-0 right-0 z-50 px-4">
+              <div className="flex gap-2 overflow-x-auto justify-center pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {interiorCarouselImages.map((src, idx) => (
+                  <button
+                    key={idx}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setInteriorSlide(idx);
+                    }}
+                    className={`relative w-16 h-12 rounded-md overflow-hidden border-2 flex-shrink-0 transition-all ${
+                      idx === interiorSlide ? 'border-white scale-110' : 'border-white/30'
+                    }`}
+                  >
+                    <img 
+                      src={src} 
+                      alt={`Interior thumb ${idx + 1}`} 
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </motion.div>
       )}
 
       {/* 10) Specifications Section */}
