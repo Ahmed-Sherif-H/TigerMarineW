@@ -5,6 +5,7 @@ const HeroSection = ({
   title, 
   subtitle, 
   backgroundImage, 
+  videoSrc = '/images/video.mp4',
   showButtons = true,
   height = "h-screen",
   overlay = true 
@@ -13,31 +14,43 @@ const HeroSection = ({
     <section className={`relative ${height} flex items-start justify-start overflow-hidden`}>
       {/* Background Video */}
       <div className="absolute inset-0 z-0">
-        <video
-          className="w-full h-full object-cover"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          onCanPlay={(e) => {
-            // Ensure video plays when ready
-            e.target.play().catch(() => {
-              // Autoplay might be blocked, but video will play when user interacts
-            });
-          }}
-          onEnded={(e) => {
-            // Force loop if it doesn't loop automatically
-            e.target.currentTime = 0;
-            e.target.play().catch(() => {});
-          }}
-          onError={(e) => {
-            console.error('Video loading error:', e);
-          }}
-        >
-          <source src="https://res.cloudinary.com/dtmcjepgn/video/upload/v1768258298/video_i1ssrs.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
+        {videoSrc ? (
+          <video
+            className="w-full h-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={backgroundImage}
+            onCanPlay={(e) => {
+              // Ensure video plays when ready
+              e.target.play().catch(() => {
+                // Autoplay might be blocked, but video will play when user interacts
+              });
+            }}
+            onEnded={(e) => {
+              // Force loop if it doesn't loop automatically
+              e.target.currentTime = 0;
+              e.target.play().catch(() => {});
+            }}
+            onError={(e) => {
+              // If video fails, poster/background image still shows
+              console.error('Video loading error:', e);
+            }}
+          >
+            <source src={videoSrc} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        ) : (
+          <img
+            src={backgroundImage}
+            alt=""
+            className="w-full h-full object-cover"
+            loading="eager"
+            fetchPriority="high"
+          />
+        )}
         {overlay && (
           <div className="absolute inset-0 bg-gradient-to-r from-black/00 via-black/20 to-black/00" />
         )}
