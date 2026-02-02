@@ -1,60 +1,13 @@
 /**
  * Simple utility to generate image paths from model names
- * Images are now served from backend public folder
+ * Images are now served from frontend public folder (Netlify CDN)
  */
-
-// Get backend URL dynamically (not at module load time)
-function getBackendUrl() {
-  // Try multiple ways to get the API URL
-  let API_BASE_URL = import.meta.env.VITE_API_URL;
-  
-  // If not set, use fallback
-  if (!API_BASE_URL || API_BASE_URL === 'undefined' || API_BASE_URL === '') {
-    API_BASE_URL = 'http://localhost:3001/api';
-    if (import.meta.env.DEV) {
-      console.warn(`[getBackendUrl] ⚠️ VITE_API_URL not set, using fallback: ${API_BASE_URL}`);
-    }
-  }
-  
-  // Remove /api to get base backend URL
-  // Handle both cases: URL ending with /api or /api/
-  let backendUrl = API_BASE_URL.replace(/\/api\/?$/, '');
-  
-  // Log in dev mode only to reduce console noise
-  if (import.meta.env.DEV) {
-    console.log(`[getBackendUrl] VITE_API_URL from env:`, import.meta.env.VITE_API_URL);
-    console.log(`[getBackendUrl] API_BASE_URL: ${API_BASE_URL}`);
-    console.log(`[getBackendUrl] Backend URL (for images): ${backendUrl}`);
-  }
-  
-  // Ensure we have a valid URL
-  if (!backendUrl || backendUrl === 'undefined' || !backendUrl.startsWith('http')) {
-    if (import.meta.env.DEV) {
-      console.error(`[getBackendUrl] ❌ Invalid backend URL: ${backendUrl}`);
-      console.error(`[getBackendUrl] Falling back to: http://localhost:3001`);
-    }
-    return 'http://localhost:3001';
-  }
-  
-  return backendUrl;
-}
 
 /**
- * Get the image folder path for a model (pointing to backend)
+ * Get the image folder path for a model (pointing to frontend public folder)
  */
 export function getModelImagePath(modelName) {
-  let BACKEND_URL = getBackendUrl();
-  
-  // Validate BACKEND_URL - use fallback if invalid
-  if (!BACKEND_URL || !BACKEND_URL.startsWith('http')) {
-    if (import.meta.env.DEV) {
-      console.error(`[getModelImagePath] ❌ Invalid BACKEND_URL: ${BACKEND_URL}`);
-      console.error(`[getModelImagePath] Using fallback: http://localhost:3001`);
-    }
-    BACKEND_URL = 'http://localhost:3001';
-  }
-  
-  if (!modelName) return `${BACKEND_URL}/images/`;
+  if (!modelName) return '/images/';
   
   // Map model names to folder names
   const modelFolderMap = {
@@ -79,54 +32,27 @@ export function getModelImagePath(modelName) {
   // Encode folder name for URL (spaces become %20)
   const encodedFolderName = encodeURIComponent(folderName);
   
-  // Return the path pointing to backend
-  return `${BACKEND_URL}/images/${encodedFolderName}/`;
+  // Return the path pointing to frontend public folder
+  return `/images/${encodedFolderName}/`;
 }
 
 /**
  * Generate full image path from model name and filename
- * Handles Cloudinary URLs, legacy filenames, and local paths
+ * Handles Cloudinary URLs (legacy), filenames, and local paths
+ * Now serves from frontend public folder (Netlify CDN)
  */
 export function getFullImagePath(modelName, filename) {
   if (!filename) return null;
   
   // If filename is already a full URL (Cloudinary or other), return as-is
+  // This handles legacy Cloudinary URLs that might still be in the database
   if (filename.startsWith('http://') || filename.startsWith('https://')) {
     return filename;
   }
   
-  // Use getBackendUrl() to ensure consistency
-  let BACKEND_URL = getBackendUrl();
-  
-  // Validate BACKEND_URL - use fallback if invalid
-  if (!BACKEND_URL || !BACKEND_URL.startsWith('http')) {
-    if (import.meta.env.DEV) {
-      console.error(`[getFullImagePath] ❌ Invalid BACKEND_URL: ${BACKEND_URL}`);
-      console.error(`[getFullImagePath] Using fallback: http://localhost:3001`);
-    }
-    BACKEND_URL = 'http://localhost:3001';
-  }
-  
-  // If it's a relative path like /images/..., convert to full backend URL
-  // Need to encode the path parts (folder names with spaces)
+  // If it's already a relative path like /images/..., return as-is (already correct)
   if (filename.startsWith('/images/')) {
-    // Split the path and encode each part
-    const parts = filename.split('/').filter(Boolean);
-    if (parts.length >= 3) {
-      // /images/Folder Name/image.jpg -> encode folder name
-      const encodedParts = parts.map((part, index) => {
-        // Encode folder names (not the 'images' part, and not the filename which will be encoded separately)
-        if (index === 0 || index === parts.length - 1) {
-          // 'images' and filename - encode filename but not 'images'
-          return index === parts.length - 1 ? encodeFilename(part) : part;
-        }
-        // Folder names - encode with encodeURIComponent to handle spaces
-        return encodeURIComponent(part);
-      });
-      return `${BACKEND_URL}/${encodedParts.join('/')}`;
-    }
-    // Fallback: just encode the whole path
-    return `${BACKEND_URL}${encodeURI(filename)}`;
+    return filename;
   }
   
   // Otherwise, treat as filename and build the path
@@ -137,49 +63,32 @@ export function getFullImagePath(modelName, filename) {
   
   const fullPath = `${basePath}${encodedFilename}`;
   
-  // Debug logging - always log errors, log details in dev
-  const hasUnencodedSpace = fullPath.includes('MaxLine 38') || fullPath.includes('Infinity 280');
-  const hasEncodedSpace = fullPath.includes('MaxLine%2038') || fullPath.includes('Infinity%20280');
-  const isRelative = fullPath.startsWith('/');
-  const isAbsolute = fullPath.startsWith('http://') || fullPath.startsWith('https://');
-  
-  // Always log errors, even in production
-  if (isRelative || (hasUnencodedSpace && !hasEncodedSpace)) {
-    console.error(`[Image Path] ❌ ERROR: Model: ${modelName}, File: ${filename}`);
-    console.error(`[Image Path] Generated path: ${fullPath}`);
-    console.error(`[Image Path] Is relative: ${isRelative}, Is absolute: ${isAbsolute}`);
-    console.error(`[Image Path] Has unencoded space: ${hasUnencodedSpace}`);
-    console.error(`[Image Path] Backend URL: ${getBackendUrl()}`);
-    console.error(`[Image Path] VITE_API_URL: ${import.meta.env.VITE_API_URL || 'NOT SET'}`);
-  } else if (import.meta.env.DEV) {
-    console.log(`[Image Path] Model: ${modelName}, File: ${filename}`);
-    console.log(`[Image Path] Generated path: ${fullPath}`);
-    console.log(`[Image Path] Is absolute: ${isAbsolute}`);
+  // Debug logging in dev mode only
+  if (import.meta.env.DEV) {
+    console.log(`[Image Path] Model: ${modelName}, File: ${filename} → ${fullPath}`);
   }
   
   return fullPath;
 }
 
 /**
- * Get category image path
+ * Get category image path (served from frontend public folder)
  */
 export function getCategoryImagePath(categoryName, filename) {
   if (!filename) return null;
   
-  const BACKEND_URL = getBackendUrl();
-  
-  // If it's already a full URL, return as-is
+  // If it's already a full URL (Cloudinary legacy), return as-is
   if (filename.startsWith('http://') || filename.startsWith('https://')) {
     return filename;
   }
   
-  // If it's a path starting with /images/, convert to backend URL
+  // If it's already a relative path, return as-is
   if (filename.startsWith('/images/')) {
-    return `${BACKEND_URL}${filename}`;
+    return filename;
   }
   
   // Otherwise, treat as filename and build the path
-  return `${BACKEND_URL}/images/categories/${categoryName}/${encodeFilename(filename)}`;
+  return `/images/categories/${categoryName}/${encodeFilename(filename)}`;
 }
 
 /**

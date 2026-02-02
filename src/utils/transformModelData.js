@@ -248,13 +248,11 @@ export function transformModel(model) {
         filename = filename.split('/').pop();
       }
       
-      // Build Railway backend path for legacy filenames
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-      const BACKEND_URL = API_BASE_URL.replace(/\/api\/?$/, '');
+      // Build frontend path for interior images
       const basePath = getModelImagePath(model.name);
       const fullPath = `${basePath}Interior/${encodeFilename(filename)}`;
       if (import.meta.env.DEV) {
-        console.log(`[Transform] InteriorImage (legacy): ${file} → ${filename} → ${fullPath}`);
+        console.log(`[Transform] InteriorImage: ${file} → ${filename} → ${fullPath}`);
       }
       return fullPath;
     }).filter(Boolean),
@@ -320,28 +318,22 @@ export function transformCategory(category, models) {
       return (a.name || '').localeCompare(b.name || '');
     });
   
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-  const BACKEND_URL = API_BASE_URL.replace('/api', '');
-  
-  // Helper to get category image path
+  // Helper to get category image path (frontend public folder)
   const getCategoryImagePath = (filename) => {
     if (!filename) return null;
     
-    // If it's already a full URL, return as-is
+    // If it's already a full URL (Cloudinary legacy), return as-is
     if (filename.startsWith('http://') || filename.startsWith('https://')) {
       return filename;
     }
     
-    // If it's a path starting with /images/, extract filename first, then build path
+    // If it's already a path starting with /images/, return as-is
     if (filename.startsWith('/images/')) {
-      // Extract just the filename from the path
-      const extractedFilename = filename.split('/').pop();
-      // Build path using category name
-      return `${BACKEND_URL}/images/categories/${category.name}/${encodeFilename(extractedFilename)}`;
+      return filename;
     }
     
     // Otherwise, treat as filename and build the path
-    return `${BACKEND_URL}/images/categories/${category.name}/${encodeFilename(filename)}`;
+    return `/images/categories/${category.name}/${encodeFilename(filename)}`;
   };
   
   // Preserve Cloudinary URLs, handle legacy filenames
