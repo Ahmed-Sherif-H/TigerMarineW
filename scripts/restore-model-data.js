@@ -119,6 +119,30 @@ async function getAllModels(token) {
 }
 
 /**
+ * Extract filename from Cloudinary URL or path
+ */
+function extractFilename(urlOrPath) {
+  if (!urlOrPath || typeof urlOrPath !== 'string') return urlOrPath;
+  
+  // If it's a Cloudinary URL, extract filename
+  if (urlOrPath.includes('cloudinary.com')) {
+    // Extract filename from URL: .../Interior/cabin%201.webp -> cabin 1.webp
+    const parts = urlOrPath.split('/');
+    const filename = parts[parts.length - 1];
+    // Decode URL encoding (%20 -> space, etc.)
+    return decodeURIComponent(filename);
+  }
+  
+  // If it's already a filename or path, extract just the filename
+  if (urlOrPath.includes('/')) {
+    return urlOrPath.split('/').pop();
+  }
+  
+  // Already a filename
+  return urlOrPath;
+}
+
+/**
  * Restore data for a single model
  */
 function prepareRestoreData(exportedModel, dbModel) {
@@ -144,6 +168,42 @@ function prepareRestoreData(exportedModel, dbModel) {
     updates.optionalFeatures = exportedModel.optionalFeatures;
     hasChanges = true;
     console.log(`  - Optional Features: ${exportedModel.optionalFeatures.length} items`);
+  }
+  
+  // Restore gallery files (convert Cloudinary URLs to filenames if needed)
+  if (exportedModel.galleryFiles && Array.isArray(exportedModel.galleryFiles) && exportedModel.galleryFiles.length > 0) {
+    updates.galleryFiles = exportedModel.galleryFiles.map(file => extractFilename(file));
+    hasChanges = true;
+    console.log(`  - Gallery Files: ${exportedModel.galleryFiles.length} items`);
+  }
+  
+  // Restore interior files (convert Cloudinary URLs to filenames)
+  if (exportedModel.interiorFiles && Array.isArray(exportedModel.interiorFiles) && exportedModel.interiorFiles.length > 0) {
+    updates.interiorFiles = exportedModel.interiorFiles.map(file => extractFilename(file));
+    hasChanges = true;
+    console.log(`  - Interior Files: ${exportedModel.interiorFiles.length} items`);
+  }
+  
+  // Restore video files (preserve YouTube IDs, convert Cloudinary URLs to filenames)
+  if (exportedModel.videoFiles && Array.isArray(exportedModel.videoFiles) && exportedModel.videoFiles.length > 0) {
+    updates.videoFiles = exportedModel.videoFiles.map(file => {
+      // Preserve YouTube video IDs (they're just IDs like "oyZ4pGxQXDo")
+      if (typeof file === 'string' && !file.includes('http') && !file.includes('cloudinary') && !file.includes('/')) {
+        // Likely a YouTube ID or filename
+        return file;
+      }
+      // Convert Cloudinary URLs to filenames
+      return extractFilename(file);
+    });
+    hasChanges = true;
+    console.log(`  - Video Files: ${exportedModel.videoFiles.length} items`);
+  }
+  
+  // Restore interior main image (convert Cloudinary URL to filename if needed)
+  if (exportedModel.interiorMainImage) {
+    updates.interiorMainImage = extractFilename(exportedModel.interiorMainImage);
+    hasChanges = true;
+    console.log(`  - Interior Main Image: ${updates.interiorMainImage}`);
   }
   
   return { updates, hasChanges };
