@@ -1228,8 +1228,14 @@ const ModelDetail = () => {
                 return 0; // Keep original order for others
               })
               .map(([key, value], index) => {
-                // Format key: "Length" -> "Length", "MaxHP" -> "Max HP", "TubeDiameter" -> "Tube Diameter"
-                const formattedKey = key.replace(/([A-Z])/g, ' $1').trim();
+                // Format key: "Length" -> "Length Overall", "MaxHP" -> "Max HP", "TubeDiameter" -> "Tube Diameter"
+                let formattedKey;
+                // Change "length" (case-insensitive) to "Length Overall"
+                if (key.toLowerCase() === 'length') {
+                  formattedKey = 'Length Overall';
+                } else {
+                  formattedKey = key.replace(/([A-Z])/g, ' $1').trim();
+                }
                 return (
                   <motion.div
                     key={key}

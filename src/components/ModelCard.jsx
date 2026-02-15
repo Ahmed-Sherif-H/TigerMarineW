@@ -46,7 +46,7 @@ const ModelCard = ({ model, index = 0 }) => {
             {/* Key Specs */}
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="text-center">
-                <div className="text-sm text-gray-500">Length</div>
+                <div className="text-sm text-gray-500">Length Overall</div>
                 <div className="font-semibold text-midnight-slate">{model.specs.length}</div>
               </div>
               <div className="text-center">

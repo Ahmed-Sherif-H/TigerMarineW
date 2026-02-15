@@ -33,7 +33,7 @@ const ColorFabric = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-xl text-gray-200 max-w-3xl mx-auto"
           >
-            Personalize your Tiger Marine yacht with our extensive selection of 
+            Personalize your Tiger Marine boat with our extensive selection of 
             premium colors and fabrics.
           </motion.p>
         </div>
@@ -234,7 +234,7 @@ const ColorFabric = () => {
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
               Work with our design specialists to create the perfect combination 
-              of colors and fabrics for your Tiger Marine yacht.
+              of colors and fabrics for your Tiger Marine boat.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <a

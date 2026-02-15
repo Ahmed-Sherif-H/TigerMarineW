@@ -301,6 +301,134 @@ const AdminDashboard = () => {
     });
   };
 
+  // ========== DEALER FUNCTIONS ==========
+  const loadDealers = async () => {
+    setIsLoadingDealers(true);
+    try {
+      const dealersData = await api.getAllDealers();
+      // Handle both array response and { data: [...] } response format
+      const dealersList = Array.isArray(dealersData) ? dealersData : (dealersData.data || dealersData || []);
+      setDealers(dealersList);
+    } catch (error) {
+      console.error('[AdminDashboard] Error loading dealers:', error);
+      setMessage({ type: 'error', text: 'Failed to load dealers: ' + error.message });
+      // Fallback to static dealers if API fails
+      try {
+        setDealers(staticDealers || []);
+      } catch (fallbackError) {
+        console.error('[AdminDashboard] Error loading static dealers:', fallbackError);
+        setDealers([]);
+      }
+    } finally {
+      setIsLoadingDealers(false);
+    }
+  };
+
+  const loadDealerData = async (id) => {
+    try {
+      const dealerData = await api.getDealerById(id);
+      // Handle both direct object and { data: {...} } response format
+      const dealer = dealerData.data || dealerData;
+      setEditedData(dealer);
+    } catch (error) {
+      console.error('[AdminDashboard] Error loading dealer:', error);
+      setMessage({ type: 'error', text: 'Failed to load dealer data: ' + error.message });
+      setEditedData(null);
+    }
+  };
+
+  const handleNewDealer = () => {
+    setSelectedDealerId('');
+    setEditedData({
+      company: '',
+      country: '',
+      address: '',
+      telephone: '',
+      fax: '',
+      email: '',
+      website: ''
+    });
+  };
+
+  const handleSaveDealer = async () => {
+    if (!editedData) return;
+    
+    // Check if user is authenticated before saving
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      setMessage({ type: 'error', text: 'You are not authenticated. Please login again.' });
+      setTimeout(() => {
+        logout();
+        navigate('/login');
+      }, 2000);
+      return;
+    }
+    
+    setIsSaving(true);
+    setMessage({ type: '', text: '' });
+    
+    try {
+      const dataToSave = {
+        company: editedData.company || '',
+        country: editedData.country || '',
+        address: editedData.address || '',
+        telephone: editedData.telephone || '',
+        fax: editedData.fax || '',
+        email: editedData.email || '',
+        website: editedData.website || ''
+      };
+
+      if (editedData.id) {
+        // Update existing dealer
+        await api.updateDealer(editedData.id, dataToSave);
+        setMessage({ type: 'success', text: 'Dealer updated successfully!' });
+      } else {
+        // Create new dealer
+        await api.createDealer(dataToSave);
+        setMessage({ type: 'success', text: 'Dealer created successfully!' });
+      }
+      
+      await loadDealers();
+      setSelectedDealerId('');
+      setEditedData(null);
+      setTimeout(() => setMessage({ type: '', text: '' }), 2000);
+    } catch (error) {
+      console.error('[AdminDashboard] Error saving dealer:', error);
+      // Check if it's an authentication error
+      if (error.message.includes('Authentication expired') || error.message.includes('401') || error.message.includes('Unauthorized')) {
+        setMessage({ type: 'error', text: 'Your session has expired. Please refresh the page and login again.' });
+        setTimeout(() => {
+          logout();
+          navigate('/login');
+        }, 2000);
+      } else {
+        setMessage({ type: 'error', text: 'Failed to save dealer: ' + error.message });
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteDealer = async () => {
+    if (!editedData || !editedData.id) return;
+    
+    if (!window.confirm(`Are you sure you want to delete "${editedData.company}"?`)) {
+      return;
+    }
+    
+    try {
+      await api.deleteDealer(editedData.id);
+      setMessage({ type: 'success', text: 'Dealer deleted successfully!' });
+      await loadDealers();
+      setSelectedDealerId('');
+      setEditedData(null);
+      setTimeout(() => setMessage({ type: '', text: '' }), 2000);
+    } catch (error) {
+      console.error('[AdminDashboard] Error deleting dealer:', error);
+      setMessage({ type: 'error', text: 'Failed to delete dealer: ' + error.message });
+    }
+  };
+
   const handleInputChange = (field, value) => {
     // For image file fields, preserve Cloudinary URLs, extract filenames only for legacy paths
     // extractFilename() already handles this - it preserves Cloudinary URLs and full URLs
@@ -2248,13 +2376,6 @@ const AdminDashboard = () => {
                       placeholder="http://www.donarboats.hr/hr"
                     />
                   </div>
-                </div>
-
-                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
-                  <p className="text-sm text-yellow-800">
-                    <strong>Note:</strong> If the backend API for dealers is not yet set up, changes will be saved locally but will be lost on page refresh. 
-                    To persist changes permanently, the backend needs to implement dealer endpoints (GET, POST, PUT, DELETE /api/dealers).
-                  </p>
                 </div>
 
                 <div className="flex gap-4 pt-4 border-t border-gray-200">
