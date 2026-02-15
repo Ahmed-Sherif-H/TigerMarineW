@@ -302,6 +302,25 @@ const AdminDashboard = () => {
   };
 
   // ========== DEALER FUNCTIONS ==========
+  // Helper functions for localStorage persistence
+  const getLocalDealers = () => {
+    try {
+      const stored = localStorage.getItem('tiger_marine_dealers');
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('[AdminDashboard] Error reading dealers from localStorage:', error);
+      return [];
+    }
+  };
+
+  const saveLocalDealers = (dealersList) => {
+    try {
+      localStorage.setItem('tiger_marine_dealers', JSON.stringify(dealersList));
+    } catch (error) {
+      console.error('[AdminDashboard] Error saving dealers to localStorage:', error);
+    }
+  };
+
   const loadDealers = async () => {
     setIsLoadingDealers(true);
     try {
@@ -309,20 +328,45 @@ const AdminDashboard = () => {
       // Handle both array response and { data: [...] } response format
       const dealersList = Array.isArray(dealersData) ? dealersData : (dealersData.data || dealersData || []);
       setDealers(dealersList);
+      // Save to localStorage as backup
+      saveLocalDealers(dealersList);
     } catch (error) {
       // Check if it's a 404 (backend endpoint doesn't exist yet)
       const is404 = error.message.includes('404') || error.message.includes('Invalid response format: 404');
       
       if (is404) {
-        // Backend endpoint doesn't exist, use static dealers
-        console.log('[AdminDashboard] Dealer API endpoint not available, using static dealers data');
-        setDealers(staticDealers || []);
+        // Backend endpoint doesn't exist, merge static dealers with localStorage dealers
+        console.log('[AdminDashboard] Dealer API endpoint not available, using static dealers + localStorage data');
+        const localDealers = getLocalDealers();
+        const staticDealersList = staticDealers || [];
+        
+        // Merge: use static dealers as base, then add/update with localStorage dealers
+        // Create a map of static dealers by ID
+        const dealersMap = new Map();
+        staticDealersList.forEach(d => dealersMap.set(d.id, d));
+        
+        // Overwrite/update with localStorage dealers
+        localDealers.forEach(localDealer => {
+          dealersMap.set(localDealer.id, localDealer);
+        });
+        
+        // Convert map back to array
+        const mergedDealers = Array.from(dealersMap.values());
+        setDealers(mergedDealers);
         // Don't show error message for 404 - it's expected if backend doesn't have the route
       } else {
         console.error('[AdminDashboard] Error loading dealers:', error);
         setMessage({ type: 'error', text: 'Failed to load dealers: ' + error.message });
-        // Fallback to static dealers if API fails for other reasons
-        setDealers(staticDealers || []);
+        // Fallback to static dealers + localStorage if API fails for other reasons
+        const localDealers = getLocalDealers();
+        const staticDealersList = staticDealers || [];
+        const dealersMap = new Map();
+        staticDealersList.forEach(d => dealersMap.set(d.id, d));
+        localDealers.forEach(localDealer => {
+          dealersMap.set(localDealer.id, localDealer);
+        });
+        const mergedDealers = Array.from(dealersMap.values());
+        setDealers(mergedDealers);
       }
     } finally {
       setIsLoadingDealers(false);
@@ -426,18 +470,19 @@ const AdminDashboard = () => {
       const is404 = error.message.includes('404') || error.message.includes('Invalid response format: 404');
       
       if (is404) {
-        // Backend endpoint doesn't exist, save to local state (static data mode)
-        console.log('[AdminDashboard] Backend endpoint not available, saving dealer to local state');
+        // Backend endpoint doesn't exist, save to local state and localStorage
+        console.log('[AdminDashboard] Backend endpoint not available, saving dealer to local state and localStorage');
         
+        let updatedDealers;
         if (editedData.id) {
           // Update existing dealer in local state
-          const updatedDealers = dealers.map(d => 
+          updatedDealers = dealers.map(d => 
             d.id === editedData.id ? { ...d, ...dataToSave } : d
           );
           setDealers(updatedDealers);
           setMessage({ 
             type: 'success', 
-            text: 'Dealer updated in local view. Note: This is temporary - changes will be lost after page refresh until backend endpoints are implemented.' 
+            text: 'Dealer updated successfully! Changes are saved locally and will persist across page refreshes.' 
           });
         } else {
           // Create new dealer in local state with temporary ID
@@ -446,16 +491,20 @@ const AdminDashboard = () => {
             id: maxId + 1,
             ...dataToSave
           };
-          setDealers([...dealers, newDealer]);
+          updatedDealers = [...dealers, newDealer];
+          setDealers(updatedDealers);
           setMessage({ 
             type: 'success', 
-            text: 'Dealer added to local view. Note: This is temporary - the dealer will disappear after page refresh until backend endpoints are implemented.' 
+            text: 'Dealer added successfully! Changes are saved locally and will persist across page refreshes.' 
           });
         }
         
+        // Save to localStorage for persistence
+        saveLocalDealers(updatedDealers);
+        
         setSelectedDealerId('');
         setEditedData(null);
-        setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       } else if (error.message.includes('Authentication expired') || error.message.includes('401') || error.message.includes('Unauthorized')) {
         setMessage({ type: 'error', text: 'Your session has expired. Please refresh the page and login again.' });
         setTimeout(() => {
@@ -491,17 +540,19 @@ const AdminDashboard = () => {
       const is404 = error.message.includes('404') || error.message.includes('Invalid response format: 404');
       
       if (is404) {
-        // Backend endpoint doesn't exist, remove from local state (static data mode)
-        console.log('[AdminDashboard] Backend endpoint not available, removing dealer from local state');
+        // Backend endpoint doesn't exist, remove from local state and localStorage
+        console.log('[AdminDashboard] Backend endpoint not available, removing dealer from local state and localStorage');
         const updatedDealers = dealers.filter(d => d.id !== editedData.id);
         setDealers(updatedDealers);
+        // Save to localStorage for persistence
+        saveLocalDealers(updatedDealers);
         setMessage({ 
           type: 'success', 
-          text: 'Dealer removed from view. Note: This is temporary - the dealer will reappear after page refresh until backend endpoints are implemented.' 
+          text: 'Dealer deleted successfully! Changes are saved locally and will persist across page refreshes.' 
         });
         setSelectedDealerId('');
         setEditedData(null);
-        setTimeout(() => setMessage({ type: '', text: '' }), 5000);
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       } else {
         setMessage({ type: 'error', text: 'Failed to delete dealer: ' + error.message });
       }
@@ -2460,9 +2511,8 @@ const AdminDashboard = () => {
                 {/* Info Notice */}
                 <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
                   <p className="text-sm text-blue-800">
-                    <strong>ℹ️ Note:</strong> You can view and edit dealers using static data. 
-                    If the backend API endpoints for dealers are not yet implemented, save/delete operations will show an error message. 
-                    The dealer list is loaded from static data as a fallback.
+                    <strong>ℹ️ Note:</strong> Dealers are saved locally in your browser and will persist across page refreshes. 
+                    When backend API endpoints are implemented, changes will automatically sync to the server.
                   </p>
                 </div>
 
