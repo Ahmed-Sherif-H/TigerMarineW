@@ -330,6 +330,8 @@ const AdminDashboard = () => {
       setDealers(dealersList);
       // Save to localStorage as backup
       saveLocalDealers(dealersList);
+      // Dispatch custom event to notify other components (like Dealers page)
+      window.dispatchEvent(new CustomEvent('dealersUpdated'));
     } catch (error) {
       // Check if it's a 404 (backend endpoint doesn't exist yet)
       const is404 = error.message.includes('404') || error.message.includes('Invalid response format: 404');
@@ -502,6 +504,9 @@ const AdminDashboard = () => {
         // Save to localStorage for persistence
         saveLocalDealers(updatedDealers);
         
+        // Dispatch custom event to notify other components (like Dealers page)
+        window.dispatchEvent(new CustomEvent('dealersUpdated'));
+        
         setSelectedDealerId('');
         setEditedData(null);
         setTimeout(() => setMessage({ type: '', text: '' }), 3000);
@@ -546,6 +551,10 @@ const AdminDashboard = () => {
         setDealers(updatedDealers);
         // Save to localStorage for persistence
         saveLocalDealers(updatedDealers);
+        
+        // Dispatch custom event to notify other components (like Dealers page)
+        window.dispatchEvent(new CustomEvent('dealersUpdated'));
+        
         setMessage({ 
           type: 'success', 
           text: 'Dealer deleted successfully! Changes are saved locally and will persist across page refreshes.' 

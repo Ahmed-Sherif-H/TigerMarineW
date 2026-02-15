@@ -1,6 +1,30 @@
 import { motion } from 'framer-motion';
 import { useState, useMemo, useEffect } from 'react';
-import { dealers } from '../data/models';
+import { dealers as staticDealers } from '../data/models';
+
+// Helper function to get dealers from localStorage and merge with static dealers
+const getMergedDealers = () => {
+  try {
+    const localDealers = localStorage.getItem('tiger_marine_dealers');
+    const localDealersList = localDealers ? JSON.parse(localDealers) : [];
+    const staticDealersList = staticDealers || [];
+    
+    // Merge: use static dealers as base, then add/update with localStorage dealers
+    const dealersMap = new Map();
+    staticDealersList.forEach(d => dealersMap.set(d.id, d));
+    
+    // Overwrite/update with localStorage dealers
+    localDealersList.forEach(localDealer => {
+      dealersMap.set(localDealer.id, localDealer);
+    });
+    
+    // Convert map back to array
+    return Array.from(dealersMap.values());
+  } catch (error) {
+    console.error('[Dealers] Error loading dealers from localStorage:', error);
+    return staticDealers || [];
+  }
+};
 
 // Map Component - Interactive map showing dealer locations
 const DealersMap = ({ dealers }) => {
@@ -78,12 +102,44 @@ const Dealers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('All');
   const [expandedCountries, setExpandedCountries] = useState(new Set());
+  const [dealers, setDealers] = useState(() => getMergedDealers());
+
+  // Reload dealers when component mounts or when localStorage might have changed
+  useEffect(() => {
+    // Listen for storage events to update when dealers are changed in admin dashboard (cross-tab)
+    const handleStorageChange = (e) => {
+      if (e.key === 'tiger_marine_dealers') {
+        setDealers(getMergedDealers());
+      }
+    };
+    
+    // Listen for custom event when dealers are updated in same tab
+    const handleDealersUpdated = () => {
+      setDealers(getMergedDealers());
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('dealersUpdated', handleDealersUpdated);
+    
+    // Also check on focus in case changes were made in another tab
+    const handleFocus = () => {
+      setDealers(getMergedDealers());
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('dealersUpdated', handleDealersUpdated);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
 
   // Get unique countries
   const countries = useMemo(() => {
     const uniqueCountries = [...new Set(dealers.map(d => d.country))].sort();
     return ['All', ...uniqueCountries];
-  }, []);
+  }, [dealers]);
 
   // Filter dealers
   const filteredDealers = useMemo(() => {
