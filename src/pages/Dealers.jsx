@@ -2,14 +2,27 @@ import { motion } from 'framer-motion';
 import { useState, useMemo, useEffect } from 'react';
 import { dealers as staticDealers } from '../data/models';
 
+// Helper function to get deleted dealer IDs from localStorage
+const getDeletedDealerIds = () => {
+  try {
+    const stored = localStorage.getItem('tiger_marine_deleted_dealers');
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('[Dealers] Error reading deleted dealers from localStorage:', error);
+    return [];
+  }
+};
+
 // Helper function to get dealers from localStorage and merge with static dealers
 const getMergedDealers = () => {
   try {
     const localDealers = localStorage.getItem('tiger_marine_dealers');
     const localDealersList = localDealers ? JSON.parse(localDealers) : [];
-    const staticDealersList = staticDealers || [];
+    const deletedIds = getDeletedDealerIds();
+    // Filter out deleted dealers from static dealers
+    const staticDealersList = (staticDealers || []).filter(d => !deletedIds.includes(d.id));
     
-    // Merge: use static dealers as base, then add/update with localStorage dealers
+    // Merge: use static dealers as base (excluding deleted ones), then add/update with localStorage dealers
     const dealersMap = new Map();
     staticDealersList.forEach(d => dealersMap.set(d.id, d));
     

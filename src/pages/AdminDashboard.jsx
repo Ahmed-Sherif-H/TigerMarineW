@@ -321,6 +321,28 @@ const AdminDashboard = () => {
     }
   };
 
+  const getDeletedDealerIds = () => {
+    try {
+      const stored = localStorage.getItem('tiger_marine_deleted_dealers');
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('[AdminDashboard] Error reading deleted dealers from localStorage:', error);
+      return [];
+    }
+  };
+
+  const addDeletedDealerId = (id) => {
+    try {
+      const deletedIds = getDeletedDealerIds();
+      if (!deletedIds.includes(id)) {
+        deletedIds.push(id);
+        localStorage.setItem('tiger_marine_deleted_dealers', JSON.stringify(deletedIds));
+      }
+    } catch (error) {
+      console.error('[AdminDashboard] Error saving deleted dealer ID to localStorage:', error);
+    }
+  };
+
   const loadDealers = async () => {
     setIsLoadingDealers(true);
     try {
@@ -340,9 +362,10 @@ const AdminDashboard = () => {
         // Backend endpoint doesn't exist, merge static dealers with localStorage dealers
         console.log('[AdminDashboard] Dealer API endpoint not available, using static dealers + localStorage data');
         const localDealers = getLocalDealers();
-        const staticDealersList = staticDealers || [];
+        const deletedIds = getDeletedDealerIds();
+        const staticDealersList = (staticDealers || []).filter(d => !deletedIds.includes(d.id));
         
-        // Merge: use static dealers as base, then add/update with localStorage dealers
+        // Merge: use static dealers as base (excluding deleted ones), then add/update with localStorage dealers
         // Create a map of static dealers by ID
         const dealersMap = new Map();
         staticDealersList.forEach(d => dealersMap.set(d.id, d));
@@ -361,7 +384,8 @@ const AdminDashboard = () => {
         setMessage({ type: 'error', text: 'Failed to load dealers: ' + error.message });
         // Fallback to static dealers + localStorage if API fails for other reasons
         const localDealers = getLocalDealers();
-        const staticDealersList = staticDealers || [];
+        const deletedIds = getDeletedDealerIds();
+        const staticDealersList = (staticDealers || []).filter(d => !deletedIds.includes(d.id));
         const dealersMap = new Map();
         staticDealersList.forEach(d => dealersMap.set(d.id, d));
         localDealers.forEach(localDealer => {
@@ -559,6 +583,8 @@ const AdminDashboard = () => {
     
     try {
       await api.deleteDealer(editedData.id);
+      // Add to deleted list to prevent it from reappearing from static data
+      addDeletedDealerId(editedData.id);
       setMessage({ type: 'success', text: 'Dealer deleted successfully!' });
       await loadDealers();
       setSelectedDealerId('');
@@ -577,6 +603,8 @@ const AdminDashboard = () => {
         setDealers(updatedDealers);
         // Save to localStorage for persistence
         saveLocalDealers(updatedDealers);
+        // Add to deleted list to prevent it from reappearing from static data
+        addDeletedDealerId(editedData.id);
         
         // Dispatch custom event to notify other components (like Dealers page)
         window.dispatchEvent(new CustomEvent('dealersUpdated'));
