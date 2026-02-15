@@ -386,24 +386,50 @@ const AdminDashboard = () => {
       const is404 = error.message.includes('404') || error.message.includes('Invalid response format: 404');
       
       if (is404) {
-        // Backend endpoint doesn't exist, try to find dealer in static data
-        console.log('[AdminDashboard] Dealer API endpoint not available, using static dealers data');
-        const staticDealer = staticDealers.find(d => d.id === parseInt(id));
-        if (staticDealer) {
-          setEditedData(staticDealer);
+        // Backend endpoint doesn't exist, try to find dealer in current dealers state (includes localStorage)
+        console.log('[AdminDashboard] Dealer API endpoint not available, searching in local dealers');
+        const foundDealer = dealers.find(d => d.id === parseInt(id));
+        if (foundDealer) {
+          setEditedData(foundDealer);
         } else {
-          setMessage({ type: 'error', text: 'Dealer not found in static data' });
-          setEditedData(null);
+          // If not in current state, check localStorage directly
+          const localDealers = getLocalDealers();
+          const localDealer = localDealers.find(d => d.id === parseInt(id));
+          if (localDealer) {
+            setEditedData(localDealer);
+          } else {
+            // Last resort: check static dealers
+            const staticDealer = staticDealers.find(d => d.id === parseInt(id));
+            if (staticDealer) {
+              setEditedData(staticDealer);
+            } else {
+              setMessage({ type: 'error', text: 'Dealer not found' });
+              setEditedData(null);
+            }
+          }
         }
       } else {
         console.error('[AdminDashboard] Error loading dealer:', error);
         setMessage({ type: 'error', text: 'Failed to load dealer data: ' + error.message });
-        // Try static data as fallback
-        const staticDealer = staticDealers.find(d => d.id === parseInt(id));
-        if (staticDealer) {
-          setEditedData(staticDealer);
+        // Try to find in current dealers state
+        const foundDealer = dealers.find(d => d.id === parseInt(id));
+        if (foundDealer) {
+          setEditedData(foundDealer);
         } else {
-          setEditedData(null);
+          // Try localStorage
+          const localDealers = getLocalDealers();
+          const localDealer = localDealers.find(d => d.id === parseInt(id));
+          if (localDealer) {
+            setEditedData(localDealer);
+          } else {
+            // Last resort: static dealers
+            const staticDealer = staticDealers.find(d => d.id === parseInt(id));
+            if (staticDealer) {
+              setEditedData(staticDealer);
+            } else {
+              setEditedData(null);
+            }
+          }
         }
       }
     }
