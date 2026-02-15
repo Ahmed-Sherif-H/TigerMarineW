@@ -464,10 +464,17 @@ const AdminDashboard = () => {
       const is404 = error.message.includes('404') || error.message.includes('Invalid response format: 404');
       
       if (is404) {
+        // Backend endpoint doesn't exist, remove from local state (static data mode)
+        console.log('[AdminDashboard] Backend endpoint not available, removing dealer from local state');
+        const updatedDealers = dealers.filter(d => d.id !== editedData.id);
+        setDealers(updatedDealers);
         setMessage({ 
-          type: 'error', 
-          text: 'Backend API endpoint for dealers is not available. Deletion cannot be performed. Please contact the backend developer to implement the dealer endpoints.' 
+          type: 'success', 
+          text: 'Dealer removed from view. Note: This is temporary - the dealer will reappear after page refresh until backend endpoints are implemented.' 
         });
+        setSelectedDealerId('');
+        setEditedData(null);
+        setTimeout(() => setMessage({ type: '', text: '' }), 5000);
       } else {
         setMessage({ type: 'error', text: 'Failed to delete dealer: ' + error.message });
       }
