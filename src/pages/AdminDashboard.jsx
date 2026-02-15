@@ -393,17 +393,18 @@ const AdminDashboard = () => {
     setIsSaving(true);
     setMessage({ type: '', text: '' });
     
+    // Prepare data to save (needed in both try and catch blocks)
+    const dataToSave = {
+      company: editedData.company || '',
+      country: editedData.country || '',
+      address: editedData.address || '',
+      telephone: editedData.telephone || '',
+      fax: editedData.fax || '',
+      email: editedData.email || '',
+      website: editedData.website || ''
+    };
+    
     try {
-      const dataToSave = {
-        company: editedData.company || '',
-        country: editedData.country || '',
-        address: editedData.address || '',
-        telephone: editedData.telephone || '',
-        fax: editedData.fax || '',
-        email: editedData.email || '',
-        website: editedData.website || ''
-      };
-
       if (editedData.id) {
         // Update existing dealer
         await api.updateDealer(editedData.id, dataToSave);
@@ -425,10 +426,36 @@ const AdminDashboard = () => {
       const is404 = error.message.includes('404') || error.message.includes('Invalid response format: 404');
       
       if (is404) {
-        setMessage({ 
-          type: 'error', 
-          text: 'Backend API endpoint for dealers is not available. Changes cannot be saved. Please contact the backend developer to implement the dealer endpoints.' 
-        });
+        // Backend endpoint doesn't exist, save to local state (static data mode)
+        console.log('[AdminDashboard] Backend endpoint not available, saving dealer to local state');
+        
+        if (editedData.id) {
+          // Update existing dealer in local state
+          const updatedDealers = dealers.map(d => 
+            d.id === editedData.id ? { ...d, ...dataToSave } : d
+          );
+          setDealers(updatedDealers);
+          setMessage({ 
+            type: 'success', 
+            text: 'Dealer updated in local view. Note: This is temporary - changes will be lost after page refresh until backend endpoints are implemented.' 
+          });
+        } else {
+          // Create new dealer in local state with temporary ID
+          const maxId = dealers.length > 0 ? Math.max(...dealers.map(d => d.id || 0)) : 0;
+          const newDealer = {
+            id: maxId + 1,
+            ...dataToSave
+          };
+          setDealers([...dealers, newDealer]);
+          setMessage({ 
+            type: 'success', 
+            text: 'Dealer added to local view. Note: This is temporary - the dealer will disappear after page refresh until backend endpoints are implemented.' 
+          });
+        }
+        
+        setSelectedDealerId('');
+        setEditedData(null);
+        setTimeout(() => setMessage({ type: '', text: '' }), 5000);
       } else if (error.message.includes('Authentication expired') || error.message.includes('401') || error.message.includes('Unauthorized')) {
         setMessage({ type: 'error', text: 'Your session has expired. Please refresh the page and login again.' });
         setTimeout(() => {
