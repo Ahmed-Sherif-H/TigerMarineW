@@ -310,14 +310,19 @@ const AdminDashboard = () => {
       const dealersList = Array.isArray(dealersData) ? dealersData : (dealersData.data || dealersData || []);
       setDealers(dealersList);
     } catch (error) {
-      console.error('[AdminDashboard] Error loading dealers:', error);
-      setMessage({ type: 'error', text: 'Failed to load dealers: ' + error.message });
-      // Fallback to static dealers if API fails
-      try {
+      // Check if it's a 404 (backend endpoint doesn't exist yet)
+      const is404 = error.message.includes('404') || error.message.includes('Invalid response format: 404');
+      
+      if (is404) {
+        // Backend endpoint doesn't exist, use static dealers
+        console.log('[AdminDashboard] Dealer API endpoint not available, using static dealers data');
         setDealers(staticDealers || []);
-      } catch (fallbackError) {
-        console.error('[AdminDashboard] Error loading static dealers:', fallbackError);
-        setDealers([]);
+        // Don't show error message for 404 - it's expected if backend doesn't have the route
+      } else {
+        console.error('[AdminDashboard] Error loading dealers:', error);
+        setMessage({ type: 'error', text: 'Failed to load dealers: ' + error.message });
+        // Fallback to static dealers if API fails for other reasons
+        setDealers(staticDealers || []);
       }
     } finally {
       setIsLoadingDealers(false);
@@ -331,9 +336,30 @@ const AdminDashboard = () => {
       const dealer = dealerData.data || dealerData;
       setEditedData(dealer);
     } catch (error) {
-      console.error('[AdminDashboard] Error loading dealer:', error);
-      setMessage({ type: 'error', text: 'Failed to load dealer data: ' + error.message });
-      setEditedData(null);
+      // Check if it's a 404 (backend endpoint doesn't exist yet)
+      const is404 = error.message.includes('404') || error.message.includes('Invalid response format: 404');
+      
+      if (is404) {
+        // Backend endpoint doesn't exist, try to find dealer in static data
+        console.log('[AdminDashboard] Dealer API endpoint not available, using static dealers data');
+        const staticDealer = staticDealers.find(d => d.id === parseInt(id));
+        if (staticDealer) {
+          setEditedData(staticDealer);
+        } else {
+          setMessage({ type: 'error', text: 'Dealer not found in static data' });
+          setEditedData(null);
+        }
+      } else {
+        console.error('[AdminDashboard] Error loading dealer:', error);
+        setMessage({ type: 'error', text: 'Failed to load dealer data: ' + error.message });
+        // Try static data as fallback
+        const staticDealer = staticDealers.find(d => d.id === parseInt(id));
+        if (staticDealer) {
+          setEditedData(staticDealer);
+        } else {
+          setEditedData(null);
+        }
+      }
     }
   };
 
@@ -394,8 +420,16 @@ const AdminDashboard = () => {
       setTimeout(() => setMessage({ type: '', text: '' }), 2000);
     } catch (error) {
       console.error('[AdminDashboard] Error saving dealer:', error);
-      // Check if it's an authentication error
-      if (error.message.includes('Authentication expired') || error.message.includes('401') || error.message.includes('Unauthorized')) {
+      
+      // Check if it's a 404 (backend endpoint doesn't exist)
+      const is404 = error.message.includes('404') || error.message.includes('Invalid response format: 404');
+      
+      if (is404) {
+        setMessage({ 
+          type: 'error', 
+          text: 'Backend API endpoint for dealers is not available. Changes cannot be saved. Please contact the backend developer to implement the dealer endpoints.' 
+        });
+      } else if (error.message.includes('Authentication expired') || error.message.includes('401') || error.message.includes('Unauthorized')) {
         setMessage({ type: 'error', text: 'Your session has expired. Please refresh the page and login again.' });
         setTimeout(() => {
           logout();
@@ -425,7 +459,18 @@ const AdminDashboard = () => {
       setTimeout(() => setMessage({ type: '', text: '' }), 2000);
     } catch (error) {
       console.error('[AdminDashboard] Error deleting dealer:', error);
-      setMessage({ type: 'error', text: 'Failed to delete dealer: ' + error.message });
+      
+      // Check if it's a 404 (backend endpoint doesn't exist)
+      const is404 = error.message.includes('404') || error.message.includes('Invalid response format: 404');
+      
+      if (is404) {
+        setMessage({ 
+          type: 'error', 
+          text: 'Backend API endpoint for dealers is not available. Deletion cannot be performed. Please contact the backend developer to implement the dealer endpoints.' 
+        });
+      } else {
+        setMessage({ type: 'error', text: 'Failed to delete dealer: ' + error.message });
+      }
     }
   };
 
@@ -2376,6 +2421,15 @@ const AdminDashboard = () => {
                       placeholder="http://www.donarboats.hr/hr"
                     />
                   </div>
+                </div>
+
+                {/* Info Notice */}
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+                  <p className="text-sm text-blue-800">
+                    <strong>ℹ️ Note:</strong> You can view and edit dealers using static data. 
+                    If the backend API endpoints for dealers are not yet implemented, save/delete operations will show an error message. 
+                    The dealer list is loaded from static data as a fallback.
+                  </p>
                 </div>
 
                 <div className="flex gap-4 pt-4 border-t border-gray-200">
