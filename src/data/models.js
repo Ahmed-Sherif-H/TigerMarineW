@@ -1233,16 +1233,7 @@ export const dealers = [
     email: null,
     website: "http://www.tigermarinecenter.nl"
   },
-  {
-    id: 16,
-    country: "USA",
-    company: "MS Marine USA",
-    address: "Riverview, FL 33578, USA",
-    telephone: null,
-    fax: null,
-    email: null,
-    website: "https://www.tigermarineboats.com/"
-  },
+ 
   {
     id: 19,
     country: "Canada",
