@@ -1,43 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState, useMemo, useEffect } from 'react';
-import { dealers as staticDealers } from '../data/models';
-
-// Helper function to get deleted dealer IDs from localStorage
-const getDeletedDealerIds = () => {
-  try {
-    const stored = localStorage.getItem('tiger_marine_deleted_dealers');
-    return stored ? JSON.parse(stored) : [];
-  } catch (error) {
-    console.error('[Dealers] Error reading deleted dealers from localStorage:', error);
-    return [];
-  }
-};
-
-// Helper function to get dealers from localStorage and merge with static dealers
-const getMergedDealers = () => {
-  try {
-    const localDealers = localStorage.getItem('tiger_marine_dealers');
-    const localDealersList = localDealers ? JSON.parse(localDealers) : [];
-    const deletedIds = getDeletedDealerIds();
-    // Filter out deleted dealers from static dealers
-    const staticDealersList = (staticDealers || []).filter(d => !deletedIds.includes(d.id));
-    
-    // Merge: use static dealers as base (excluding deleted ones), then add/update with localStorage dealers
-    const dealersMap = new Map();
-    staticDealersList.forEach(d => dealersMap.set(d.id, d));
-    
-    // Overwrite/update with localStorage dealers
-    localDealersList.forEach(localDealer => {
-      dealersMap.set(localDealer.id, localDealer);
-    });
-    
-    // Convert map back to array
-    return Array.from(dealersMap.values());
-  } catch (error) {
-    console.error('[Dealers] Error loading dealers from localStorage:', error);
-    return staticDealers || [];
-  }
-};
+import api from '../services/api';
 
 // Map Component - Interactive map showing dealer locations
 const DealersMap = ({ dealers }) => {
@@ -115,37 +78,27 @@ const Dealers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('All');
   const [expandedCountries, setExpandedCountries] = useState(new Set());
-  const [dealers, setDealers] = useState(() => getMergedDealers());
+  const [dealers, setDealers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Reload dealers when component mounts or when localStorage might have changed
+  // Load dealers from API
   useEffect(() => {
-    // Listen for storage events to update when dealers are changed in admin dashboard (cross-tab)
-    const handleStorageChange = (e) => {
-      if (e.key === 'tiger_marine_dealers') {
-        setDealers(getMergedDealers());
+    const loadDealers = async () => {
+      try {
+        setLoading(true);
+        const dealersData = await api.getAllDealers();
+        // Handle both array response and { data: [...] } response format
+        const dealersList = Array.isArray(dealersData) ? dealersData : (dealersData.data || dealersData || []);
+        setDealers(dealersList);
+      } catch (error) {
+        console.error('[Dealers] Error loading dealers:', error);
+        setDealers([]);
+      } finally {
+        setLoading(false);
       }
     };
-    
-    // Listen for custom event when dealers are updated in same tab
-    const handleDealersUpdated = () => {
-      setDealers(getMergedDealers());
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('dealersUpdated', handleDealersUpdated);
-    
-    // Also check on focus in case changes were made in another tab
-    const handleFocus = () => {
-      setDealers(getMergedDealers());
-    };
-    
-    window.addEventListener('focus', handleFocus);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('dealersUpdated', handleDealersUpdated);
-      window.removeEventListener('focus', handleFocus);
-    };
+
+    loadDealers();
   }, []);
 
   // Get unique countries
@@ -253,7 +206,12 @@ const Dealers = () => {
       {/* Dealers List - New Compact Design */}
       <section className="section-padding bg-white">
         <div className="container-custom">
-          {Object.keys(dealersByCountry).length === 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-smoked-saffron mx-auto mb-4"></div>
+              <p className="text-xl text-gray-600">Loading dealers...</p>
+            </div>
+          ) : Object.keys(dealersByCountry).length === 0 ? (
             <div className="text-center py-16">
               <p className="text-xl text-gray-600">No dealers found matching your search.</p>
             </div>

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useModels } from '../context/ModelsContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { dealers as staticDealers } from '../data/models';
 import { 
   normalizeModelDataForSave, 
   normalizeModelDataForEdit,
@@ -302,47 +301,6 @@ const AdminDashboard = () => {
   };
 
   // ========== DEALER FUNCTIONS ==========
-  // Helper functions for localStorage persistence
-  const getLocalDealers = () => {
-    try {
-      const stored = localStorage.getItem('tiger_marine_dealers');
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error('[AdminDashboard] Error reading dealers from localStorage:', error);
-      return [];
-    }
-  };
-
-  const saveLocalDealers = (dealersList) => {
-    try {
-      localStorage.setItem('tiger_marine_dealers', JSON.stringify(dealersList));
-    } catch (error) {
-      console.error('[AdminDashboard] Error saving dealers to localStorage:', error);
-    }
-  };
-
-  const getDeletedDealerIds = () => {
-    try {
-      const stored = localStorage.getItem('tiger_marine_deleted_dealers');
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error('[AdminDashboard] Error reading deleted dealers from localStorage:', error);
-      return [];
-    }
-  };
-
-  const addDeletedDealerId = (id) => {
-    try {
-      const deletedIds = getDeletedDealerIds();
-      if (!deletedIds.includes(id)) {
-        deletedIds.push(id);
-        localStorage.setItem('tiger_marine_deleted_dealers', JSON.stringify(deletedIds));
-      }
-    } catch (error) {
-      console.error('[AdminDashboard] Error saving deleted dealer ID to localStorage:', error);
-    }
-  };
-
   const loadDealers = async () => {
     setIsLoadingDealers(true);
     try {
@@ -350,50 +308,10 @@ const AdminDashboard = () => {
       // Handle both array response and { data: [...] } response format
       const dealersList = Array.isArray(dealersData) ? dealersData : (dealersData.data || dealersData || []);
       setDealers(dealersList);
-      // Save to localStorage as backup
-      saveLocalDealers(dealersList);
-      // Dispatch custom event to notify other components (like Dealers page)
-      window.dispatchEvent(new CustomEvent('dealersUpdated'));
     } catch (error) {
-      // Check if it's a 404 (backend endpoint doesn't exist yet)
-      const is404 = error.message.includes('404') || error.message.includes('Invalid response format: 404');
-      
-      if (is404) {
-        // Backend endpoint doesn't exist, merge static dealers with localStorage dealers
-        console.log('[AdminDashboard] Dealer API endpoint not available, using static dealers + localStorage data');
-        const localDealers = getLocalDealers();
-        const deletedIds = getDeletedDealerIds();
-        const staticDealersList = (staticDealers || []).filter(d => !deletedIds.includes(d.id));
-        
-        // Merge: use static dealers as base (excluding deleted ones), then add/update with localStorage dealers
-        // Create a map of static dealers by ID
-        const dealersMap = new Map();
-        staticDealersList.forEach(d => dealersMap.set(d.id, d));
-        
-        // Overwrite/update with localStorage dealers
-        localDealers.forEach(localDealer => {
-          dealersMap.set(localDealer.id, localDealer);
-        });
-        
-        // Convert map back to array
-        const mergedDealers = Array.from(dealersMap.values());
-        setDealers(mergedDealers);
-        // Don't show error message for 404 - it's expected if backend doesn't have the route
-      } else {
-        console.error('[AdminDashboard] Error loading dealers:', error);
-        setMessage({ type: 'error', text: 'Failed to load dealers: ' + error.message });
-        // Fallback to static dealers + localStorage if API fails for other reasons
-        const localDealers = getLocalDealers();
-        const deletedIds = getDeletedDealerIds();
-        const staticDealersList = (staticDealers || []).filter(d => !deletedIds.includes(d.id));
-        const dealersMap = new Map();
-        staticDealersList.forEach(d => dealersMap.set(d.id, d));
-        localDealers.forEach(localDealer => {
-          dealersMap.set(localDealer.id, localDealer);
-        });
-        const mergedDealers = Array.from(dealersMap.values());
-        setDealers(mergedDealers);
-      }
+      console.error('[AdminDashboard] Error loading dealers:', error);
+      setMessage({ type: 'error', text: 'Failed to load dealers: ' + error.message });
+      setDealers([]);
     } finally {
       setIsLoadingDealers(false);
     }
@@ -406,56 +324,9 @@ const AdminDashboard = () => {
       const dealer = dealerData.data || dealerData;
       setEditedData(dealer);
     } catch (error) {
-      // Check if it's a 404 (backend endpoint doesn't exist yet)
-      const is404 = error.message.includes('404') || error.message.includes('Invalid response format: 404');
-      
-      if (is404) {
-        // Backend endpoint doesn't exist, try to find dealer in current dealers state (includes localStorage)
-        console.log('[AdminDashboard] Dealer API endpoint not available, searching in local dealers');
-        const foundDealer = dealers.find(d => d.id === parseInt(id));
-        if (foundDealer) {
-          setEditedData(foundDealer);
-        } else {
-          // If not in current state, check localStorage directly
-          const localDealers = getLocalDealers();
-          const localDealer = localDealers.find(d => d.id === parseInt(id));
-          if (localDealer) {
-            setEditedData(localDealer);
-          } else {
-            // Last resort: check static dealers
-            const staticDealer = staticDealers.find(d => d.id === parseInt(id));
-            if (staticDealer) {
-              setEditedData(staticDealer);
-            } else {
-              setMessage({ type: 'error', text: 'Dealer not found' });
-              setEditedData(null);
-            }
-          }
-        }
-      } else {
-        console.error('[AdminDashboard] Error loading dealer:', error);
-        setMessage({ type: 'error', text: 'Failed to load dealer data: ' + error.message });
-        // Try to find in current dealers state
-        const foundDealer = dealers.find(d => d.id === parseInt(id));
-        if (foundDealer) {
-          setEditedData(foundDealer);
-        } else {
-          // Try localStorage
-          const localDealers = getLocalDealers();
-          const localDealer = localDealers.find(d => d.id === parseInt(id));
-          if (localDealer) {
-            setEditedData(localDealer);
-          } else {
-            // Last resort: static dealers
-            const staticDealer = staticDealers.find(d => d.id === parseInt(id));
-            if (staticDealer) {
-              setEditedData(staticDealer);
-            } else {
-              setEditedData(null);
-            }
-          }
-        }
-      }
+      console.error('[AdminDashboard] Error loading dealer:', error);
+      setMessage({ type: 'error', text: 'Failed to load dealer data: ' + error.message });
+      setEditedData(null);
     }
   };
 
@@ -518,49 +389,7 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('[AdminDashboard] Error saving dealer:', error);
       
-      // Check if it's a 404 (backend endpoint doesn't exist)
-      const is404 = error.message.includes('404') || error.message.includes('Invalid response format: 404');
-      
-      if (is404) {
-        // Backend endpoint doesn't exist, save to local state and localStorage
-        console.log('[AdminDashboard] Backend endpoint not available, saving dealer to local state and localStorage');
-        
-        let updatedDealers;
-        if (editedData.id) {
-          // Update existing dealer in local state
-          updatedDealers = dealers.map(d => 
-            d.id === editedData.id ? { ...d, ...dataToSave } : d
-          );
-          setDealers(updatedDealers);
-          setMessage({ 
-            type: 'success', 
-            text: 'Dealer updated successfully! Changes are saved locally and will persist across page refreshes.' 
-          });
-        } else {
-          // Create new dealer in local state with temporary ID
-          const maxId = dealers.length > 0 ? Math.max(...dealers.map(d => d.id || 0)) : 0;
-          const newDealer = {
-            id: maxId + 1,
-            ...dataToSave
-          };
-          updatedDealers = [...dealers, newDealer];
-          setDealers(updatedDealers);
-          setMessage({ 
-            type: 'success', 
-            text: 'Dealer added successfully! Changes are saved locally and will persist across page refreshes.' 
-          });
-        }
-        
-        // Save to localStorage for persistence
-        saveLocalDealers(updatedDealers);
-        
-        // Dispatch custom event to notify other components (like Dealers page)
-        window.dispatchEvent(new CustomEvent('dealersUpdated'));
-        
-        setSelectedDealerId('');
-        setEditedData(null);
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-      } else if (error.message.includes('Authentication expired') || error.message.includes('401') || error.message.includes('Unauthorized')) {
+      if (error.message.includes('Authentication expired') || error.message.includes('401') || error.message.includes('Unauthorized')) {
         setMessage({ type: 'error', text: 'Your session has expired. Please refresh the page and login again.' });
         setTimeout(() => {
           logout();
@@ -583,8 +412,6 @@ const AdminDashboard = () => {
     
     try {
       await api.deleteDealer(editedData.id);
-      // Add to deleted list to prevent it from reappearing from static data
-      addDeletedDealerId(editedData.id);
       setMessage({ type: 'success', text: 'Dealer deleted successfully!' });
       await loadDealers();
       setSelectedDealerId('');
@@ -592,33 +419,7 @@ const AdminDashboard = () => {
       setTimeout(() => setMessage({ type: '', text: '' }), 2000);
     } catch (error) {
       console.error('[AdminDashboard] Error deleting dealer:', error);
-      
-      // Check if it's a 404 (backend endpoint doesn't exist)
-      const is404 = error.message.includes('404') || error.message.includes('Invalid response format: 404');
-      
-      if (is404) {
-        // Backend endpoint doesn't exist, remove from local state and localStorage
-        console.log('[AdminDashboard] Backend endpoint not available, removing dealer from local state and localStorage');
-        const updatedDealers = dealers.filter(d => d.id !== editedData.id);
-        setDealers(updatedDealers);
-        // Save to localStorage for persistence
-        saveLocalDealers(updatedDealers);
-        // Add to deleted list to prevent it from reappearing from static data
-        addDeletedDealerId(editedData.id);
-        
-        // Dispatch custom event to notify other components (like Dealers page)
-        window.dispatchEvent(new CustomEvent('dealersUpdated'));
-        
-        setMessage({ 
-          type: 'success', 
-          text: 'Dealer deleted successfully! Changes are saved locally and will persist across page refreshes.' 
-        });
-        setSelectedDealerId('');
-        setEditedData(null);
-        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-      } else {
-        setMessage({ type: 'error', text: 'Failed to delete dealer: ' + error.message });
-      }
+      setMessage({ type: 'error', text: 'Failed to delete dealer: ' + error.message });
     }
   };
 
@@ -2571,13 +2372,6 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                {/* Info Notice */}
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-                  <p className="text-sm text-blue-800">
-                    <strong>ℹ️ Note:</strong> Dealers are saved locally in your browser and will persist across page refreshes. 
-                    When backend API endpoints are implemented, changes will automatically sync to the server.
-                  </p>
-                </div>
 
                 <div className="flex gap-4 pt-4 border-t border-gray-200">
                   <button
