@@ -1225,15 +1225,24 @@ export const dealers = [
   },
   {
     id: 15,
-    country: "Netherlands & Belgium",
-    company: "Tiger Marine Center",
+    country: "Netherlands",
+    company: "Tiger Marine CENTER",
     address: "Delftweg 129, 3043 NH Rotterdam, Netherlands",
     telephone: null,
     fax: null,
     email: null,
     website: "http://www.tigermarinecenter.nl"
   },
- 
+  {
+    id: 20,
+    country: "Belgium",
+    company: "ARDEMA BV",
+    address: "Vlambloemweg 3, 8620 Nieuwpoort, Belgium",
+    telephone: "+32 471 18 19 98",
+    fax: null,
+    email: "info@tiger-marine-boats.be",
+    website: null
+  },
   {
     id: 19,
     country: "Canada",
