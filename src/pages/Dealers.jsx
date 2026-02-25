@@ -80,6 +80,7 @@ const Dealers = () => {
   const [expandedCountries, setExpandedCountries] = useState(new Set());
   const [dealers, setDealers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Load dealers from API
   useEffect(() => {
@@ -87,12 +88,51 @@ const Dealers = () => {
       try {
         setLoading(true);
         const dealersData = await api.getAllDealers();
+        console.log('[Dealers] Raw API response:', dealersData);
+        console.log('[Dealers] Response type:', typeof dealersData);
+        console.log('[Dealers] Is array:', Array.isArray(dealersData));
+        console.log('[Dealers] Response stringified:', JSON.stringify(dealersData, null, 2));
+        
         // Handle both array response and { data: [...] } response format
-        const dealersList = Array.isArray(dealersData) ? dealersData : (dealersData.data || dealersData || []);
+        let dealersList = [];
+        if (Array.isArray(dealersData)) {
+          dealersList = dealersData;
+          console.log('[Dealers] Response is array, length:', dealersList.length);
+        } else if (dealersData && typeof dealersData === 'object') {
+          if (dealersData.data !== undefined) {
+            dealersList = Array.isArray(dealersData.data) ? dealersData.data : [];
+            console.log('[Dealers] Response has data property, length:', dealersList.length);
+          } else if (dealersData.dealers !== undefined) {
+            dealersList = Array.isArray(dealersData.dealers) ? dealersData.dealers : [];
+            console.log('[Dealers] Response has dealers property, length:', dealersList.length);
+          } else {
+            // Single object, wrap in array
+            dealersList = [dealersData];
+            console.log('[Dealers] Response is single object, wrapping in array');
+          }
+        } else if (dealersData === null || dealersData === undefined) {
+          console.warn('[Dealers] Response is null or undefined');
+          dealersList = [];
+        } else {
+          console.warn('[Dealers] Unexpected response format:', dealersData);
+          dealersList = [];
+        }
+        
+        console.log('[Dealers] Final processed dealers list:', dealersList);
+        console.log('[Dealers] Number of dealers:', dealersList.length);
+        if (dealersList.length > 0) {
+          console.log('[Dealers] First dealer sample:', dealersList[0]);
+        }
         setDealers(dealersList);
+        setError(null);
       } catch (error) {
         console.error('[Dealers] Error loading dealers:', error);
+        console.error('[Dealers] Error details:', {
+          message: error.message,
+          stack: error.stack
+        });
         setDealers([]);
+        setError(error.message || 'Failed to load dealers');
       } finally {
         setLoading(false);
       }
@@ -197,9 +237,19 @@ const Dealers = () => {
           </div>
 
           {/* Results Count */}
-          <p className="text-gray-600 mb-8">
-            Showing {filteredDealers.length} dealer{filteredDealers.length !== 1 ? 's' : ''}
-          </p>
+          {!loading && (
+            <p className="text-gray-600 mb-8">
+              Showing {filteredDealers.length} dealer{filteredDealers.length !== 1 ? 's' : ''} 
+              {dealers.length > 0 && ` (out of ${dealers.length} total)`}
+            </p>
+          )}
+          {error && (
+            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-8">
+              <p className="text-red-800">
+                <strong>Error:</strong> {error}
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -211,9 +261,19 @@ const Dealers = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-smoked-saffron mx-auto mb-4"></div>
               <p className="text-xl text-gray-600">Loading dealers...</p>
             </div>
+          ) : dealers.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-xl text-gray-600 mb-4">No dealers found.</p>
+              {error ? (
+                <p className="text-red-600">Error: {error}</p>
+              ) : (
+                <p className="text-gray-500">Please check your backend connection.</p>
+              )}
+            </div>
           ) : Object.keys(dealersByCountry).length === 0 ? (
             <div className="text-center py-16">
               <p className="text-xl text-gray-600">No dealers found matching your search.</p>
+              <p className="text-sm text-gray-500 mt-2">Total dealers loaded: {dealers.length}</p>
             </div>
           ) : (
               <div className="space-y-4">

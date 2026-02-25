@@ -249,7 +249,45 @@ class ApiService {
     if (import.meta.env.DEV) {
       console.log('[API] Fetching all dealers');
     }
-    return this.fetch('/dealers');
+    // Dealers endpoint is public (no auth required for GET)
+    const url = `${API_BASE_URL}/dealers`;
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        if (import.meta.env.DEV) {
+          console.log('[API] getAllDealers response:', data);
+          console.log('[API] Response type:', typeof data);
+          console.log('[API] Is array:', Array.isArray(data));
+          if (data && typeof data === 'object') {
+            console.log('[API] Response keys:', Object.keys(data));
+          }
+        }
+        // Extract data from response (backend returns { success: true, data: [...] })
+        return data.data || data;
+      } else {
+        const text = await response.text();
+        console.error('[API] Non-JSON response:', text);
+        throw new Error(`Invalid response format: ${response.status}`);
+      }
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('[API] Error fetching dealers:', error);
+      }
+      throw error;
+    }
   }
 
   async getDealerById(id) {
