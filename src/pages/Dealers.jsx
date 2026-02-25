@@ -149,17 +149,23 @@ const Dealers = () => {
 
   // Filter dealers
   const filteredDealers = useMemo(() => {
+    if (!dealers || dealers.length === 0) return [];
+    
     return dealers.filter(dealer => {
+      // Handle search term - if empty or just whitespace, match all
+      const searchLower = searchTerm.trim().toLowerCase();
       const matchesSearch = 
-        dealer.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        dealer.country?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        dealer.address?.toLowerCase().includes(searchTerm.toLowerCase());
+        !searchLower || // If no search term, show all
+        dealer.company?.toLowerCase().includes(searchLower) ||
+        dealer.country?.toLowerCase().includes(searchLower) ||
+        dealer.address?.toLowerCase().includes(searchLower);
       
+      // Handle country filter - 'All' means show all countries
       const matchesCountry = selectedCountry === 'All' || dealer.country === selectedCountry;
       
       return matchesSearch && matchesCountry;
     });
-  }, [searchTerm, selectedCountry]);
+  }, [dealers, searchTerm, selectedCountry]);
 
   // Group dealers by country
   const dealersByCountry = useMemo(() => {
