@@ -97,6 +97,10 @@ const AdminDashboard = () => {
         // Normalize data: extract filenames from paths
         const normalizedData = normalizeModelDataForEdit(actualData);
         console.log('[AdminDashboard] Normalized model data:', normalizedData);
+        console.log('[AdminDashboard] Features after normalization:', normalizedData.features);
+        console.log('[AdminDashboard] Features type:', typeof normalizedData.features);
+        console.log('[AdminDashboard] Is features array:', Array.isArray(normalizedData.features));
+        console.log('[AdminDashboard] Features length:', normalizedData.features?.length);
         console.log('[AdminDashboard] Gallery files after normalization:', normalizedData.galleryFiles);
         console.log('[AdminDashboard] Interior main image after normalization:', normalizedData.interiorMainImage);
         console.log('[AdminDashboard] Interior files after normalization:', normalizedData.interiorFiles);
@@ -1189,69 +1193,77 @@ const AdminDashboard = () => {
                 )}
 
                 {/* Features Card */}
-                {editedData.features && Array.isArray(editedData.features) && editedData.features.length > 0 ? (
-                  <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
-                      <span className="text-2xl">✨</span>
-                      <h2 className="text-xl font-bold text-gray-900">
-                        Standard Features ({editedData.features.length})
-                      </h2>
+                {(() => {
+                  // Handle both features and standardFeatures from backend
+                  const features = editedData.features || editedData.standardFeatures || [];
+                  const featuresArray = Array.isArray(features) ? features : [];
+                  
+                  return featuresArray.length > 0 ? (
+                    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+                        <span className="text-2xl">✨</span>
+                        <h2 className="text-xl font-bold text-gray-900">
+                          Standard Features ({featuresArray.length})
+                        </h2>
+                      </div>
+                      <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {featuresArray.map((feature, index) => (
+                          <div key={feature.id || index} className="flex gap-2 items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <span className="text-gray-500 font-medium w-8">{index + 1}.</span>
+                            <input
+                              type="text"
+                              value={typeof feature === 'string' ? feature : (feature.feature || '')}
+                              onChange={(e) => handleFeatureChange(index, e.target.value)}
+                              className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                              placeholder="Enter feature description"
+                            />
+                            <button
+                              onClick={() => {
+                                const currentFeatures = editedData.features || editedData.standardFeatures || [];
+                                const newFeatures = currentFeatures.filter((_, i) => i !== index);
+                                setEditedData({ ...editedData, features: newFeatures });
+                              }}
+                              className="px-4 py-2.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium transition-all"
+                            >
+                              ✕ Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => {
+                          const currentFeatures = editedData.features || editedData.standardFeatures || [];
+                          setEditedData({
+                            ...editedData,
+                            features: [...currentFeatures, '']
+                          });
+                        }}
+                        className="mt-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-all"
+                      >
+                        + Add Feature
+                      </button>
                     </div>
-                    <div className="space-y-3 max-h-96 overflow-y-auto">
-                      {editedData.features.map((feature, index) => (
-                        <div key={feature.id || index} className="flex gap-2 items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
-                          <span className="text-gray-500 font-medium w-8">{index + 1}.</span>
-                          <input
-                            type="text"
-                            value={typeof feature === 'string' ? feature : (feature.feature || '')}
-                            onChange={(e) => handleFeatureChange(index, e.target.value)}
-                            className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
-                            placeholder="Enter feature description"
-                          />
-                          <button
-                            onClick={() => {
-                              const newFeatures = editedData.features.filter((_, i) => i !== index);
-                              setEditedData({ ...editedData, features: newFeatures });
-                            }}
-                            className="px-4 py-2.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium transition-all"
-                          >
-                            ✕ Remove
-                          </button>
-                        </div>
-                      ))}
+                  ) : (
+                    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-2xl">✨</span>
+                        <h2 className="text-xl font-bold text-gray-900">Standard Features</h2>
+                      </div>
+                      <p className="text-gray-500 text-sm mb-4">No features found.</p>
+                      <button
+                        onClick={() => {
+                          setEditedData({
+                            ...editedData,
+                            features: ['']
+                          });
+                        }}
+                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-all"
+                      >
+                        + Add Feature
+                      </button>
                     </div>
-                    <button
-                      onClick={() => {
-                        setEditedData({
-                          ...editedData,
-                          features: [...(editedData.features || []), '']
-                        });
-                      }}
-                      className="mt-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-all"
-                    >
-                      + Add Feature
-                    </button>
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-2xl">✨</span>
-                      <h2 className="text-xl font-bold text-gray-900">Standard Features</h2>
-                    </div>
-                    <p className="text-gray-500 text-sm mb-4">No features found.</p>
-                    <button
-                      onClick={() => {
-                        setEditedData({
-                          ...editedData,
-                          features: ['']
-                        });
-                      }}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-all"
-                    >
-                      + Add Feature
-                    </button>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {/* Optional Features Card */}
                 {editedData.optionalFeatures && Array.isArray(editedData.optionalFeatures) && editedData.optionalFeatures.length > 0 ? (

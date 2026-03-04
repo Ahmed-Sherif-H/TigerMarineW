@@ -173,8 +173,26 @@ export function normalizeModelDataForEdit(modelData) {
     return modelData;
   }
   
+  // Handle features - backend might return standardFeatures or features
+  let features = [];
+  if (modelData.features && Array.isArray(modelData.features)) {
+    features = modelData.features.map(f => {
+      if (typeof f === 'string') return f;
+      if (typeof f === 'object' && f !== null) return f.feature || '';
+      return '';
+    }).filter(Boolean);
+  } else if (modelData.standardFeatures && Array.isArray(modelData.standardFeatures)) {
+    features = modelData.standardFeatures.map(f => {
+      if (typeof f === 'string') return f;
+      if (typeof f === 'object' && f !== null) return f.feature || '';
+      return '';
+    }).filter(Boolean);
+  }
+  
   return {
     ...modelData,
+    // Ensure features is always available for editing (use standardFeatures as fallback)
+    features: features,
     // Preserve Cloudinary URLs, extract filenames for legacy paths
     // extractFilename() already handles this correctly
     imageFile: modelData.imageFile || '',
