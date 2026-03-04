@@ -485,7 +485,7 @@ export const allCategories = [
           "Automatic electric bilge pump",
           "Deck self-drain system",
           "Cup holders",
-          "Front Sundeck extension",  
+          //"Front Sundeck extension",  
           "Swimming platforms with ladder compartment and hand rails",
           "Large bow storage compartment with hydraulic hatch",
           
