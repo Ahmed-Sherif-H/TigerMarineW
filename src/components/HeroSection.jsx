@@ -1,5 +1,17 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { isYouTubeUrl, getYouTubeEmbedUrl, extractYouTubeId } from '../utils/youtubeUtils';
+
+const YouTubeIntroCover = () => {
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(false), 800);
+    return () => clearTimeout(t);
+  }, []);
+  if (!visible) return null;
+  return <div className="absolute inset-0 bg-black" />;
+};
 
 const HeroSection = ({ 
   title, 
@@ -15,33 +27,55 @@ const HeroSection = ({
       {/* Background Video */}
       <div className="absolute inset-0 z-0">
         {videoSrc ? (
-          <video
-            className="w-full h-full object-cover"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            poster={backgroundImage}
-            onCanPlay={(e) => {
-              // Ensure video plays when ready
-              e.target.play().catch(() => {
-                // Autoplay might be blocked, but video will play when user interacts
-              });
-            }}
-            onEnded={(e) => {
-              // Force loop if it doesn't loop automatically
-              e.target.currentTime = 0;
-              e.target.play().catch(() => {});
-            }}
-            onError={(e) => {
-              // If video fails, poster/background image still shows
-              console.error('Video loading error:', e);
-            }}
-          >
-            <source src={videoSrc} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+          isYouTubeUrl(videoSrc) ? (
+            <div className="absolute inset-0 w-full h-full bg-black overflow-hidden">
+              <iframe
+                src={`${getYouTubeEmbedUrl(videoSrc)}?autoplay=1&mute=1&loop=1&playlist=${extractYouTubeId(videoSrc)}&controls=0&rel=0&modestbranding=1&playsinline=1&fs=0&iv_load_policy=3&disablekb=1&cc_load_policy=0&color=white`}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                title="Hero Video"
+                style={{
+                  // Cover technique for 16:9 iframe
+                  width: '100vw',
+                  height: '56.25vw', // 9/16 = 0.5625
+                  minHeight: '100%',
+                  minWidth: '177.78vh', // 16/9 = 1.7778
+                }}
+              />
+              {/* Brief cover to mask initial YouTube title flash */}
+              <YouTubeIntroCover />
+            </div>
+          ) : (
+            <video
+              className="w-full h-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster={backgroundImage}
+              onCanPlay={(e) => {
+                // Ensure video plays when ready
+                e.target.play().catch(() => {
+                  // Autoplay might be blocked, but video will play when user interacts
+                });
+              }}
+              onEnded={(e) => {
+                // Force loop if it doesn't loop automatically
+                e.target.currentTime = 0;
+                e.target.play().catch(() => {});
+              }}
+              onError={(e) => {
+                // If video fails, poster/background image still shows
+                console.error('Video loading error:', e);
+              }}
+            >
+              <source src={videoSrc} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          )
         ) : (
           <img
             src={backgroundImage}
