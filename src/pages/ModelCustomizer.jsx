@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
@@ -77,6 +77,27 @@ const ModelCustomizer = () => {
   const [baseImage, setBaseImage] = useState(null);
   const [partImages, setPartImages] = useState({});
   const [loading, setLoading] = useState(true);
+  
+  // 3D-ish interaction state
+  const previewRef = useRef(null);
+  const rafRef = useRef(null);
+  const [tilt, setTilt] = useState({ x: -0.15, y: -0.25 }); // initial gentle angle
+  const targetTiltRef = useRef({ x: -0.15, y: -0.25 });
+  const [poppedPart, setPoppedPart] = useState(null);
+  const scrollParallaxRef = useRef(0);
+
+  // 2.5D depth map per layer (higher means closer to viewer)
+  // Base ~ 1, parts increase by their index with some custom weight
+  const depthWeights = useMemo(() => {
+    const weights = { base: 1 };
+    customizerParts.forEach((p, idx) => {
+      if (p.key !== 'base') {
+        // near-to-far order based on array order; tweakable
+        weights[p.key] = 2 + idx * 0.45;
+      }
+    });
+    return weights;
+  }, []);
   
   // Collapsible sections state - all open by default
   const [openSections, setOpenSections] = useState(new Set());
@@ -165,11 +186,25 @@ const ModelCustomizer = () => {
     setPartImages(images);
   }, [finalModel, selectedColors, baseImage]);
 
+  // Scroll parallax effect (2.5D)
+  useEffect(() => {
+    const onScroll = () => {
+      // normalize scroll within a small range
+      const y = window.scrollY || 0;
+      scrollParallaxRef.current = Math.max(-200, Math.min(200, y));
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const handleColorChange = (partKey, color) => {
     setSelectedColors(prev => ({
       ...prev,
       [partKey]: color
     }));
+    // Micro pop effect on changed part
+    setPoppedPart(partKey);
+    setTimeout(() => setPoppedPart(null), 220);
   };
 
   const toggleSection = (partKey) => {
@@ -426,7 +461,47 @@ const ModelCustomizer = () => {
             {/* TOP: Live Preview */}
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
               {/* Preview Container */}
-              <div className="relative bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 overflow-hidden shadow-inner" style={{ height: '480px' }}>
+              <div
+                ref={previewRef}
+                className="relative bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 overflow-hidden shadow-inner"
+                style={{ height: '480px', perspective: '1200px' }}
+                onMouseMove={(e) => {
+                  const rect = previewRef.current?.getBoundingClientRect();
+                  if (!rect) return;
+                  const nx = (e.clientX - rect.left) / rect.width;   // 0..1
+                  const ny = (e.clientY - rect.top) / rect.height;   // 0..1
+                  // Map to small angles
+                  const targetY = (nx - 0.5) * 0.5;   // yaw
+                  const targetX = -(ny - 0.5) * 0.35; // pitch
+                  targetTiltRef.current = { x: targetX, y: targetY };
+                  if (!rafRef.current) {
+                    const step = () => {
+                      rafRef.current = null;
+                      setTilt(prev => {
+                        const nx = prev.x + (targetTiltRef.current.x - prev.x) * 0.12;
+                        const ny = prev.y + (targetTiltRef.current.y - prev.y) * 0.12;
+                        return { x: nx, y: ny };
+                      });
+                    };
+                    rafRef.current = requestAnimationFrame(step);
+                  }
+                }}
+                onMouseLeave={() => {
+                  targetTiltRef.current = { x: -0.12, y: -0.18 };
+                }}
+              >
+                {/* Background parallax sky/floor bands for stronger 2.5D cue */}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: `
+                      linear-gradient(180deg, rgba(247,249,252,0.85) 0%, rgba(247,249,252,0.35) 45%, rgba(230,233,239,0.25) 60%, rgba(210,214,222,0.15) 100%)
+                    `,
+                    transform: `translate(${-(tilt.y * 12)}px, ${(tilt.x * 8) + scrollParallaxRef.current * 0.06}px)`,
+                    transition: 'transform 80ms linear'
+                  }}
+                />
                 {/* Enhanced Background Effects */}
                 <div 
                   className="absolute inset-0 pointer-events-none"
@@ -436,6 +511,20 @@ const ModelCustomizer = () => {
                       radial-gradient(ellipse at 70% 60%, rgba(0, 0, 0, 0.03) 0%, transparent 50%),
                       radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(0,0,0,0.06) 100%)
                     `
+                  }}
+                />
+                
+                {/* Floor shadow (moves slightly with tilt) */}
+                <div
+                  className="absolute left-1/2 -translate-x-1/2"
+                  style={{
+                    bottom: '28px',
+                    width: '75%',
+                    height: '18%',
+                    background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.08) 45%, rgba(0,0,0,0) 70%)',
+                    filter: 'blur(6px)',
+                    transform: `translate(${tilt.y * 18}px, ${-tilt.x * 12}px)`,
+                    opacity: 0.6
                   }}
                 />
                 
@@ -453,10 +542,10 @@ const ModelCustomizer = () => {
                     className="relative"
                     style={{
                       filter: `
-                        drop-shadow(0 20px 40px rgba(0, 0, 0, 0.25)) 
-                        drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2))
+                        drop-shadow(0 22px 42px rgba(0, 0, 0, 0.28)) 
+                        drop-shadow(0 12px 22px rgba(0, 0, 0, 0.22))
                       `,
-                      transform: 'perspective(1200px) rotateX(5deg) rotateY(-3deg)',
+                      transform: `rotateX(${tilt.x * 57.3 + 5}deg) rotateY(${tilt.y * 57.3 - 3}deg) translateY(${scrollParallaxRef.current * -0.04}px)`,
                       width: '85%',
                       height: '85%',
                       transformStyle: 'preserve-3d',
@@ -479,7 +568,9 @@ const ModelCustomizer = () => {
                         className="absolute inset-0 w-full h-full object-contain"
                         style={{
                           filter: 'brightness(1.08) contrast(1.15) saturate(1.12)',
-                          transform: 'translateZ(20px)',
+                          transform: `translateZ(${(depthWeights.base || 1) * 12}px) translate(${tilt.y * 6}px, ${-tilt.x * 6}px)`,
+                          // small depth-of-field cue
+                          willChange: 'transform, filter'
                         }}
                       />
                     )}
@@ -524,12 +615,36 @@ const ModelCustomizer = () => {
                           style={{
                             zIndex: customizerParts.indexOf(part) + 2,
                             filter: 'brightness(1.03) saturate(1.05)',
-                            transform: `translateZ(${customizerParts.indexOf(part) * 5 + 25}px)`,
+                            transform: `translateZ(${(depthWeights[part.key] || 2) * 12}px) translate(${tilt.y * (3 + (depthWeights[part.key] || 2))}px, ${-tilt.x * (3 + (depthWeights[part.key] || 2))}px) scale(${poppedPart === part.key ? 1.02 : 1})`,
+                            // keep crisp edges; remove depth blur for clarity
+                            transition: poppedPart === part.key ? 'transform 220ms ease-out' : 'transform 120ms ease-out',
+                            willChange: 'transform'
                           }}
                           onError={handleImageError}
                         />
                       );
                     })}
+                    
+                    {/* Specular sheen overlay */}
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: 'radial-gradient(ellipse at 30% 25%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 18%, rgba(255,255,255,0) 55%)',
+                        mixBlendMode: 'screen',
+                        transform: `translate(${-(tilt.y * 10)}px, ${(tilt.x * 10)}px)`,
+                        willChange: 'transform'
+                      }}
+                    />
+                    
+                    {/* AO seam vignette */}
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.04) 35%, rgba(0,0,0,0) 60%)',
+                        filter: 'blur(1px)',
+                        opacity: 0.35
+                      }}
+                    />
                   </div>
                 </div>
               </div>

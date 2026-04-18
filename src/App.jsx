@@ -16,6 +16,7 @@ import About from './pages/About';
 import BoatShows from './pages/BoatShows';
 import UpcomingModels from './pages/UpcomingModels';
 import ModelCustomizer from './pages/ModelCustomizer';
+import DraftCustomizer from './pages/DraftCustomizer';
 import AdminDashboard from './pages/AdminDashboard';
 import './styles/index.css';
 import { AuthProvider } from './context/AuthContext';
@@ -38,6 +39,7 @@ function App() {
               <Route path="/models/upcoming" element={<UpcomingModels />} />
               <Route path="/models/:id" element={<ModelDetail />} />
               <Route path="/models/:id/customize" element={<ModelCustomizer />} />
+              <Route path="/customizer-draft/:id" element={<DraftCustomizer />} />
               <Route path="/professional" element={<Professional />} />
               <Route path="/dealers" element={<Dealers />} />
               <Route path="/boat-shows" element={<BoatShows />} />

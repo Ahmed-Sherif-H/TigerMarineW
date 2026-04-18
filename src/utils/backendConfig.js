@@ -49,26 +49,71 @@ export function extractFilename(pathOrFilename) {
 }
 
 /**
+ * Turn a backend root-relative path (e.g. /uploads/..., /images/... on the API host)
+ * into an absolute URL the browser can load. Site-bundled assets under the same
+ * origin use /images/... without a host — upload responses, however, refer to the API server.
+ */
+export function resolveBackendPublicPath(relativePath) {
+  if (relativePath == null || typeof relativePath !== 'string') return relativePath;
+  const trimmed = relativePath.trim();
+  if (!trimmed) return trimmed;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+  if (trimmed.startsWith('//')) return `https:${trimmed}`;
+  if (!trimmed.startsWith('/')) return trimmed;
+
+  const apiBase =
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) ||
+    'http://localhost:3001/api';
+  const origin = apiBase.replace(/\/?api\/?$/, '');
+  return `${origin}${trimmed}`;
+}
+
+/**
  * Extract URL from upload response
- * Handles both old format { filename, path } and new format { url, public_id, filename }
- * Returns the URL if available, otherwise falls back to filename
+ * Handles Cloudinary ({ url, secure_url }), nested { data }, and root-relative path on the API.
+ * Avoids returning only `filename` when `path` is the real public location (common bug → broken gallery).
  */
 export function extractUploadUrl(uploadResponse) {
   if (!uploadResponse) return '';
-  
-  // New Cloudinary format: { url, public_id, filename }
-  if (uploadResponse.url) {
-    return uploadResponse.url;
+
+  const raw =
+    uploadResponse.data && typeof uploadResponse.data === 'object' && !Array.isArray(uploadResponse.data)
+      ? { ...uploadResponse, ...uploadResponse.data }
+      : uploadResponse;
+
+  const direct =
+    raw.url ||
+    raw.secure_url ||
+    (raw.result && (raw.result.url || raw.result.secure_url));
+
+  if (direct) {
+    const u = String(direct).trim();
+    if (u.startsWith('//')) return `https:${u}`;
+    return u;
   }
-  
-  // Old format: { filename, path }
-  // If path is a Cloudinary URL, use it
-  if (uploadResponse.path && (uploadResponse.path.includes('cloudinary.com') || uploadResponse.path.startsWith('http'))) {
-    return uploadResponse.path;
+
+  const path = raw.path != null ? String(raw.path).trim() : '';
+  if (path) {
+    if (path.includes('cloudinary.com') || path.startsWith('http://') || path.startsWith('https://')) {
+      return path.startsWith('//') ? `https:${path}` : path;
+    }
+    if (path.startsWith('//')) return `https:${path}`;
+    if (path.startsWith('/')) {
+      return resolveBackendPublicPath(path);
+    }
   }
-  
-  // Fallback to filename (for backward compatibility with legacy data)
-  return uploadResponse.filename || uploadResponse.path || '';
+
+  const filename = raw.filename != null ? String(raw.filename).trim() : '';
+  if (
+    filename &&
+    (filename.startsWith('http://') ||
+      filename.startsWith('https://') ||
+      filename.includes('cloudinary.com'))
+  ) {
+    return filename.startsWith('//') ? `https:${filename}` : filename;
+  }
+
+  return filename || path || '';
 }
 
 /**

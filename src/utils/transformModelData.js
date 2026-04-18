@@ -5,6 +5,7 @@
 
 import { getModelImagePath, getFullImagePath, encodeFilename } from './imagePathUtils';
 import { isYouTubeUrl } from './youtubeUtils';
+import { extractFilename, resolveBackendPublicPath } from './backendConfig';
 
 /**
  * Transform a single model from API format to frontend format
@@ -134,44 +135,47 @@ export function transformModel(model) {
       return null;
     })(),
     
-    // Transform arrays - extract filenames first, then build paths
-    // Backend may return full paths like "/images/Open650/image.jpg" or just "image.jpg"
+    // Keep Cloudinary / absolute URLs; only reduce legacy relative paths to filenames
     galleryFiles: (model.galleryFiles || []).map(file => {
       if (typeof file === 'string') {
-        // Extract filename from path if it's a path
-        if (file.includes('/')) {
-          return file.split('/').pop();
-        }
-        return file;
+        return extractFilename(file);
       }
       if (file && file.filename) {
-        const f = file.filename;
-        return f.includes('/') ? f.split('/').pop() : f;
+        return extractFilename(file.filename);
       }
       return file;
     }),
     galleryImages: (model.galleryFiles || []).length > 0 
       ? (model.galleryFiles || []).map(file => {
-          // Extract filename from path if needed
           let filename = typeof file === 'string' ? file : (file?.filename || file);
-          
-          // If it's already a Cloudinary URL or full URL, use it directly
-          if (filename && (filename.startsWith('http://') || filename.startsWith('https://'))) {
-            return filename;
+          if (filename == null || filename === '') return null;
+          let str = String(filename).trim();
+          if (!str) return null;
+
+          if (str.startsWith('//')) {
+            return `https:${str}`;
           }
-          
-          // If it's a path like "/images/Open650/image.jpg", extract just "image.jpg"
-          if (filename.includes('/')) {
-            filename = filename.split('/').pop();
+          if (str.includes('cloudinary.com') && !str.startsWith('http')) {
+            return `https://${str.replace(/^\/+/, '')}`;
           }
-          // Now build the full path from just the filename
-          const fullPath = getFullImagePath(model.name, filename);
-          // Only log in development
+          if (str.startsWith('http://') || str.startsWith('https://')) {
+            return str;
+          }
+
+          // Files saved on the API (uploads, etc.) — not the static site /public folder
+          if (str.startsWith('/') && /upload|(^\/files\/)|\/storage\/|\/media\//i.test(str)) {
+            return resolveBackendPublicPath(str);
+          }
+
+          if (str.includes('/')) {
+            str = str.split('/').pop();
+          }
+          const fullPath = getFullImagePath(model.name, str);
           if (import.meta.env.DEV) {
-            console.log(`[Transform] Gallery file: ${filename} → ${fullPath}`);
+            console.log(`[Transform] Gallery file: ${str} → ${fullPath}`);
           }
           return fullPath;
-        })
+        }).filter(Boolean)
       : [getFallbackImage(model.name)], // Use fallback if no gallery files
     
     videoFiles: (model.videoFiles || []).map(file => {
