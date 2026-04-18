@@ -5,7 +5,7 @@
 
 import { getModelImagePath, getFullImagePath, encodeFilename } from './imagePathUtils';
 import { isYouTubeUrl } from './youtubeUtils';
-import { extractFilename, resolveBackendPublicPath } from './backendConfig';
+import { extractFilename, resolveBackendPublicPath, resolveMediaPublicPath } from './backendConfig';
 
 /**
  * Transform a single model from API format to frontend format
@@ -51,9 +51,8 @@ export function transformModel(model) {
       if (imageFile.startsWith('http://') || imageFile.startsWith('https://')) {
         return imageFile;
       }
-      // Media served from the API (Railway uploads), not the static site's /public
       if (imageFile.startsWith('/images/') || imageFile.startsWith('/Customizer-images/')) {
-        return resolveBackendPublicPath(imageFile);
+        return resolveMediaPublicPath(imageFile);
       }
       // If it's a path like "/images/Open650/image.jpg", extract just "image.jpg"
       let filename = imageFile;
@@ -74,7 +73,7 @@ export function transformModel(model) {
         return heroImageFile;
       }
       if (heroImageFile.startsWith('/images/') || heroImageFile.startsWith('/Customizer-images/')) {
-        return resolveBackendPublicPath(heroImageFile);
+        return resolveMediaPublicPath(heroImageFile);
       }
       let filename = heroImageFile;
       if (filename.includes('/')) {
@@ -94,7 +93,7 @@ export function transformModel(model) {
         return contentImageFile;
       }
       if (contentImageFile.startsWith('/images/') || contentImageFile.startsWith('/Customizer-images/')) {
-        return resolveBackendPublicPath(contentImageFile);
+        return resolveMediaPublicPath(contentImageFile);
       }
       let filename = contentImageFile;
       if (filename.includes('/')) {
@@ -123,7 +122,7 @@ export function transformModel(model) {
         return interiorMainImage;
       }
       if (interiorMainImage.startsWith('/images/') || interiorMainImage.startsWith('/Customizer-images/')) {
-        return resolveBackendPublicPath(interiorMainImage);
+        return resolveMediaPublicPath(interiorMainImage);
       }
       let filename = interiorMainImage;
       // Extract filename from path if backend returns full path
@@ -175,9 +174,8 @@ export function transformModel(model) {
             return str;
           }
 
-          // Files served from the API (Railway /images, etc.) — not the static site /public folder
           if (str.startsWith('/images/') || str.startsWith('/Customizer-images/')) {
-            return resolveBackendPublicPath(str);
+            return resolveMediaPublicPath(str);
           }
           if (str.startsWith('/') && /upload|(^\/files\/)|\/storage\/|\/media\//i.test(str)) {
             return resolveBackendPublicPath(str);
@@ -226,7 +224,7 @@ export function transformModel(model) {
         return str;
       }
       if (str.startsWith('/images/') || str.startsWith('/Customizer-images/')) {
-        return resolveBackendPublicPath(str);
+        return resolveMediaPublicPath(str);
       }
       
       // For local video files, extract filename from path if it's a path
@@ -272,7 +270,7 @@ export function transformModel(model) {
       }
 
       if (filename.startsWith('/images/') || filename.startsWith('/Customizer-images/')) {
-        return resolveBackendPublicPath(filename);
+        return resolveMediaPublicPath(filename);
       }
       
       // Extract filename from path if it's a path
@@ -350,7 +348,6 @@ export function transformCategory(category, models) {
       return (a.name || '').localeCompare(b.name || '');
     });
   
-  // Category media from the admin upload API lives on the backend host (e.g. Railway)
   const getCategoryImagePath = (filename) => {
     if (!filename) return null;
     
@@ -359,10 +356,10 @@ export function transformCategory(category, models) {
     }
     
     if (filename.startsWith('/images/') || filename.startsWith('/Customizer-images/')) {
-      return resolveBackendPublicPath(filename);
+      return resolveMediaPublicPath(filename);
     }
     
-    return resolveBackendPublicPath(
+    return resolveMediaPublicPath(
       `/images/categories/${category.name}/${encodeFilename(filename)}`
     );
   };
@@ -379,7 +376,7 @@ export function transformCategory(category, models) {
     }
 
     if (filename.startsWith('/images/') || filename.startsWith('/Customizer-images/')) {
-      return resolveBackendPublicPath(filename);
+      return resolveMediaPublicPath(filename);
     }
     
     // If it's a Cloudinary URL but missing protocol, add https://
@@ -422,7 +419,7 @@ export function transformCategory(category, models) {
     }
 
     if (filename.startsWith('/images/') || filename.startsWith('/Customizer-images/')) {
-      return resolveBackendPublicPath(filename);
+      return resolveMediaPublicPath(filename);
     }
     
     // If it's a Cloudinary URL but missing protocol, add https://

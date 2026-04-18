@@ -68,6 +68,33 @@ export function resolveBackendPublicPath(relativePath) {
   return `${origin}${trimmed}`;
 }
 
+/** True when root-relative /images/... should load from the API host (Railway), not the static site. */
+export function mediaUsesApiOrigin() {
+  if (typeof import.meta === 'undefined') return false;
+  return String(import.meta.env?.VITE_SERVE_MEDIA_FROM_API || '').toLowerCase() === 'true';
+}
+
+/**
+ * API responses often use root-relative paths like `/images/Model/file.jpg`. Those files may live on
+ * the static host (Netlify `public/`) or on the API (Railway uploads). Default: same origin as the
+ * website so existing static assets keep working. Set `VITE_SERVE_MEDIA_FROM_API=true` when media is
+ * only on the backend. Absolute `http(s)` URLs (e.g. after an upload) are left unchanged.
+ */
+export function resolveMediaPublicPath(pathOrUrl) {
+  if (pathOrUrl == null || typeof pathOrUrl !== 'string') return pathOrUrl;
+  const trimmed = pathOrUrl.trim();
+  if (!trimmed) return trimmed;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+  if (trimmed.startsWith('//')) return `https:${trimmed}`;
+  if (
+    mediaUsesApiOrigin() &&
+    (trimmed.startsWith('/images/') || trimmed.startsWith('/Customizer-images/'))
+  ) {
+    return resolveBackendPublicPath(trimmed);
+  }
+  return trimmed;
+}
+
 /**
  * Extract URL from upload response
  * Handles Cloudinary ({ url, secure_url }), nested { data }, and root-relative path on the API.
