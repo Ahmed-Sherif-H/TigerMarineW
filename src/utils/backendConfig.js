@@ -81,6 +81,11 @@ export function extractUploadUrl(uploadResponse) {
       ? { ...uploadResponse, ...uploadResponse.data }
       : uploadResponse;
 
+  const absolute = raw.absoluteUrl != null ? String(raw.absoluteUrl).trim() : '';
+  if (absolute && (absolute.startsWith('http://') || absolute.startsWith('https://'))) {
+    return absolute.startsWith('//') ? `https:${absolute}` : absolute;
+  }
+
   const direct =
     raw.url ||
     raw.secure_url ||
@@ -88,7 +93,11 @@ export function extractUploadUrl(uploadResponse) {
 
   if (direct) {
     const u = String(direct).trim();
+    if (!u) return '';
     if (u.startsWith('//')) return `https:${u}`;
+    if (u.startsWith('http://') || u.startsWith('https://')) return u;
+    // Backend returns root-relative paths served from the API (e.g. Railway), not the static site
+    if (u.startsWith('/')) return resolveBackendPublicPath(u);
     return u;
   }
 

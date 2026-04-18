@@ -51,6 +51,10 @@ export function transformModel(model) {
       if (imageFile.startsWith('http://') || imageFile.startsWith('https://')) {
         return imageFile;
       }
+      // Media served from the API (Railway uploads), not the static site's /public
+      if (imageFile.startsWith('/images/') || imageFile.startsWith('/Customizer-images/')) {
+        return resolveBackendPublicPath(imageFile);
+      }
       // If it's a path like "/images/Open650/image.jpg", extract just "image.jpg"
       let filename = imageFile;
       if (filename.includes('/')) {
@@ -69,6 +73,9 @@ export function transformModel(model) {
       if (heroImageFile.startsWith('http://') || heroImageFile.startsWith('https://')) {
         return heroImageFile;
       }
+      if (heroImageFile.startsWith('/images/') || heroImageFile.startsWith('/Customizer-images/')) {
+        return resolveBackendPublicPath(heroImageFile);
+      }
       let filename = heroImageFile;
       if (filename.includes('/')) {
         filename = filename.split('/').pop();
@@ -85,6 +92,9 @@ export function transformModel(model) {
       // If it's already a Cloudinary URL or full URL, use it directly
       if (contentImageFile.startsWith('http://') || contentImageFile.startsWith('https://')) {
         return contentImageFile;
+      }
+      if (contentImageFile.startsWith('/images/') || contentImageFile.startsWith('/Customizer-images/')) {
+        return resolveBackendPublicPath(contentImageFile);
       }
       let filename = contentImageFile;
       if (filename.includes('/')) {
@@ -111,6 +121,9 @@ export function transformModel(model) {
           console.log(`[Transform] ✅ InteriorMainImage (Cloudinary URL): ${interiorMainImage}`);
         }
         return interiorMainImage;
+      }
+      if (interiorMainImage.startsWith('/images/') || interiorMainImage.startsWith('/Customizer-images/')) {
+        return resolveBackendPublicPath(interiorMainImage);
       }
       let filename = interiorMainImage;
       // Extract filename from path if backend returns full path
@@ -162,7 +175,10 @@ export function transformModel(model) {
             return str;
           }
 
-          // Files saved on the API (uploads, etc.) — not the static site /public folder
+          // Files served from the API (Railway /images, etc.) — not the static site /public folder
+          if (str.startsWith('/images/') || str.startsWith('/Customizer-images/')) {
+            return resolveBackendPublicPath(str);
+          }
           if (str.startsWith('/') && /upload|(^\/files\/)|\/storage\/|\/media\//i.test(str)) {
             return resolveBackendPublicPath(str);
           }
@@ -204,10 +220,18 @@ export function transformModel(model) {
       if (isYouTubeUrl(filename)) {
         return filename;
       }
+
+      const str = filename != null ? String(filename).trim() : '';
+      if (str.startsWith('http://') || str.startsWith('https://')) {
+        return str;
+      }
+      if (str.startsWith('/images/') || str.startsWith('/Customizer-images/')) {
+        return resolveBackendPublicPath(str);
+      }
       
       // For local video files, extract filename from path if it's a path
-      if (filename && filename.includes('/')) {
-        filename = filename.split('/').pop();
+      if (str && str.includes('/')) {
+        filename = str.split('/').pop();
       }
       // Build full path for local videos only
       return getFullImagePath(model.name, filename);
@@ -245,6 +269,10 @@ export function transformModel(model) {
           console.log(`[Transform] ✅ InteriorImage (Cloudinary URL): ${filename}`);
         }
         return filename;
+      }
+
+      if (filename.startsWith('/images/') || filename.startsWith('/Customizer-images/')) {
+        return resolveBackendPublicPath(filename);
       }
       
       // Extract filename from path if it's a path
@@ -322,22 +350,21 @@ export function transformCategory(category, models) {
       return (a.name || '').localeCompare(b.name || '');
     });
   
-  // Helper to get category image path (frontend public folder)
+  // Category media from the admin upload API lives on the backend host (e.g. Railway)
   const getCategoryImagePath = (filename) => {
     if (!filename) return null;
     
-    // If it's already a full URL (Cloudinary legacy), return as-is
     if (filename.startsWith('http://') || filename.startsWith('https://')) {
       return filename;
     }
     
-    // If it's already a path starting with /images/, return as-is
-    if (filename.startsWith('/images/')) {
-      return filename;
+    if (filename.startsWith('/images/') || filename.startsWith('/Customizer-images/')) {
+      return resolveBackendPublicPath(filename);
     }
     
-    // Otherwise, treat as filename and build the path
-    return `/images/categories/${category.name}/${encodeFilename(filename)}`;
+    return resolveBackendPublicPath(
+      `/images/categories/${category.name}/${encodeFilename(filename)}`
+    );
   };
   
   // Preserve Cloudinary URLs, handle legacy filenames
@@ -349,6 +376,10 @@ export function transformCategory(category, models) {
         console.log(`[Transform] ✅ CategoryImage (Cloudinary URL): ${filename}`);
       }
       return filename;
+    }
+
+    if (filename.startsWith('/images/') || filename.startsWith('/Customizer-images/')) {
+      return resolveBackendPublicPath(filename);
     }
     
     // If it's a Cloudinary URL but missing protocol, add https://
@@ -388,6 +419,10 @@ export function transformCategory(category, models) {
         console.log(`[Transform] ✅ CategoryHeroImage (Cloudinary URL): ${filename}`);
       }
       return filename;
+    }
+
+    if (filename.startsWith('/images/') || filename.startsWith('/Customizer-images/')) {
+      return resolveBackendPublicPath(filename);
     }
     
     // If it's a Cloudinary URL but missing protocol, add https://
