@@ -6,7 +6,6 @@ import { allCategories } from '../data/models';
 import { getCustomizerFolder, getBaseImage, getPartImage, customizerParts } from '../data/customizerConfig';
 import { getAvailableColors } from '../data/customizerColors';
 import { getColorHex } from '../data/customizerColorMap';
-import { getModelImageFolder, encodeFilename } from '../data/imageHelpers';
 import { getModelDisplayName } from '../utils/modelNameUtils';
 
 const ModelCustomizer = () => {
@@ -258,10 +257,10 @@ const ModelCustomizer = () => {
 
   if (loading) {
     return (
-      <div className="pt-20 min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="pt-20 min-h-screen flex items-center justify-center bg-[#0f1419]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-smoked-saffron mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading customizer...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-smoked-saffron/30 border-t-smoked-saffron mx-auto mb-4" />
+          <p className="text-aged-bone/80 text-sm tracking-wide">Loading configurator…</p>
         </div>
       </div>
     );
@@ -269,10 +268,10 @@ const ModelCustomizer = () => {
 
   if (!finalModel) {
     return (
-      <div className="pt-20 min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h1 className="text-4xl font-light text-midnight-slate mb-4">Model Not Found</h1>
-          <Link to="/models" className="btn-primary">Back to Models</Link>
+      <div className="pt-20 min-h-screen flex items-center justify-center bg-[#0f1419]">
+        <div className="text-center px-6">
+          <h1 className="text-3xl font-light text-aged-bone mb-4">Model not found</h1>
+          <Link to="/models" className="inline-flex text-smoked-saffron text-sm font-medium hover:underline">Back to models</Link>
         </div>
       </div>
     );
@@ -281,11 +280,11 @@ const ModelCustomizer = () => {
   const customizerFolder = getCustomizerFolder(finalModel.name);
   if (!customizerFolder) {
     return (
-      <div className="pt-20 min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h1 className="text-4xl font-light text-midnight-slate mb-4">Customizer Not Available</h1>
-          <p className="text-gray-600 mb-8">Customizer images are not available for this model.</p>
-          <Link to={`/models/${finalModel.id}`} className="btn-primary">Back to Model</Link>
+      <div className="pt-20 min-h-screen flex items-center justify-center bg-[#0f1419]">
+        <div className="text-center px-6">
+          <h1 className="text-3xl font-light text-aged-bone mb-4">Customizer not available</h1>
+          <p className="text-aged-bone/70 mb-8 max-w-md mx-auto text-sm">Layer assets are not set up for this model yet.</p>
+          <Link to={`/models/${finalModel.id}`} className="inline-flex text-smoked-saffron text-sm font-medium hover:underline">Back to model</Link>
         </div>
       </div>
     );
@@ -302,169 +301,58 @@ const ModelCustomizer = () => {
   };
 
   return (
-    <div className="pt-20 bg-gradient-to-b from-gray-50 to-white min-h-screen">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm sticky top-20 z-30">
-        <div className="max-w-[1800px] mx-auto px-4 lg:px-8 py-3">
-          <div className="flex items-center justify-between">
-            {/* Left: Hamburger (for mobile) */}
-            <button className="lg:hidden p-2 text-gray-600 hover:text-midnight-slate">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+    <div className="pt-20 min-h-screen bg-[#0f1419] text-aged-bone">
+      {/* Top bar */}
+      <header className="sticky top-20 z-30 border-b border-white/[0.08] bg-[#0f1419]/90 backdrop-blur-md">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 h-14 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              to={`/models/${finalModel.id}`}
+              className="shrink-0 flex items-center justify-center w-9 h-9 rounded-lg border border-white/10 text-aged-bone/80 hover:text-smoked-saffron hover:border-smoked-saffron/40 transition-colors"
+              aria-label="Back to model"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-            </button>
-            
-            {/* Right: Reset Link */}
-            <div className="flex-1 flex justify-end">
-              <button
-                onClick={handleReset}
-                className="text-sm text-gray-600 hover:text-midnight-slate transition-colors font-medium"
-              >
-                Reset to default
-              </button>
+            </Link>
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-smoked-saffron/90 font-medium">Studio configurator</p>
+              <h1 className="text-base sm:text-lg font-light text-aged-bone truncate">{fullModelName}</h1>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="shrink-0 text-xs sm:text-sm font-medium text-aged-bone/70 hover:text-smoked-saffron border border-white/10 hover:border-smoked-saffron/35 rounded-lg px-3 py-2 transition-colors"
+          >
+            Reset build
+          </button>
         </div>
       </header>
 
-      {/* Main Content - 2 Column Layout */}
-      <div className="py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6 lg:gap-8 max-w-[1800px] mx-auto px-4 lg:px-8">
-          
-          {/* LEFT COLUMN - Configurator Panel */}
-          <aside className="lg:sticky lg:top-32 lg:h-[calc(100vh-140px)]">
-            <div className="bg-gradient-to-br from-white via-gray-50/50 to-white backdrop-blur-sm rounded-2xl shadow-xl border-2 border-gray-200/50 p-6 h-full flex flex-col">
-              <div className="mb-6 pb-4 border-b-2 border-gray-200">
-                <h2 className="text-2xl font-light text-midnight-slate mb-1">
-                  Customize your Boat
-                </h2>
-                <p className="text-xs text-gray-500">Select colors for each component</p>
+      <div className="py-6 sm:py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(300px,400px)] gap-6 lg:gap-8 xl:gap-10 lg:items-start max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10">
+          {/* Hero: preview + build strip (wide column on desktop, first on mobile) */}
+          <main className="flex flex-col gap-0 min-w-0">
+            <div className="rounded-2xl overflow-hidden border border-white/[0.07] shadow-2xl shadow-black/40 bg-gradient-to-b from-[#1a222c] to-[#12181f] flex flex-col">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 sm:px-5 py-3 border-b border-white/[0.06]">
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-widest text-aged-bone/45">Live composite</p>
+                  <p className="text-sm text-aged-bone/90">Move the pointer over the hull for parallax</p>
+                </div>
+                <span className="shrink-0 self-start sm:self-auto text-[10px] uppercase tracking-wider text-smoked-saffron/80 border border-smoked-saffron/25 rounded-full px-2.5 py-1">
+                  2.5D layers
+                </span>
               </div>
-              
-              {/* Collapsible Sections */}
-              <div className="flex-1 overflow-y-auto pr-2 space-y-3">
-                {customizerParts.map((part) => {
-                  if (part.key === 'base') return null;
-                  
-                  const colors = availableColors[part.key] || [];
-                  const selectedColor = selectedColors[part.key];
-                  const isOpen = openSections.has(part.key);
-                  const label = partLabels[part.key] || part.label;
-
-                  return (
-                    <div
-                      key={part.key}
-                      id={`section-${part.key}`}
-                      className="border-2 border-gray-200/60 rounded-xl overflow-hidden bg-white/70 backdrop-blur-sm shadow-md hover:shadow-lg transition-shadow"
-                    >
-                      {/* Section Header - Clickable */}
-                      <button
-                        onClick={() => toggleSection(part.key)}
-                        className="w-full px-5 py-4 flex items-center justify-between bg-gradient-to-r from-gray-50/50 to-white hover:from-gray-100/50 hover:to-gray-50/50 transition-all"
-                      >
-                        <span className="text-base font-semibold text-midnight-slate">{label}</span>
-                        <svg
-                          className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${
-                            isOpen ? 'rotate-180' : ''
-                          }`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-
-                      {/* Section Content - Collapsible */}
-                      <AnimatePresence>
-                        {isOpen && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2, ease: 'easeOut' }}
-                            className="overflow-hidden"
-                          >
-                            <div className="px-5 pb-5 pt-3 bg-white/40">
-                              <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
-                                {colors.map((color) => {
-                                  const isSelected = selectedColor === color;
-                                  const colorHex = getColorHex(color);
-                                  
-                                  return (
-                                    <button
-                                      key={color}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleColorChange(part.key, color);
-                                      }}
-                                      className="flex flex-col items-center gap-2 group"
-                                    >
-                                      <div
-                                        className={`w-12 h-12 rounded-full border-2 transition-all duration-200 ease-out shadow-lg relative ${
-                                          isSelected
-                                            ? 'border-smoked-saffron ring-2 ring-smoked-saffron ring-offset-2 scale-110'
-                                            : 'border-gray-300 group-hover:border-smoked-saffron/50 group-hover:scale-105'
-                                        }`}
-                                        style={{ backgroundColor: colorHex }}
-                                      >
-                                        {isSelected && (
-                                          <motion.div
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: 1 }}
-                                            className="absolute inset-0 flex items-center justify-center"
-                                          >
-                                            <svg
-                                              className="w-6 h-6 text-white"
-                                              fill="none"
-                                              stroke="currentColor"
-                                              viewBox="0 0 24 24"
-                                              style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
-                                            >
-                                              <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={3}
-                                                d="M5 13l4 4L19 7"
-                                              />
-                                            </svg>
-                                          </motion.div>
-                                        )}
-                                      </div>
-                                      <span
-                                        className={`text-xs text-center leading-tight transition-colors duration-200 ${
-                                          isSelected
-                                            ? 'font-semibold text-smoked-saffron'
-                                            : 'text-gray-600 group-hover:text-midnight-slate'
-                                        }`}
-                                      >
-                                        {color}
-                                      </span>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </aside>
-
-          {/* RIGHT COLUMN - Preview & Summary */}
-          <main className="flex flex-col gap-6">
-            
-            {/* TOP: Live Preview */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-              {/* Preview Container */}
               <div
                 ref={previewRef}
-                className="relative bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 overflow-hidden shadow-inner"
-                style={{ height: '480px', perspective: '1200px' }}
+                className="relative overflow-hidden"
+                style={{
+                  height: 'min(58vh, 720px)',
+                  minHeight: '420px',
+                  perspective: '1200px',
+                  background: 'radial-gradient(ellipse 85% 65% at 50% 55%, #2a3544 0%, #151b24 45%, #0e1218 100%)',
+                }}
                 onMouseMove={(e) => {
                   const rect = previewRef.current?.getBoundingClientRect();
                   if (!rect) return;
@@ -490,26 +378,25 @@ const ModelCustomizer = () => {
                   targetTiltRef.current = { x: -0.12, y: -0.18 };
                 }}
               >
-                {/* Background parallax sky/floor bands for stronger 2.5D cue */}
+                {/* Background parallax — subtle depth on dark stage */}
                 <div
                   aria-hidden="true"
                   className="absolute inset-0 pointer-events-none"
                   style={{
                     background: `
-                      linear-gradient(180deg, rgba(247,249,252,0.85) 0%, rgba(247,249,252,0.35) 45%, rgba(230,233,239,0.25) 60%, rgba(210,214,222,0.15) 100%)
+                      linear-gradient(180deg, rgba(90,110,130,0.12) 0%, rgba(40,50,62,0.06) 42%, rgba(20,26,34,0.2) 58%, rgba(10,14,18,0.35) 100%)
                     `,
                     transform: `translate(${-(tilt.y * 12)}px, ${(tilt.x * 8) + scrollParallaxRef.current * 0.06}px)`,
                     transition: 'transform 80ms linear'
                   }}
                 />
-                {/* Enhanced Background Effects */}
-                <div 
+                <div
                   className="absolute inset-0 pointer-events-none"
                   style={{
                     background: `
-                      radial-gradient(ellipse at 30% 40%, rgba(168, 121, 50, 0.08) 0%, transparent 50%),
-                      radial-gradient(ellipse at 70% 60%, rgba(0, 0, 0, 0.03) 0%, transparent 50%),
-                      radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(0,0,0,0.06) 100%)
+                      radial-gradient(ellipse at 30% 38%, rgba(168, 121, 50, 0.12) 0%, transparent 52%),
+                      radial-gradient(ellipse at 72% 62%, rgba(255, 255, 255, 0.04) 0%, transparent 45%),
+                      radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.25) 100%)
                     `
                   }}
                 />
@@ -527,16 +414,7 @@ const ModelCustomizer = () => {
                     opacity: 0.6
                   }}
                 />
-                
-                {/* Title Overlay - Inside Preview */}
-                <div className="absolute top-6 left-6 z-20">
-                  <h1 className="text-3xl font-light text-gray-700 mb-1 drop-shadow-lg">
-                    {fullModelName}
-                  </h1>
-                  <p className="text-sm text-gray-600 drop-shadow-md">Live Preview</p>
-                </div>
-                
-                {/* Boat Preview */}
+                {/* Boat composite */}
                 <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 1 }}>
                   <div
                     className="relative"
@@ -648,59 +526,162 @@ const ModelCustomizer = () => {
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* BOTTOM: Summary Display */}
-            <div className="bg-gradient-to-br from-white via-gray-50/30 to-white backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 p-4">
-              {/* Your Selections Header */}
-              <div className="mb-3">
-                <h3 className="text-sm font-medium text-midnight-slate mb-1">Your selections</h3>
-                <div className="w-12 h-0.5 bg-smoked-saffron"></div>
-              </div>
-              
-              {/* Selections Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {Object.entries(selectedColors).map(([partKey, color]) => {
-                  const part = customizerParts.find(p => p.key === partKey);
-                  if (!part) return null;
-                  const colorHex = getColorHex(color);
-                  const label = partLabels[partKey] || part.label;
-                  
-                  return (
-                    <div
-                      key={partKey}
-                      className="group relative p-2 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 hover:border-smoked-saffron/30 hover:shadow-sm transition-all duration-300"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-4 h-4 rounded-full border border-gray-300 shadow-sm group-hover:shadow transition-shadow flex-shrink-0"
+              {/* Build summary — part of the preview card so the hero reads as one unit */}
+              <div className="border-t border-white/[0.08] bg-[#0c1016]/85 px-3 sm:px-4 py-3">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <h3 className="text-[9px] uppercase tracking-[0.14em] text-aged-bone/45 font-medium">Current build</h3>
+                  <p className="text-[9px] text-aged-bone/35 hidden sm:block">Tap a layer to edit</p>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-0.5 -mx-1 px-1 [scrollbar-width:thin] snap-x snap-mandatory">
+                  {Object.entries(selectedColors).map(([partKey, color]) => {
+                    const part = customizerParts.find(p => p.key === partKey);
+                    if (!part) return null;
+                    const colorHex = getColorHex(color);
+                    const label = partLabels[partKey] || part.label;
+                    return (
+                      <button
+                        key={partKey}
+                        type="button"
+                        onClick={() => scrollToSection(partKey)}
+                        className="group snap-start shrink-0 flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] hover:border-smoked-saffron/35 hover:bg-white/[0.06] pl-2 pr-2.5 py-2 text-left transition-colors max-w-[200px]"
+                      >
+                        <span
+                          className="w-4 h-4 rounded-full border border-white/20 shrink-0 shadow-inner"
                           style={{ backgroundColor: colorHex }}
                         />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[10px] text-gray-500 uppercase tracking-wide">{label}</div>
-                          <div className="text-xs font-semibold text-midnight-slate truncate">{color}</div>
-                        </div>
-                        <button
-                          onClick={() => scrollToSection(partKey)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-smoked-saffron rounded hover:bg-gray-50"
-                          aria-label={`Edit ${label}`}
+                        <span className="min-w-0">
+                          <span className="block text-[9px] text-aged-bone/40 uppercase tracking-wider truncate">{label}</span>
+                          <span className="block text-xs font-medium text-aged-bone truncate">{color}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </main>
+
+          {/* Materials rail (second column desktop, below hero on mobile) */}
+          <aside className="lg:sticky lg:top-[7.25rem] lg:self-start lg:max-h-[calc(100vh-7.25rem)] w-full min-w-0">
+            <div className="rounded-2xl border border-white/[0.08] bg-[#151b24]/95 backdrop-blur-sm shadow-xl shadow-black/30 p-5 sm:p-6 h-full flex flex-col min-h-0">
+              <div className="mb-5 pb-4 border-b border-white/[0.08]">
+                <h2 className="text-lg font-light text-aged-bone tracking-tight">Materials &amp; finish</h2>
+                <p className="text-xs text-aged-bone/50 mt-1">Open a section and tap a swatch to update the composite.</p>
+              </div>
+              <div className="flex-1 overflow-y-auto pr-1 space-y-2.5 min-h-0 [scrollbar-width:thin]">
+                {customizerParts.map((part) => {
+                  if (part.key === 'base') return null;
+                  const colors = availableColors[part.key] || [];
+                  const selectedColor = selectedColors[part.key];
+                  const isOpen = openSections.has(part.key);
+                  const label = partLabels[part.key] || part.label;
+
+                  return (
+                    <div
+                      key={part.key}
+                      id={`section-${part.key}`}
+                      className={`rounded-xl overflow-hidden border transition-colors ${
+                        isOpen
+                          ? 'border-smoked-saffron/35 bg-white/[0.04]'
+                          : 'border-white/[0.06] bg-white/[0.02] hover:border-white/10'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleSection(part.key)}
+                        className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-white/[0.03] transition-colors"
+                      >
+                        <span className="text-sm font-medium text-aged-bone/95">{label}</span>
+                        <svg
+                          className={`w-4 h-4 text-aged-bone/40 shrink-0 transition-transform duration-200 ${
+                            isOpen ? 'rotate-180' : ''
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
                         >
-                          <svg
-                            className="w-3.5 h-3.5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      <AnimatePresence>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: 'easeOut' }}
+                            className="overflow-hidden"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                      </div>
+                            <div className="px-4 pb-4 pt-0 border-t border-white/[0.05]">
+                              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-3">
+                                {colors.map((color) => {
+                                  const isSelected = selectedColor === color;
+                                  const colorHex = getColorHex(color);
+                                  return (
+                                    <button
+                                      key={color}
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleColorChange(part.key, color);
+                                      }}
+                                      className="flex flex-col items-center gap-1.5 group"
+                                    >
+                                      <div
+                                        className={`w-11 h-11 rounded-full border-2 transition-all duration-200 ease-out shadow-lg relative ring-offset-2 ring-offset-[#151b24] ${
+                                          isSelected
+                                            ? 'border-smoked-saffron ring-2 ring-smoked-saffron scale-110'
+                                            : 'border-white/20 group-hover:border-smoked-saffron/50 group-hover:scale-105'
+                                        }`}
+                                        style={{ backgroundColor: colorHex }}
+                                      >
+                                        {isSelected && (
+                                          <motion.div
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            className="absolute inset-0 flex items-center justify-center"
+                                          >
+                                            <svg
+                                              className="w-5 h-5 text-white"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                              style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={3}
+                                                d="M5 13l4 4L19 7"
+                                              />
+                                            </svg>
+                                          </motion.div>
+                                        )}
+                                      </div>
+                                      <span
+                                        className={`text-[10px] text-center leading-tight transition-colors duration-200 ${
+                                          isSelected
+                                            ? 'font-semibold text-smoked-saffron'
+                                            : 'text-aged-bone/55 group-hover:text-aged-bone'
+                                        }`}
+                                      >
+                                        {color}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   );
                 })}
               </div>
             </div>
-          </main>
+          </aside>
         </div>
       </div>
 
