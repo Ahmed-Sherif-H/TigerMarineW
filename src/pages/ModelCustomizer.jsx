@@ -563,8 +563,8 @@ const ModelCustomizer = () => {
           </main>
 
           {/* Materials rail (second column desktop, below hero on mobile) */}
-          <aside className="lg:sticky lg:top-[7.25rem] lg:self-start lg:max-h-[calc(100vh-7.25rem)] w-full min-w-0">
-            <div className="rounded-2xl border border-white/[0.08] bg-[#151b24]/95 backdrop-blur-sm shadow-xl shadow-black/30 p-5 sm:p-6 h-full flex flex-col min-h-0">
+          <aside className="w-full min-w-0 lg:sticky lg:top-[7.25rem] lg:self-start lg:h-[calc(100vh-7.25rem)]">
+            <div className="rounded-2xl border border-white/[0.08] bg-[#151b24]/95 backdrop-blur-sm shadow-xl shadow-black/30 p-5 sm:p-6 h-full max-h-full flex flex-col min-h-0 overflow-hidden">
               <div className="mb-5 pb-4 border-b border-white/[0.08]">
                 <h2 className="text-lg font-light text-aged-bone tracking-tight">Materials &amp; finish</h2>
                 <p className="text-xs text-aged-bone/50 mt-1">Open a section and tap a swatch to update the composite.</p>

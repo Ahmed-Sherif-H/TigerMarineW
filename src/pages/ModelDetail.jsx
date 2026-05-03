@@ -352,120 +352,115 @@ const ModelDetail = () => {
               {model.shortDescription}
             </p>
           )}
-          {/* Customizer button hidden temporarily */}
-          {false && getCustomizerFolder(model.name) && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-            >
-              <Link
-                to={`/models/${model.id}/customize`}
-                className="inline-flex items-center gap-3 bg-smoked-saffron hover:bg-smoked-saffron/90 text-white px-8 py-4 rounded-lg font-medium text-lg shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 transform group"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                </svg>
-                <span>Customize Your Boat</span>
-                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </motion.div>
-          )}
         </motion.div>
       </section>
 
       {/* Navigation Tabs - Sticky after hero */}
       <nav className="sticky top-20 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
         <div className="container-custom">
-          <div className="flex items-center gap-3 overflow-x-auto py-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex items-center gap-2 sm:gap-3 py-4 sm:py-5">
             <style>{`
-              .overflow-x-auto::-webkit-scrollbar {
+              .model-detail-nav-tabs::-webkit-scrollbar {
                 display: none;
               }
             `}</style>
-            <button
-              onClick={() => scrollToSection('overview')}
-              className={`px-6 py-3 rounded-lg font-semibold text-base whitespace-nowrap transition-all ${
-                activeNavTab === 'overview'
-                  ? 'bg-smoked-saffron text-white'
-                  : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
-              }`}
+            <div
+              className="model-detail-nav-tabs flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5 overflow-x-auto py-0.5"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              Overview
-            </button>
-            {videoFiles.length > 0 && (
               <button
-                onClick={() => scrollToSection('video')}
-                className={`px-6 py-3 rounded-lg font-semibold text-base whitespace-nowrap transition-all ${
-                  activeNavTab === 'video'
+                onClick={() => scrollToSection('overview')}
+                className={`shrink-0 rounded-lg px-4 py-2.5 text-base font-semibold whitespace-nowrap transition-all ${
+                  activeNavTab === 'overview'
                     ? 'bg-smoked-saffron text-white'
-                    : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-midnight-slate'
                 }`}
               >
-                Video
+                Overview
               </button>
-            )}
-            {galleryImages.length > 0 && (
-              <button
-                onClick={() => scrollToSection('gallery')}
-                className={`px-6 py-3 rounded-lg font-semibold text-base whitespace-nowrap transition-all ${
-                  activeNavTab === 'gallery'
-                    ? 'bg-smoked-saffron text-white'
-                    : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
-                }`}
+              {videoFiles.length > 0 && (
+                <button
+                  onClick={() => scrollToSection('video')}
+                  className={`shrink-0 rounded-lg px-4 py-2.5 text-base font-semibold whitespace-nowrap transition-all ${
+                    activeNavTab === 'video'
+                      ? 'bg-smoked-saffron text-white'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-midnight-slate'
+                  }`}
+                >
+                  Video
+                </button>
+              )}
+              {galleryImages.length > 0 && (
+                <button
+                  onClick={() => scrollToSection('gallery')}
+                  className={`shrink-0 rounded-lg px-4 py-2.5 text-base font-semibold whitespace-nowrap transition-all ${
+                    activeNavTab === 'gallery'
+                      ? 'bg-smoked-saffron text-white'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-midnight-slate'
+                  }`}
+                >
+                  Gallery
+                </button>
+              )}
+              {((model.standardFeatures || model.features || []).length > 0) && (
+                <button
+                  onClick={() => scrollToSection('features')}
+                  className={`shrink-0 rounded-lg px-4 py-2.5 text-base font-semibold whitespace-nowrap transition-all ${
+                    activeNavTab === 'features'
+                      ? 'bg-smoked-saffron text-white'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-midnight-slate'
+                  }`}
+                >
+                  Features
+                </button>
+              )}
+              {allOptionalFeatures.length > 0 && (
+                <button
+                  onClick={() => scrollToSection('optional-features')}
+                  className={`shrink-0 rounded-lg px-4 py-2.5 text-base font-semibold whitespace-nowrap transition-all ${
+                    activeNavTab === 'optional-features'
+                      ? 'bg-smoked-saffron text-white'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-midnight-slate'
+                  }`}
+                >
+                  Optional Features
+                </button>
+              )}
+              {(interiorMainImage || interiorCarouselImages.length > 0) && (
+                <button
+                  onClick={() => scrollToSection('interior')}
+                  className={`shrink-0 rounded-lg px-4 py-2.5 text-base font-semibold whitespace-nowrap transition-all ${
+                    activeNavTab === 'interior'
+                      ? 'bg-smoked-saffron text-white'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-midnight-slate'
+                  }`}
+                >
+                  Interior
+                </button>
+              )}
+              {model.specs && Object.keys(model.specs).length > 0 && (
+                <button
+                  onClick={() => scrollToSection('specifications')}
+                  className={`shrink-0 rounded-lg px-4 py-2.5 text-base font-semibold whitespace-nowrap transition-all ${
+                    activeNavTab === 'specifications'
+                      ? 'bg-smoked-saffron text-white'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-midnight-slate'
+                  }`}
+                >
+                  Specifications
+                </button>
+              )}
+            </div>
+            {getCustomizerFolder(model.name) && (
+              <Link
+                to={`/models/${model.id}/customize`}
+                className="inline-flex shrink-0 items-center gap-2 self-center rounded-lg border-2 border-smoked-saffron/40 bg-smoked-saffron/10 px-4 py-2.5 text-base font-semibold whitespace-nowrap text-smoked-saffron transition-all hover:border-smoked-saffron hover:bg-smoked-saffron hover:text-white"
               >
-                Gallery
-              </button>
-            )}
-            {((model.standardFeatures || model.features || []).length > 0) && (
-              <button
-                onClick={() => scrollToSection('features')}
-                className={`px-6 py-3 rounded-lg font-semibold text-base whitespace-nowrap transition-all ${
-                  activeNavTab === 'features'
-                    ? 'bg-smoked-saffron text-white'
-                    : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
-                }`}
-              >
-                Features
-              </button>
-            )}
-            {allOptionalFeatures.length > 0 && (
-              <button
-                onClick={() => scrollToSection('optional-features')}
-                className={`px-6 py-3 rounded-lg font-semibold text-base whitespace-nowrap transition-all ${
-                  activeNavTab === 'optional-features'
-                    ? 'bg-smoked-saffron text-white'
-                    : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
-                }`}
-              >
-                Optional Features
-              </button>
-            )}
-            {(interiorMainImage || interiorCarouselImages.length > 0) && (
-              <button
-                onClick={() => scrollToSection('interior')}
-                className={`px-6 py-3 rounded-lg font-semibold text-base whitespace-nowrap transition-all ${
-                  activeNavTab === 'interior'
-                    ? 'bg-smoked-saffron text-white'
-                    : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
-                }`}
-              >
-                Interior
-              </button>
-            )}
-            {model.specs && Object.keys(model.specs).length > 0 && (
-              <button
-                onClick={() => scrollToSection('specifications')}
-                className={`px-6 py-3 rounded-lg font-semibold text-base whitespace-nowrap transition-all ${
-                  activeNavTab === 'specifications'
-                    ? 'bg-smoked-saffron text-white'
-                    : 'text-gray-600 hover:text-midnight-slate hover:bg-gray-100'
-                }`}
-              >
-                Specifications
-              </button>
+                <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                </svg>
+                Configurator
+              </Link>
             )}
           </div>
         </div>
