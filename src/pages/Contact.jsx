@@ -1,6 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
+import {
+  shouldBlockContactSubmission,
+  recordContactSubmission,
+} from '../utils/contactFormSpam';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -20,23 +24,50 @@ const Contact = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState({ type: '', text: '' });
+  const [honeypot, setHoneypot] = useState('');
+  const formReadyAt = useRef(Date.now());
+
+  const emptyForm = {
+    name: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: '',
+  };
+
+  const showSuccess = () => {
+    setSubmitMessage({
+      type: 'success',
+      text: 'Thank you for your message! We will contact you soon.',
+    });
+    setFormData(emptyForm);
+    setHoneypot('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitMessage({ type: '', text: '' });
 
+    if (
+      shouldBlockContactSubmission({
+        honeypot,
+        formReadyAt: formReadyAt.current,
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+      })
+    ) {
+      showSuccess();
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const response = await api.submitContactForm(formData);
       if (response.success) {
-        setSubmitMessage({ type: 'success', text: 'Thank you for your message! We will contact you soon.' });
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          subject: '',
-          message: ''
-        });
+        recordContactSubmission();
+        showSuccess();
       } else {
         setSubmitMessage({ type: 'error', text: response.error || 'Failed to send message. Please try again.' });
       }
@@ -112,7 +143,22 @@ const Contact = () => {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="relative space-y-6">
+                <div
+                  className="absolute -left-[9999px] h-0 w-0 overflow-hidden"
+                  aria-hidden="true"
+                >
+                  <label htmlFor="company_website">Company website</label>
+                  <input
+                    type="text"
+                    id="company_website"
+                    name="company_website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                  />
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">

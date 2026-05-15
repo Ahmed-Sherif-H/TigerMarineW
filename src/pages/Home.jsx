@@ -6,6 +6,7 @@ import { useModels } from '../context/ModelsContext';
 import { upcomingModels } from '../data/models';
 import { getModelDisplayName, sortModelsByNumberDesc } from '../utils/modelNameUtils';
 import api from '../services/api';
+import { resolveEventImageUrl, handleEventImageError } from '../utils/eventImageUtils';
 import ModelCard from '../components/ModelCard';
 
 const Home = () => {
@@ -534,13 +535,11 @@ const Home = () => {
                         <div className="relative h-48 overflow-hidden bg-gradient-to-br from-midnight-slate to-gray-800">
                           {event.image ? (
                             <img
-                              src={event.image.startsWith('http://') || event.image.startsWith('https://') ? event.image : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001'}${event.image.startsWith('/') ? '' : '/'}${event.image}`}
+                              src={resolveEventImageUrl(event.image)}
                               alt={event.name}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                               loading="lazy"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                              }}
+                              onError={handleEventImageError}
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-white text-4xl">

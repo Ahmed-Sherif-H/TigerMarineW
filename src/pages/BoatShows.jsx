@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import { resolveEventImageUrl, handleEventImageError } from '../utils/eventImageUtils';
 
 const BoatShows = () => {
   const [events, setEvents] = useState([]);
@@ -50,19 +51,6 @@ const BoatShows = () => {
       return `${formatDate(startDate)} - ${formatDate(endDate)}`;
     }
     return formatDate(startDate);
-  };
-
-  const getEventImage = (event) => {
-    if (event.image) {
-      // If it's a Cloudinary URL or any full URL, use it directly
-      if (event.image.startsWith('http://') || event.image.startsWith('https://')) {
-        return event.image;
-      }
-      // Legacy support: build Railway backend path for old filenames
-      const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001';
-      return `${baseUrl}${event.image.startsWith('/') ? '' : '/'}${event.image}`;
-    }
-    return '/images/DJI_0154.jpg'; // Fallback image
   };
 
   return (
@@ -144,12 +132,10 @@ const BoatShows = () => {
                   {/* Event Image */}
                   <div className="relative h-56 overflow-hidden bg-gradient-to-br from-midnight-slate to-gray-800">
                     <img
-                      src={getEventImage(event)}
+                      src={resolveEventImageUrl(event.image)}
                       alt={event.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
+                      onError={handleEventImageError}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                     <div className="absolute top-4 left-4">
