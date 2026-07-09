@@ -18,6 +18,7 @@ import {
   modelToUpcomingForm,
   upcomingFormToModelPatch,
   upcomingFormToCreatePayload,
+  formatUpcomingSaveError,
 } from '../utils/upcomingModelData';
 
 const AdminDashboard = () => {
@@ -153,6 +154,13 @@ const AdminDashboard = () => {
     try {
       let savedModelId = upcomingForm.modelId;
 
+      if (!savedModelId) {
+        const existingSlot = findUpcomingModel(models);
+        if (existingSlot?.id) {
+          savedModelId = existingSlot.id;
+        }
+      }
+
       if (savedModelId) {
         const modelData = await api.getModelById(savedModelId);
         const existing = normalizeModelDataForEdit(modelData?.data || modelData);
@@ -179,17 +187,24 @@ const AdminDashboard = () => {
       setTimeout(() => setMessage({ type: '', text: '' }), 4000);
     } catch (error) {
       console.error('[AdminDashboard] Error saving upcoming model:', error);
-      setMessage({ type: 'error', text: 'Failed to save upcoming model: ' + error.message });
+      setMessage({ type: 'error', text: 'Failed to save upcoming model: ' + formatUpcomingSaveError(error) });
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleResetUpcomingForm = () => {
-    setUpcomingForm(modelToUpcomingForm(null));
+    const blank = modelToUpcomingForm(null);
+    const existingSlot = findUpcomingModel(models);
+    if (existingSlot?.id) {
+      blank.modelId = existingSlot.id;
+    }
+    setUpcomingForm(blank);
     setMessage({
       type: 'info',
-      text: 'Form cleared. Save to create a new upcoming model record.',
+      text: existingSlot
+        ? 'Form cleared. Save will update the existing upcoming slot with new content.'
+        : 'Form cleared. Save to create the upcoming model slot.',
     });
   };
 
@@ -2571,13 +2586,18 @@ const AdminDashboard = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Model name</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Display name</label>
                       <input
                         type="text"
                         value={upcomingForm.name || ''}
                         onChange={(e) => handleUpcomingChange('name', e.target.value)}
                         className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="e.g. Tiger XL 400"
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Shown on the site. Can match a catalog name (e.g. Infinity 280) — stored separately from the
+                        catalog record.
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Teaser text (home + hero)</label>
