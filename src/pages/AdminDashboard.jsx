@@ -2546,14 +2546,7 @@ const AdminDashboard = () => {
 
         {activeTab === 'upcoming' && (
           <div className="space-y-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-900">
-              <p className="font-semibold mb-1">Edits the Home teaser + Upcoming Models page</p>
-              <p>
-                This uses a <strong>dedicated upcoming model record</strong> (marked in the database, hidden from the
-                catalog). Infinity 280 and other published models are not touched. When the new model launches, set
-                &quot;Link to model detail page&quot; to its catalog entry.
-              </p>
-            </div>
+       
 
             {isLoadingUpcoming ? (
               <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-200">
@@ -2595,8 +2588,7 @@ const AdminDashboard = () => {
                         placeholder="e.g. Tiger XL 400"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Shown on the site. Can match a catalog name (e.g. Infinity 280) — stored separately from the
-                        catalog record.
+                        Shown on the site. 
                       </p>
                     </div>
                     <div>
