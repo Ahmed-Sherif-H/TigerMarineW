@@ -6,6 +6,7 @@
 import { getModelImagePath, getFullImagePath, encodeFilename } from './imagePathUtils';
 import { isYouTubeUrl } from './youtubeUtils';
 import { extractFilename, resolveBackendPublicPath, resolveMediaPublicPath } from './backendConfig';
+import { isUpcomingModel } from './upcomingModelData';
 
 /**
  * Transform a single model from API format to frontend format
@@ -334,7 +335,7 @@ export function transformModels(models) {
  */
 export function transformCategory(category, models) {
   const categoryModels = models
-    .filter(m => m.categoryId === category.id)
+    .filter(m => m.categoryId === category.id && !isUpcomingModel(m))
     .map(transformModel)
     .sort((a, b) => {
       // Sort by number in descending order (950 → 650)

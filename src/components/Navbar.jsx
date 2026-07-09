@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useModels } from '../context/ModelsContext';
 import { getModelDisplayName } from '../utils/modelNameUtils';
+import { isUpcomingModel } from '../utils/upcomingModelData';
 import { getSideMenuImage } from '../data/imageHelpers';
 
 const Navbar = () => {
@@ -35,7 +36,9 @@ const Navbar = () => {
     const boatsCategoryIds = categories
       .filter(cat => cat.mainGroup === 'boats')
       .map(cat => cat.id);
-    return models.filter(model => boatsCategoryIds.includes(model.categoryId));
+    return models.filter(
+      (model) => boatsCategoryIds.includes(model.categoryId) && !isUpcomingModel(model)
+    );
   }, [categories, models]);
 
   const location = useLocation();

@@ -1,39 +1,36 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useState, useMemo } from 'react';
-import { upcomingModels } from '../data/models';
+import { useState } from 'react';
 import { getFullModelName } from '../utils/modelNameUtils';
-import { useModels } from '../context/ModelsContext';
+import { useUpcomingModel } from '../context/UpcomingModelContext';
 
 const UpcomingModels = () => {
-  const model = upcomingModels[0]; // Only Infinity 280
+  const { display, linkedModel, loading } = useUpcomingModel();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const { models } = useModels();
 
-  // Find the Infinity 280 model ID from the models context
-  const infinityModelId = useMemo(() => {
-    if (!models || models.length === 0) return null;
-    const infinityModel = models.find(m => m.name === 'Infinity 280');
-    return infinityModel?.id || null;
-  }, [models]);
+  const galleryImages = display.galleryImages?.length
+    ? display.galleryImages
+    : [display.homeImage].filter(Boolean);
 
-  // Infinity 280 images carousel (3-4 images)
-  const infinityImages = [
-    "/images/Infinity 280/Infinity 280-1.jpg",
-    "/images/Infinity 280/Infinity 280-2.jpg",
-    "/images/Infinity 280/Infinity 280-3.jpg",
-    "/images/Infinity 280/Infinity 280-4.jpg"
-  ];
+  const detailModelId = display.detailModelId || null;
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % infinityImages.length);
+    setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + infinityImages.length) % infinityImages.length);
+    setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
   };
 
-  if (!model) {
+  if (loading) {
+    return (
+      <div className="pt-20 min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-smoked-saffron mx-auto" />
+      </div>
+    );
+  }
+
+  if (!display?.name) {
     return (
       <div className="pt-20 min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -49,12 +46,11 @@ const UpcomingModels = () => {
 
   return (
     <div className="pt-20 bg-white">
-      {/* Hero Section */}
       <section className="relative h-[70vh] min-h-[500px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src={model.heroImage || model.image}
-            alt={model.name}
+            src={display.heroImage || display.homeImage}
+            alt={display.name}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/70" />
@@ -83,7 +79,7 @@ const UpcomingModels = () => {
               className="text-6xl md:text-7xl lg:text-8xl font-light mb-6 tracking-tight"
               style={{ textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}
             >
-              {getFullModelName(model.name)}
+              {getFullModelName(display.name)}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -92,13 +88,42 @@ const UpcomingModels = () => {
               className="text-xl md:text-2xl text-gray-100 max-w-3xl mx-auto leading-relaxed font-light"
               style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}
             >
-              {model.shortDescription || model.description}
+              {display.shortDescription}
             </motion.p>
           </motion.div>
         </div>
       </section>
 
-      {/* Description Section */}
+      {galleryImages.length > 1 && (
+        <section className="section-padding bg-gray-50">
+          <div className="container-custom max-w-4xl mx-auto">
+            <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-[16/10] bg-midnight-slate">
+              <img
+                src={galleryImages[currentImageIndex]}
+                alt={`${display.name} gallery ${currentImageIndex + 1}`}
+                className="w-full h-full object-cover"
+              />
+              <button
+                type="button"
+                onClick={prevImage}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 text-midnight-slate hover:bg-white shadow-lg"
+                aria-label="Previous image"
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                onClick={nextImage}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 text-midnight-slate hover:bg-white shadow-lg"
+                aria-label="Next image"
+              >
+                ›
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="section-padding bg-white">
         <div className="container-custom">
           <motion.div
@@ -109,16 +134,16 @@ const UpcomingModels = () => {
             className="text-center max-w-4xl mx-auto"
           >
             <h2 className="text-4xl md:text-5xl font-light text-midnight-slate mb-6">
-              {getFullModelName(model.name)}
+              {getFullModelName(display.name)}
             </h2>
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-8">
-              {model.description}
+              {display.description}
             </p>
             <Link
-              to={infinityModelId ? `/models/${infinityModelId}` : '/models'}
+              to={detailModelId ? `/models/${detailModelId}` : '/models'}
               className="inline-flex items-center gap-3 bg-smoked-saffron hover:bg-smoked-saffron/90 text-white px-10 py-4 rounded-lg font-medium text-lg shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 transform group"
             >
-              <span>View Infinity 280 Details</span>
+              <span>View {display.name} Details</span>
               <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
@@ -131,4 +156,3 @@ const UpcomingModels = () => {
 };
 
 export default UpcomingModels;
-

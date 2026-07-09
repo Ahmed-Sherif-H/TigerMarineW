@@ -12,6 +12,13 @@ import {
   extractUploadUrl
 } from '../utils/backendConfig';
 import { isYouTubeUrl } from '../utils/youtubeUtils';
+import {
+  findUpcomingModel,
+  isUpcomingModel,
+  modelToUpcomingForm,
+  upcomingFormToModelPatch,
+  upcomingFormToCreatePayload,
+} from '../utils/upcomingModelData';
 
 const AdminDashboard = () => {
   const { models, categories, loading, refreshData } = useModels();
@@ -32,6 +39,8 @@ const AdminDashboard = () => {
   const [isLoadingModel, setIsLoadingModel] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [upcomingForm, setUpcomingForm] = useState(null);
+  const [isLoadingUpcoming, setIsLoadingUpcoming] = useState(false);
 
   // Load model data when selection changes
   useEffect(() => {
@@ -81,6 +90,113 @@ const AdminDashboard = () => {
       setEditedData(null);
     }
   }, [selectedDealerId, activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'upcoming') {
+      loadUpcomingForm();
+    }
+  }, [activeTab, models]);
+
+  const loadUpcomingForm = async () => {
+    setIsLoadingUpcoming(true);
+    setMessage({ type: '', text: '' });
+    try {
+      const found = findUpcomingModel(models);
+      if (found?.id) {
+        const modelData = await api.getModelById(found.id);
+        const actualData = modelData?.data || modelData;
+        const normalized = normalizeModelDataForEdit(actualData);
+        setUpcomingForm(modelToUpcomingForm(normalized));
+      } else {
+        setUpcomingForm(modelToUpcomingForm(null));
+        setMessage({
+          type: 'info',
+          text: 'No upcoming model is set yet. Fill in the form below and save — a dedicated upcoming record will be created (Infinity 280 and other catalog models are not affected).',
+        });
+      }
+    } catch (error) {
+      console.error('[AdminDashboard] Error loading upcoming form:', error);
+      setUpcomingForm(modelToUpcomingForm(null));
+      setMessage({ type: 'error', text: 'Failed to load upcoming model: ' + error.message });
+    } finally {
+      setIsLoadingUpcoming(false);
+    }
+  };
+
+  const clearOtherUpcomingFlags = async (keepModelId) => {
+    const others = models.filter((m) => m.id !== keepModelId && isUpcomingModel(m));
+    for (const other of others) {
+      try {
+        const modelData = await api.getModelById(other.id);
+        const existing = normalizeModelDataForEdit(modelData?.data || modelData);
+        const dataToSave = normalizeModelDataForSave({ ...existing, isUpcoming: false });
+        await api.updateModel(other.id, dataToSave);
+      } catch (err) {
+        console.warn('[AdminDashboard] Could not clear isUpcoming on model', other.id, err);
+      }
+    }
+  };
+
+  const handleUpcomingChange = (field, value) => {
+    setUpcomingForm((prev) => (prev ? { ...prev, [field]: value } : prev));
+  };
+
+  const handleSaveUpcoming = async () => {
+    if (!upcomingForm?.name?.trim()) {
+      setMessage({ type: 'error', text: 'Please enter a model name for the upcoming model.' });
+      return;
+    }
+
+    setIsSaving(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      let savedModelId = upcomingForm.modelId;
+
+      if (savedModelId) {
+        const modelData = await api.getModelById(savedModelId);
+        const existing = normalizeModelDataForEdit(modelData?.data || modelData);
+        const merged = upcomingFormToModelPatch(existing, upcomingForm);
+        const dataToSave = normalizeModelDataForSave(merged);
+        await api.updateModel(savedModelId, dataToSave);
+      } else {
+        const payload = upcomingFormToCreatePayload(upcomingForm, categories);
+        const dataToSave = normalizeModelDataForSave(payload);
+        const created = await api.createModel(dataToSave);
+        savedModelId = created?.id ?? created?.data?.id ?? null;
+        if (!savedModelId) {
+          throw new Error('Server did not return the new model ID.');
+        }
+      }
+
+      await clearOtherUpcomingFlags(savedModelId);
+      await refreshData();
+      await loadUpcomingForm();
+      setMessage({
+        type: 'success',
+        text: 'Upcoming model saved! Home page and Upcoming Models page will update for all visitors.',
+      });
+      setTimeout(() => setMessage({ type: '', text: '' }), 4000);
+    } catch (error) {
+      console.error('[AdminDashboard] Error saving upcoming model:', error);
+      setMessage({ type: 'error', text: 'Failed to save upcoming model: ' + error.message });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleResetUpcomingForm = () => {
+    setUpcomingForm(modelToUpcomingForm(null));
+    setMessage({
+      type: 'info',
+      text: 'Form cleared. Save to create a new upcoming model record.',
+    });
+  };
+
+  const upcomingUploadFolder = () =>
+    (upcomingForm?.name || 'upcoming').trim() || 'upcoming';
+
+  const catalogModelsForLink = models.filter((m) => !isUpcomingModel(m));
 
   const loadModelData = async (id) => {
     setIsLoadingModel(true);
@@ -742,12 +858,16 @@ const AdminDashboard = () => {
         {/* Message Alert */}
         {message.text && (
           <div className={`mb-6 p-4 rounded-xl shadow-sm border ${
-            message.type === 'success' 
-              ? 'bg-green-50 text-green-800 border-green-200' 
-              : 'bg-red-50 text-red-800 border-red-200'
+            message.type === 'success'
+              ? 'bg-green-50 text-green-800 border-green-200'
+              : message.type === 'info'
+                ? 'bg-blue-50 text-blue-800 border-blue-200'
+                : 'bg-red-50 text-red-800 border-red-200'
           }`}>
             <div className="flex items-center gap-2">
-              <span className="text-xl">{message.type === 'success' ? '✅' : '❌'}</span>
+              <span className="text-xl">
+                {message.type === 'success' ? '✅' : message.type === 'info' ? 'ℹ️' : '❌'}
+              </span>
               <span>{message.text}</span>
             </div>
           </div>
@@ -756,7 +876,7 @@ const AdminDashboard = () => {
         {/* Tabs */}
         <div className="mb-6 bg-white rounded-xl shadow-sm p-2 border border-gray-200">
           <nav className="flex space-x-2">
-            {['models', 'categories', 'events', 'dealers', 'export'].map((tab) => (
+            {['models', 'categories', 'events', 'dealers', 'upcoming', 'export'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => {
@@ -778,6 +898,7 @@ const AdminDashboard = () => {
                 {tab === 'categories' && '📁 '}
                 {tab === 'events' && '📅 '}
                 {tab === 'dealers' && '🏢 '}
+                {tab === 'upcoming' && '🚀 '}
                 {tab === 'export' && '📤 '}
                 {tab}
               </button>
@@ -2405,6 +2526,268 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'upcoming' && (
+          <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-900">
+              <p className="font-semibold mb-1">Edits the Home teaser + Upcoming Models page</p>
+              <p>
+                This uses a <strong>dedicated upcoming model record</strong> (marked in the database, hidden from the
+                catalog). Infinity 280 and other published models are not touched. When the new model launches, set
+                &quot;Link to model detail page&quot; to its catalog entry.
+              </p>
+            </div>
+
+            {isLoadingUpcoming ? (
+              <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-200">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4" />
+                <p className="text-gray-600">Loading upcoming model content…</p>
+              </div>
+            ) : upcomingForm ? (
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 space-y-8">
+                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 border-b border-gray-200 pb-4">
+                  <span>🚀</span>
+                  Upcoming Model Content
+                  {upcomingForm.modelId ? (
+                    <span className="text-sm font-normal text-gray-500 ml-2">(editing record #{upcomingForm.modelId})</span>
+                  ) : (
+                    <span className="text-sm font-normal text-amber-600 ml-2">(new — save to create)</span>
+                  )}
+                </h2>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Home page section</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Section title</label>
+                      <input
+                        type="text"
+                        value={upcomingForm.homeSectionTitle || ''}
+                        onChange={(e) => handleUpcomingChange('homeSectionTitle', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Our Upcoming Model"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Model name</label>
+                      <input
+                        type="text"
+                        value={upcomingForm.name || ''}
+                        onChange={(e) => handleUpcomingChange('name', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Teaser text (home + hero)</label>
+                      <input
+                        type="text"
+                        value={upcomingForm.shortDescription || ''}
+                        onChange={(e) => handleUpcomingChange('shortDescription', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Home card image</label>
+                      <input
+                        type="text"
+                        value={upcomingForm.homeImage || ''}
+                        onChange={(e) => handleUpcomingChange('homeImage', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg mb-2"
+                        placeholder="Image URL or filename"
+                      />
+                      <label className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer text-sm font-medium">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            try {
+                              const result = await api.uploadFile(file, 'images', upcomingUploadFolder());
+                              const url = extractUploadUrl(result);
+                              handleUpcomingChange('homeImage', url);
+                              setMessage({ type: 'success', text: 'Home image uploaded!' });
+                            } catch (err) {
+                              setMessage({ type: 'error', text: 'Upload failed: ' + err.message });
+                            }
+                            e.target.value = '';
+                          }}
+                        />
+                        📤 Upload home image
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Upcoming Models page</h3>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Hero image</label>
+                      <input
+                        type="text"
+                        value={upcomingForm.heroImage || ''}
+                        onChange={(e) => handleUpcomingChange('heroImage', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg mb-2"
+                      />
+                      <label className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer text-sm font-medium">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            try {
+                              const result = await api.uploadFile(file, 'images', upcomingUploadFolder());
+                              const url = extractUploadUrl(result);
+                              handleUpcomingChange('heroImage', url);
+                              setMessage({ type: 'success', text: 'Hero image uploaded!' });
+                            } catch (err) {
+                              setMessage({ type: 'error', text: 'Upload failed: ' + err.message });
+                            }
+                            e.target.value = '';
+                          }}
+                        />
+                        📤 Upload hero image
+                      </label>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Link to model detail page (optional)
+                      </label>
+                      <select
+                        value={upcomingForm.detailModelId || ''}
+                        onChange={(e) =>
+                          handleUpcomingChange(
+                            'detailModelId',
+                            e.target.value ? parseInt(e.target.value, 10) : null
+                          )
+                        }
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                      >
+                        <option value="">None — &quot;View details&quot; goes to models list</option>
+                        {catalogModelsForLink.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.name}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Use this when the model already has a full detail page (e.g. Infinity 280 after launch).
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Full description</label>
+                      <textarea
+                        rows={5}
+                        value={upcomingForm.description || ''}
+                        onChange={(e) => handleUpcomingChange('description', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Gallery images ({upcomingForm.galleryFiles?.length || 0})
+                      </label>
+                      {(upcomingForm.galleryFiles || []).map((img, index) => (
+                        <div key={index} className="flex gap-2 mb-2">
+                          <input
+                            type="text"
+                            value={img}
+                            onChange={(e) => {
+                              const next = [...(upcomingForm.galleryFiles || [])];
+                              next[index] = e.target.value;
+                              handleUpcomingChange('galleryFiles', next);
+                            }}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = (upcomingForm.galleryFiles || []).filter((_, i) => i !== index);
+                              handleUpcomingChange('galleryFiles', next);
+                            }}
+                            className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                      <div className="flex gap-3 mt-3">
+                        <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer text-sm font-medium">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={async (e) => {
+                              const files = Array.from(e.target.files || []);
+                              if (!files.length) return;
+                              try {
+                                const uploaded = [];
+                                for (const file of files) {
+                                  const result = await api.uploadFile(file, 'images', upcomingUploadFolder());
+                                  uploaded.push(extractUploadUrl(result));
+                                }
+                                handleUpcomingChange('galleryFiles', [
+                                  ...(upcomingForm.galleryFiles || []),
+                                  ...uploaded,
+                                ]);
+                                setMessage({ type: 'success', text: `${uploaded.length} gallery image(s) uploaded!` });
+                              } catch (err) {
+                                setMessage({ type: 'error', text: 'Upload failed: ' + err.message });
+                              }
+                              e.target.value = '';
+                            }}
+                          />
+                          📤 Upload gallery
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleUpcomingChange('galleryFiles', [...(upcomingForm.galleryFiles || []), ''])
+                          }
+                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium"
+                        >
+                          + Add URL manually
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-4 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={handleSaveUpcoming}
+                    disabled={isSaving}
+                    className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
+                  >
+                    {isSaving ? 'Saving…' : upcomingForm.modelId ? '💾 Save upcoming content' : '💾 Create upcoming model'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={loadUpcomingForm}
+                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+                  >
+                    Reload
+                  </button>
+                  {upcomingForm.modelId && (
+                    <button
+                      type="button"
+                      onClick={handleResetUpcomingForm}
+                      className="px-6 py-3 bg-amber-100 text-amber-900 rounded-lg hover:bg-amber-200 font-medium"
+                    >
+                      Start new upcoming model
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : null}
           </div>
         )}
 

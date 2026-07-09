@@ -3,14 +3,16 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect, useMemo } from 'react';
 import HeroSection from '../components/HeroSection';
 import { useModels } from '../context/ModelsContext';
-import { upcomingModels } from '../data/models';
+import { useUpcomingModel } from '../context/UpcomingModelContext';
 import { getModelDisplayName, sortModelsByNumberDesc } from '../utils/modelNameUtils';
+import { isUpcomingModel } from '../utils/upcomingModelData';
 import api from '../services/api';
 import { resolveEventImageUrl, handleEventImageError } from '../utils/eventImageUtils';
 import ModelCard from '../components/ModelCard';
 
 const Home = () => {
   const { categories, models, loading } = useModels();
+  const { display: upcomingDisplay } = useUpcomingModel();
   const [selectedModels, setSelectedModels] = useState([]);
   const [events, setEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
@@ -21,14 +23,17 @@ const Home = () => {
     const boatsCategoryIds = categories
       .filter(cat => cat.mainGroup === 'boats')
       .map(cat => cat.id);
-    const filteredModels = models.filter(model => boatsCategoryIds.includes(model.categoryId));
+    const filteredModels = models.filter(
+      (model) => boatsCategoryIds.includes(model.categoryId) && !isUpcomingModel(model)
+    );
     return sortModelsByNumberDesc(filteredModels);
   }, [categories, models]);
   
   // Get 7 random models when data loads
   useEffect(() => {
     if (models.length > 0) {
-      const shuffled = [...models].sort(() => 0.5 - Math.random());
+      const catalogModels = models.filter((m) => !isUpcomingModel(m));
+      const shuffled = [...catalogModels].sort(() => 0.5 - Math.random());
       setSelectedModels(shuffled.slice(0, Math.min(7, shuffled.length)));
     }
   }, [models]);
@@ -102,11 +107,7 @@ const Home = () => {
       {/* 1. Upcoming Model Section */}
       <section className="section-padding bg-white">
         <div className="container-custom">
-          {(() => {
-            const upcomingModel = upcomingModels[0]; // Get first upcoming model (Infinity 280)
-            if (!upcomingModel) return null;
-            
-            return (
+          {upcomingDisplay && (
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -114,33 +115,28 @@ const Home = () => {
                 viewport={{ once: true }}
                 className="text-center"
               >
-                {/* Title */}
                 <h2 className="text-4xl md:text-5xl font-light text-midnight-slate mb-8">
-                  Our Upcoming Model
+                  {upcomingDisplay.homeSectionTitle}
                 </h2>
                 
-                {/* Image */}
                 <div className="mb-8 max-w-4xl mx-auto">
                   <div className="relative rounded-2xl overflow-hidden shadow-xl">
                     <img
-                      src={upcomingModel.image || upcomingModel.heroImage}
-                      alt={upcomingModel.name}
+                      src={upcomingDisplay.homeImage}
+                      alt={upcomingDisplay.name}
                       className="w-full h-auto object-cover"
                     />
                   </div>
                 </div>
                 
-                {/* Model Name */}
                 <h3 className="text-3xl md:text-4xl font-light text-midnight-slate mb-4">
-                  {upcomingModel.name}
+                  {upcomingDisplay.name}
                 </h3>
                 
-                {/* Description Text */}
                 <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-                  {upcomingModel.shortDescription || upcomingModel.description}
+                  {upcomingDisplay.shortDescription}
                 </p>
                 
-                {/* Learn More Button */}
                 <Link
                   to="/models/upcoming"
                   className="btn-primary text-lg px-10 py-4 hover:scale-105 transform transition-all duration-300 inline-block"
@@ -148,8 +144,7 @@ const Home = () => {
                   Learn More
                 </Link>
               </motion.div>
-            );
-          })()}
+          )}
         </div>
       </section>
 

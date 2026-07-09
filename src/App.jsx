@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ModelsProvider } from './context/ModelsContext';
+import { UpcomingModelProvider } from './context/UpcomingModelContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
@@ -69,9 +70,11 @@ function App() {
   return (
     <AuthProvider>
       <ModelsProvider>
-        <Router>
-          <AppShell />
-        </Router>
+        <UpcomingModelProvider>
+          <Router>
+            <AppShell />
+          </Router>
+        </UpcomingModelProvider>
       </ModelsProvider>
     </AuthProvider>
   );
