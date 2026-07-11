@@ -12,7 +12,7 @@ import ModelCard from '../components/ModelCard';
 
 const Home = () => {
   const { categories, models, loading } = useModels();
-  const { display: upcomingDisplay } = useUpcomingModel();
+  const { display: upcomingDisplay, configured: upcomingConfigured } = useUpcomingModel();
   const [selectedModels, setSelectedModels] = useState([]);
   const [events, setEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
@@ -104,21 +104,22 @@ const Home = () => {
         videoSrc="https://youtu.be/JlN2vwDqdWg?si=IJNwHHNvZBUT7Uvg"
       />
 
-      {/* 1. Upcoming Model Section */}
-      <section className="section-padding bg-white">
-        <div className="container-custom">
-          {upcomingDisplay && (
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <h2 className="text-4xl md:text-5xl font-light text-midnight-slate mb-8">
-                  {upcomingDisplay.homeSectionTitle}
-                </h2>
-                
+      {/* 1. Upcoming Model Section — content comes only from Admin → Upcoming Model */}
+      {upcomingConfigured && upcomingDisplay?.name && (
+        <section className="section-padding bg-white">
+          <div className="container-custom">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+              className="text-center"
+            >
+              <h2 className="text-4xl md:text-5xl font-light text-midnight-slate mb-8">
+                {upcomingDisplay.homeSectionTitle}
+              </h2>
+
+              {upcomingDisplay.homeImage ? (
                 <div className="mb-8 max-w-4xl mx-auto">
                   <div className="relative rounded-2xl overflow-hidden shadow-xl">
                     <img
@@ -128,25 +129,28 @@ const Home = () => {
                     />
                   </div>
                 </div>
-                
-                <h3 className="text-3xl md:text-4xl font-light text-midnight-slate mb-4">
-                  {upcomingDisplay.name}
-                </h3>
-                
+              ) : null}
+
+              <h3 className="text-3xl md:text-4xl font-light text-midnight-slate mb-4">
+                {upcomingDisplay.name}
+              </h3>
+
+              {upcomingDisplay.shortDescription ? (
                 <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
                   {upcomingDisplay.shortDescription}
                 </p>
-                
-                <Link
-                  to="/models/upcoming"
-                  className="btn-primary text-lg px-10 py-4 hover:scale-105 transform transition-all duration-300 inline-block"
-                >
-                  Learn More
-                </Link>
-              </motion.div>
-          )}
-        </div>
-      </section>
+              ) : null}
+
+              <Link
+                to="/models/upcoming"
+                className="btn-primary text-lg px-10 py-4 hover:scale-105 transform transition-all duration-300 inline-block"
+              >
+                Learn More
+              </Link>
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* 2. Vision Section */}
       <section className="section-padding bg-gray-100">

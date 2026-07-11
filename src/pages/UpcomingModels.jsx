@@ -5,7 +5,7 @@ import { getFullModelName } from '../utils/modelNameUtils';
 import { useUpcomingModel } from '../context/UpcomingModelContext';
 
 const UpcomingModels = () => {
-  const { display, linkedModel, loading } = useUpcomingModel();
+  const { display, loading, configured } = useUpcomingModel();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const galleryImages = display.galleryImages?.length
@@ -30,7 +30,7 @@ const UpcomingModels = () => {
     );
   }
 
-  if (!display?.name) {
+  if (!configured || !display?.name) {
     return (
       <div className="pt-20 min-h-screen flex items-center justify-center">
         <div className="text-center">

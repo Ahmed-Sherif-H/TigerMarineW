@@ -13,11 +13,12 @@ import {
 } from '../utils/backendConfig';
 import { isYouTubeUrl } from '../utils/youtubeUtils';
 import {
+  UPCOMING_MODEL_SLOT_NAME,
   findUpcomingModel,
   isUpcomingModel,
   modelToUpcomingForm,
-  upcomingFormToModelPatch,
-  upcomingFormToCreatePayload,
+  emptyUpcomingForm,
+  buildUpcomingSavePayload,
   formatUpcomingSaveError,
 } from '../utils/upcomingModelData';
 
@@ -96,45 +97,47 @@ const AdminDashboard = () => {
     if (activeTab === 'upcoming') {
       loadUpcomingForm();
     }
+    // Only when entering the tab or models list identity changes after a save/refresh
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, models]);
+
+  const resolveUpcomingSlotFromApi = async () => {
+    // Prefer context list, then full API list (handles race after create)
+    const fromContext = findUpcomingModel(models);
+    if (fromContext?.id) return fromContext;
+
+    try {
+      const all = await api.getAllModels();
+      const list = Array.isArray(all) ? all : all?.data || [];
+      return list.find((m) => String(m.name || '').trim() === UPCOMING_MODEL_SLOT_NAME) || null;
+    } catch (err) {
+      console.warn('[AdminDashboard] Could not search models for upcoming slot:', err);
+      return null;
+    }
+  };
 
   const loadUpcomingForm = async () => {
     setIsLoadingUpcoming(true);
-    setMessage({ type: '', text: '' });
     try {
-      const found = findUpcomingModel(models);
+      const found = await resolveUpcomingSlotFromApi();
       if (found?.id) {
         const modelData = await api.getModelById(found.id);
         const actualData = modelData?.data || modelData;
         const normalized = normalizeModelDataForEdit(actualData);
         setUpcomingForm(modelToUpcomingForm(normalized));
       } else {
-        setUpcomingForm(modelToUpcomingForm(null));
+        setUpcomingForm(emptyUpcomingForm());
         setMessage({
           type: 'info',
-          text: 'No upcoming model is set yet. Fill in the form below and save — a dedicated upcoming record will be created (Infinity 280 and other catalog models are not affected).',
+          text: 'No upcoming model saved yet. Fill the form and click Create — Home and Upcoming pages will use only this content (not Infinity 280).',
         });
       }
     } catch (error) {
       console.error('[AdminDashboard] Error loading upcoming form:', error);
-      setUpcomingForm(modelToUpcomingForm(null));
+      setUpcomingForm(emptyUpcomingForm());
       setMessage({ type: 'error', text: 'Failed to load upcoming model: ' + error.message });
     } finally {
       setIsLoadingUpcoming(false);
-    }
-  };
-
-  const clearOtherUpcomingFlags = async (keepModelId) => {
-    const others = models.filter((m) => m.id !== keepModelId && isUpcomingModel(m));
-    for (const other of others) {
-      try {
-        const modelData = await api.getModelById(other.id);
-        const existing = normalizeModelDataForEdit(modelData?.data || modelData);
-        const dataToSave = normalizeModelDataForSave({ ...existing, isUpcoming: false });
-        await api.updateModel(other.id, dataToSave);
-      } catch (err) {
-        console.warn('[AdminDashboard] Could not clear isUpcoming on model', other.id, err);
-      }
     }
   };
 
@@ -144,7 +147,7 @@ const AdminDashboard = () => {
 
   const handleSaveUpcoming = async () => {
     if (!upcomingForm?.name?.trim()) {
-      setMessage({ type: 'error', text: 'Please enter a model name for the upcoming model.' });
+      setMessage({ type: 'error', text: 'Please enter a display name for the upcoming model.' });
       return;
     }
 
@@ -152,37 +155,62 @@ const AdminDashboard = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      let savedModelId = upcomingForm.modelId;
+      let savedModelId = upcomingForm.modelId || null;
+      let existing = null;
 
       if (!savedModelId) {
-        const existingSlot = findUpcomingModel(models);
-        if (existingSlot?.id) {
-          savedModelId = existingSlot.id;
-        }
+        const slot = await resolveUpcomingSlotFromApi();
+        if (slot?.id) savedModelId = slot.id;
       }
 
       if (savedModelId) {
         const modelData = await api.getModelById(savedModelId);
-        const existing = normalizeModelDataForEdit(modelData?.data || modelData);
-        const merged = upcomingFormToModelPatch(existing, upcomingForm);
-        const dataToSave = normalizeModelDataForSave(merged);
+        existing = normalizeModelDataForEdit(modelData?.data || modelData);
+      }
+
+      const payload = buildUpcomingSavePayload(upcomingForm, {
+        existingModel: existing,
+        categories,
+      });
+      const dataToSave = normalizeModelDataForSave(payload);
+
+      if (savedModelId) {
         await api.updateModel(savedModelId, dataToSave);
       } else {
-        const payload = upcomingFormToCreatePayload(upcomingForm, categories);
-        const dataToSave = normalizeModelDataForSave(payload);
-        const created = await api.createModel(dataToSave);
-        savedModelId = created?.id ?? created?.data?.id ?? null;
+        try {
+          const created = await api.createModel(dataToSave);
+          savedModelId = created?.id ?? created?.data?.id ?? null;
+        } catch (createErr) {
+          // Slot may already exist (unique constraint) — fall back to update
+          const slot = await resolveUpcomingSlotFromApi();
+          if (slot?.id) {
+            const modelData = await api.getModelById(slot.id);
+            existing = normalizeModelDataForEdit(modelData?.data || modelData);
+            const retryPayload = buildUpcomingSavePayload(upcomingForm, {
+              existingModel: existing,
+              categories,
+            });
+            await api.updateModel(slot.id, normalizeModelDataForSave(retryPayload));
+            savedModelId = slot.id;
+          } else {
+            throw createErr;
+          }
+        }
         if (!savedModelId) {
           throw new Error('Server did not return the new model ID.');
         }
       }
 
-      await clearOtherUpcomingFlags(savedModelId);
       await refreshData();
+      // Keep form on what we just saved (don't flash empty / old defaults)
+      setUpcomingForm({
+        ...upcomingForm,
+        modelId: savedModelId,
+      });
       await loadUpcomingForm();
       setMessage({
         type: 'success',
-        text: 'Upcoming model saved! Home page and Upcoming Models page will update for all visitors.',
+        text: 'Upcoming model saved. Home and Upcoming Models pages now show this content.',
       });
       setTimeout(() => setMessage({ type: '', text: '' }), 4000);
     } catch (error) {
@@ -194,22 +222,19 @@ const AdminDashboard = () => {
   };
 
   const handleResetUpcomingForm = () => {
-    const blank = modelToUpcomingForm(null);
+    const blank = emptyUpcomingForm();
     const existingSlot = findUpcomingModel(models);
-    if (existingSlot?.id) {
-      blank.modelId = existingSlot.id;
-    }
+    if (existingSlot?.id) blank.modelId = existingSlot.id;
     setUpcomingForm(blank);
     setMessage({
       type: 'info',
       text: existingSlot
-        ? 'Form cleared. Save will update the existing upcoming slot with new content.'
+        ? 'Form cleared. Save will overwrite the existing upcoming slot.'
         : 'Form cleared. Save to create the upcoming model slot.',
     });
   };
 
-  const upcomingUploadFolder = () =>
-    (upcomingForm?.name || 'upcoming').trim() || 'upcoming';
+  const upcomingUploadFolder = () => 'upcoming';
 
   const catalogModelsForLink = models.filter((m) => !isUpcomingModel(m));
 
@@ -997,7 +1022,7 @@ const AdminDashboard = () => {
                   className="w-full max-w-md px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 font-medium transition-all"
                 >
                   <option value="">-- Choose a model --</option>
-                  {models.map((model) => (
+                  {models.filter((m) => !isUpcomingModel(m)).map((model) => (
                     <option key={model.id} value={String(model.id)}>
                       {model.name}
                     </option>
@@ -2546,7 +2571,13 @@ const AdminDashboard = () => {
 
         {activeTab === 'upcoming' && (
           <div className="space-y-6">
-       
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-900">
+              <p className="font-semibold mb-1">Home teaser + Upcoming Models page</p>
+              <p>
+                Content saved here is the only source for the public Upcoming section. Catalog models
+                like Infinity 280 are not used as a fallback.
+              </p>
+            </div>
 
             {isLoadingUpcoming ? (
               <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-200">
