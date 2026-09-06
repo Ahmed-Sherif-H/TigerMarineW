@@ -8,6 +8,7 @@ import { getModelDisplayName, sortModelsByNumberDesc } from '../utils/modelNameU
 import { isUpcomingModel } from '../utils/upcomingModelData';
 import api from '../services/api';
 import { resolveEventImageUrl, handleEventImageError } from '../utils/eventImageUtils';
+import { getActiveEvents } from '../utils/eventStatus';
 import ModelCard from '../components/ModelCard';
 
 const Home = () => {
@@ -44,11 +45,8 @@ const Home = () => {
       try {
         setLoadingEvents(true);
         const eventsData = await api.getAllEvents();
-        // Filter to show only upcoming and ongoing events, sorted by start date
-        const upcomingEvents = eventsData
-          .filter(event => event.status === 'upcoming' || event.status === 'ongoing')
-          .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
-          .slice(0, 6);
+        // Active = upcoming + ongoing based on dates (not manual admin status)
+        const upcomingEvents = getActiveEvents(eventsData).slice(0, 6);
         setEvents(upcomingEvents);
       } catch (error) {
         console.error('Error loading events:', error);
@@ -547,11 +545,11 @@ const Home = () => {
                           )}
                           <div className="absolute top-4 left-4">
                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              event.status === 'ongoing' 
-                                ? 'bg-green-500 text-white'
-                                : 'bg-smoked-saffron text-white'
-                            }`}>
-                              {event.status === 'ongoing' ? 'Ongoing' : 'Upcoming'}
+                            event.computedStatus === 'ongoing'
+                              ? 'bg-green-500 text-white'
+                              : 'bg-smoked-saffron text-white'
+                          }`}>
+                              {event.computedStatus === 'ongoing' ? 'Ongoing' : 'Upcoming'}
                             </span>
                           </div>
                         </div>

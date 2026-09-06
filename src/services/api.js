@@ -207,12 +207,14 @@ class ApiService {
   // ========== EVENTS ==========
   async getAllEvents() {
     console.log('[API] Fetching all events');
-    return this.fetch('/events');
+    const response = await this.fetch('/events');
+    return response?.data || response || [];
   }
 
   async getEventById(id) {
     console.log('[API] Fetching event by ID:', id);
-    return this.fetch(`/events/${id}`);
+    const response = await this.fetch(`/events/${id}`);
+    return response?.data || response;
   }
 
   async createEvent(eventData) {

@@ -3,6 +3,11 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { resolveEventImageUrl, handleEventImageError } from '../utils/eventImageUtils';
+import {
+  normalizeEventsList,
+  withComputedEventStatus,
+  filterEventsByStatus,
+} from '../utils/eventStatus';
 
 const BoatShows = () => {
   const [events, setEvents] = useState([]);
@@ -14,7 +19,8 @@ const BoatShows = () => {
       try {
         setLoading(true);
         const eventsData = await api.getAllEvents();
-        setEvents(eventsData);
+        const list = normalizeEventsList(eventsData).map((e) => withComputedEventStatus(e));
+        setEvents(list);
       } catch (error) {
         console.error('Error loading events:', error);
         setEvents([]);
@@ -25,15 +31,9 @@ const BoatShows = () => {
     loadEvents();
   }, []);
 
-  const filteredEvents = events
-    .filter(event => {
-      if (filter === 'all') return true;
-      return event.status === filter;
-    })
-    .sort((a, b) => {
-      // Sort by start date (earliest first)
-      return new Date(a.startDate) - new Date(b.startDate);
-    });
+  const filteredEvents = filterEventsByStatus(events, filter).sort((a, b) => {
+    return new Date(a.startDate) - new Date(b.startDate);
+  });
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -140,13 +140,13 @@ const BoatShows = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                     <div className="absolute top-4 left-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        event.status === 'ongoing' 
+                        event.computedStatus === 'ongoing' 
                           ? 'bg-green-500 text-white'
-                          : event.status === 'past'
+                          : event.computedStatus === 'past'
                           ? 'bg-gray-500 text-white'
                           : 'bg-smoked-saffron text-white'
                       }`}>
-                        {event.status === 'ongoing' ? 'Ongoing Now' : event.status === 'past' ? 'Past Event' : 'Upcoming'}
+                        {event.computedStatus === 'ongoing' ? 'Ongoing Now' : event.computedStatus === 'past' ? 'Past Event' : 'Upcoming'}
                       </span>
                     </div>
                   </div>
