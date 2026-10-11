@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useModels } from '../context/ModelsContext';
 import { getModelDisplayName } from '../utils/modelNameUtils';
-import { isUpcomingModel } from '../utils/upcomingModelData';
+import { isPublicCatalogModel } from '../utils/modelVisibility';
 import { getSideMenuImage } from '../data/imageHelpers';
 
 const Navbar = () => {
@@ -37,7 +37,7 @@ const Navbar = () => {
       .filter(cat => cat.mainGroup === 'boats')
       .map(cat => cat.id);
     return models.filter(
-      (model) => boatsCategoryIds.includes(model.categoryId) && !isUpcomingModel(model)
+      (model) => boatsCategoryIds.includes(model.categoryId) && isPublicCatalogModel(model)
     );
   }, [categories, models]);
 

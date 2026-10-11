@@ -7,10 +7,13 @@ import { getCustomizerFolder, getBaseImage, getPartImage, customizerParts } from
 import { getAvailableColors } from '../data/customizerColors';
 import { getColorHex } from '../data/customizerColorMap';
 import { getModelDisplayName } from '../utils/modelNameUtils';
+import { useModels } from '../context/ModelsContext';
+import { isHiddenModel } from '../utils/modelVisibility';
 
 const ModelCustomizer = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { models: contextModels, loading: modelsLoading } = useModels();
   
   // Find the model and its category - try API first, then fallback to static data
   const { model, category } = useMemo(() => {
@@ -33,6 +36,14 @@ const ModelCustomizer = () => {
       });
     }
   }, [id, model]);
+
+  useEffect(() => {
+    if (modelsLoading) return;
+    const fromApi = contextModels.find((m) => String(m.id) === String(id));
+    if (fromApi && isHiddenModel(fromApi)) {
+      navigate('/categories');
+    }
+  }, [modelsLoading, contextModels, id, navigate]);
   
   // Use API model if available, otherwise use static model
   const finalModel = apiModel || model;

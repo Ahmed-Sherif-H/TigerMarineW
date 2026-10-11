@@ -8,6 +8,8 @@ import { getCustomizerFolder } from '../data/customizerConfig';
 import { getModelDisplayName } from '../utils/modelNameUtils';
 import { isYouTubeUrl, getYouTubeEmbedUrl, extractYouTubeId } from '../utils/youtubeUtils';
 import { getFullImagePath, getModelImagePath } from '../utils/imagePathUtils';
+import { isHiddenModel, HIDDEN_SPEC_KEY } from '../utils/modelVisibility';
+import { isUpcomingModel } from '../utils/upcomingModelData';
 
 const ModelDetail = () => {
   const { id } = useParams();
@@ -314,7 +316,7 @@ const ModelDetail = () => {
     );
   }
 
-  if (!model) {
+  if (!model || isHiddenModel(model) || isUpcomingModel(model)) {
     return (
       <div className="pt-20 min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -1209,6 +1211,7 @@ const ModelDetail = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {model.specs && Object.entries(model.specs)
               .filter(([key, value]) => {
+                if (key === HIDDEN_SPEC_KEY) return false;
                 // Filter out empty values, N/A, and whitespace-only values
                 if (!value) return false;
                 const strValue = String(value).trim();

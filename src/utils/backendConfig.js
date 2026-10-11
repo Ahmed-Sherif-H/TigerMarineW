@@ -3,6 +3,8 @@
  * All backend-related constants, mappings, and helper functions in one place
  */
 
+import { isHiddenModel, setHiddenOnSpecs } from './modelVisibility';
+
 // Model name to folder name mapping
 export const MODEL_FOLDER_MAP = {
   'TL950': 'TopLine950',
@@ -209,9 +211,14 @@ export function normalizeModelDataForSave(modelData) {
       .map(f => typeof f === 'string' ? f.trim() : String(f).trim())
       .filter(Boolean);
   }
+
+  const hidden = isHiddenModel(modelData);
+  const specs = setHiddenOnSpecs(modelData.specs, hidden);
+  const { isHidden: _ignoredHidden, ...restModelData } = modelData;
   
   return {
-    ...modelData,
+    ...restModelData,
+    specs,
     // Preserve Cloudinary URLs, extract filenames for legacy paths
     imageFile: modelData.imageFile || '',
     heroImageFile: modelData.heroImageFile || '',

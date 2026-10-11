@@ -6,7 +6,7 @@
 import { getModelImagePath, getFullImagePath, encodeFilename } from './imagePathUtils';
 import { isYouTubeUrl } from './youtubeUtils';
 import { extractFilename, resolveBackendPublicPath, resolveMediaPublicPath } from './backendConfig';
-import { isUpcomingModel } from './upcomingModelData';
+import { isHiddenModel, isPublicCatalogModel, stripHiddenSpec } from './modelVisibility';
 
 /**
  * Transform a single model from API format to frontend format
@@ -320,6 +320,10 @@ export function transformModel(model) {
     }),
   };
 
+  const hidden = isHiddenModel({ ...model, specs: transformed.specs });
+  transformed.specs = stripHiddenSpec(transformed.specs) || {};
+  transformed.isHidden = hidden;
+
   return transformed;
 }
 
@@ -335,7 +339,7 @@ export function transformModels(models) {
  */
 export function transformCategory(category, models) {
   const categoryModels = models
-    .filter(m => m.categoryId === category.id && !isUpcomingModel(m))
+    .filter(m => m.categoryId === category.id && isPublicCatalogModel(m))
     .map(transformModel)
     .sort((a, b) => {
       // Sort by number in descending order (950 → 650)

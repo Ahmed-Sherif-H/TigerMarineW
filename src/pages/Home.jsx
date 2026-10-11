@@ -5,7 +5,7 @@ import HeroSection from '../components/HeroSection';
 import { useModels } from '../context/ModelsContext';
 import { useUpcomingModel } from '../context/UpcomingModelContext';
 import { getModelDisplayName, sortModelsByNumberDesc } from '../utils/modelNameUtils';
-import { isUpcomingModel } from '../utils/upcomingModelData';
+import { isPublicCatalogModel } from '../utils/modelVisibility';
 import api from '../services/api';
 import { resolveEventImageUrl, handleEventImageError } from '../utils/eventImageUtils';
 import { getActiveEvents } from '../utils/eventStatus';
@@ -25,7 +25,7 @@ const Home = () => {
       .filter(cat => cat.mainGroup === 'boats')
       .map(cat => cat.id);
     const filteredModels = models.filter(
-      (model) => boatsCategoryIds.includes(model.categoryId) && !isUpcomingModel(model)
+      (model) => boatsCategoryIds.includes(model.categoryId) && isPublicCatalogModel(model)
     );
     return sortModelsByNumberDesc(filteredModels);
   }, [categories, models]);
@@ -33,7 +33,7 @@ const Home = () => {
   // Get 7 random models when data loads
   useEffect(() => {
     if (models.length > 0) {
-      const catalogModels = models.filter((m) => !isUpcomingModel(m));
+      const catalogModels = models.filter((m) => isPublicCatalogModel(m));
       const shuffled = [...catalogModels].sort(() => 0.5 - Math.random());
       setSelectedModels(shuffled.slice(0, Math.min(7, shuffled.length)));
     }

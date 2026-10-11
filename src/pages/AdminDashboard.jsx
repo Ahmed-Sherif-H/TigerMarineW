@@ -21,6 +21,12 @@ import {
   buildUpcomingSavePayload,
   formatUpcomingSaveError,
 } from '../utils/upcomingModelData';
+import {
+  HIDDEN_SPEC_KEY,
+  isHiddenModel,
+  setHiddenOnModelData,
+  visibleSpecEntries,
+} from '../utils/modelVisibility';
 
 const AdminDashboard = () => {
   const { models, categories, loading, refreshData } = useModels();
@@ -1024,7 +1030,7 @@ const AdminDashboard = () => {
                   <option value="">-- Choose a model --</option>
                   {models.filter((m) => !isUpcomingModel(m)).map((model) => (
                     <option key={model.id} value={String(model.id)}>
-                      {model.name}
+                      {model.name}{isHiddenModel(model) ? ' — Hidden' : ''}
                     </option>
                   ))}
                 </select>
@@ -1055,6 +1061,39 @@ const AdminDashboard = () => {
                       {JSON.stringify(editedData, null, 2)}
                     </pre>
                   </details>
+                </div>
+
+                <div className={`rounded-xl shadow-sm p-6 border ${
+                  isHiddenModel(editedData)
+                    ? 'bg-amber-50 border-amber-300'
+                    : 'bg-white border-gray-200'
+                }`}>
+                  <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-200">
+                    <span className="text-2xl">👁️</span>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900">Website visibility</h2>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Hidden models stay in this dashboard so you can show them again.
+                      </p>
+                    </div>
+                  </div>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isHiddenModel(editedData)}
+                      onChange={(e) => setEditedData((prev) => setHiddenOnModelData(prev, e.target.checked))}
+                      className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>
+                      <span className="block text-sm font-semibold text-gray-800">
+                        Hide this model from the public website
+                      </span>
+                      <span className="block text-xs text-gray-600 mt-1">
+                        It will not appear in menus, category pages, or listings. Direct links will show as not found.
+                        Click Save Changes below to apply.
+                      </span>
+                    </span>
+                  </label>
                 </div>
 
                 {/* Basic Info Card */}
@@ -1274,16 +1313,16 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Specs Card */}
-                {editedData.specs && Object.keys(editedData.specs).length > 0 ? (
+                {visibleSpecEntries(editedData.specs).length > 0 ? (
                   <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
                       <span className="text-2xl">⚙️</span>
                       <h2 className="text-xl font-bold text-gray-900">
-                        Specifications ({Object.keys(editedData.specs).length})
+                        Specifications ({visibleSpecEntries(editedData.specs).length})
                       </h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {Object.entries(editedData.specs).map(([key, value], index) => (
+                      {visibleSpecEntries(editedData.specs).map(([key, value], index) => (
                         <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                           <div className="flex items-center justify-between mb-2">
                             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -1317,7 +1356,7 @@ const AdminDashboard = () => {
                     <button
                       onClick={() => {
                         const newKey = prompt('Enter spec key:');
-                        if (newKey) {
+                        if (newKey && newKey !== HIDDEN_SPEC_KEY) {
                           setEditedData({
                             ...editedData,
                             specs: { ...editedData.specs, [newKey]: '' }
@@ -1339,10 +1378,10 @@ const AdminDashboard = () => {
                     <button
                       onClick={() => {
                         const newKey = prompt('Enter spec key:');
-                        if (newKey) {
+                        if (newKey && newKey !== HIDDEN_SPEC_KEY) {
                           setEditedData({
                             ...editedData,
-                            specs: { [newKey]: '' }
+                            specs: { ...(editedData.specs || {}), [newKey]: '' }
                           });
                         }
                       }}
