@@ -1089,7 +1089,7 @@ const AdminDashboard = () => {
                         Hide this model from the public website
                       </span>
                       <span className="block text-xs text-gray-600 mt-1">
-                        It will not appear in menus, category pages, or listings. Direct links will show as not found.
+                        It will not appear in menus, category pages, or listings.
                         Click Save Changes below to apply.
                       </span>
                     </span>
