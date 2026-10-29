@@ -97,6 +97,20 @@ export function resolveMediaPublicPath(pathOrUrl) {
   return trimmed;
 }
 
+/** Brochures live on the API/volume, never on the static site. */
+export function resolveBrochureUrl(value, modelName) {
+  if (value == null || typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+  if (trimmed.startsWith('//')) return `https:${trimmed}`;
+  if (trimmed.startsWith('/')) return resolveBackendPublicPath(trimmed);
+  const folder = MODEL_FOLDER_MAP[modelName] || modelName || '';
+  return resolveBackendPublicPath(
+    `/images/${encodeURIComponent(folder)}/Brochure/${encodeURIComponent(trimmed)}`
+  );
+}
+
 /**
  * Extract URL from upload response
  * Handles Cloudinary ({ url, secure_url }), nested { data }, and root-relative path on the API.
@@ -224,6 +238,7 @@ export function normalizeModelDataForSave(modelData) {
     heroImageFile: modelData.heroImageFile || '',
     contentImageFile: modelData.contentImageFile || '',
     interiorMainImage: modelData.interiorMainImage || '',
+    brochureFile: modelData.brochureFile || '',
     // Preserve Cloudinary URLs in arrays, extract filenames for legacy paths
     galleryFiles: (modelData.galleryFiles || []).map(file => {
       // If it's a Cloudinary URL, preserve it
@@ -287,6 +302,7 @@ export function normalizeModelDataForEdit(modelData) {
     heroImageFile: modelData.heroImageFile || '',
     contentImageFile: modelData.contentImageFile || '',
     interiorMainImage: modelData.interiorMainImage || '',
+    brochureFile: modelData.brochureFile || '',
     // Preserve Cloudinary URLs in arrays, extract filenames for legacy paths
     galleryFiles: (modelData.galleryFiles || []).map(file => {
       // If it's a Cloudinary URL, preserve it

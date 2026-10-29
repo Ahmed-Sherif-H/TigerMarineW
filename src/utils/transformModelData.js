@@ -5,7 +5,7 @@
 
 import { getModelImagePath, getFullImagePath, encodeFilename } from './imagePathUtils';
 import { isYouTubeUrl } from './youtubeUtils';
-import { extractFilename, resolveBackendPublicPath, resolveMediaPublicPath } from './backendConfig';
+import { extractFilename, resolveBackendPublicPath, resolveMediaPublicPath, resolveBrochureUrl } from './backendConfig';
 import { isHiddenModel, isPublicCatalogModel, stripHiddenSpec } from './modelVisibility';
 
 /**
@@ -112,6 +112,8 @@ export function transformModel(model) {
     imageFile: model.imageFile || '',
     heroImageFile: model.heroImageFile || '',
     contentImageFile: model.contentImageFile || '',
+    brochureFile: model.brochureFile || '',
+    brochureUrl: resolveBrochureUrl(model.brochureFile, model.name),
     // Transform interiorMainImage to full path (in Interior subfolder)
     interiorMainImage: (model.interiorMainImage && model.interiorMainImage.trim() !== '') ? (() => {
       const interiorMainImage = model.interiorMainImage;

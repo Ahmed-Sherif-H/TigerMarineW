@@ -9,7 +9,8 @@ import {
   normalizeCategoryDataForSave,
   normalizeCategoryDataForEdit,
   extractFilename,
-  extractUploadUrl
+  extractUploadUrl,
+  resolveBrochureUrl
 } from '../utils/backendConfig';
 import { isYouTubeUrl } from '../utils/youtubeUtils';
 import {
@@ -593,7 +594,8 @@ const AdminDashboard = () => {
     // For image file fields, preserve Cloudinary URLs, extract filenames only for legacy paths
     // extractFilename() already handles this - it preserves Cloudinary URLs and full URLs
     if (field === 'imageFile' || field === 'heroImageFile' || field === 'contentImageFile' ||
-        field === 'image' || field === 'heroImage' || field === 'interiorMainImage') {
+        field === 'image' || field === 'heroImage' || field === 'interiorMainImage' ||
+        field === 'brochureFile') {
       // extractFilename preserves Cloudinary URLs, so this is safe
       value = extractFilename(value);
     }
@@ -1309,6 +1311,75 @@ const AdminDashboard = () => {
                         </label>
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                  <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-200">
+                    <span className="text-2xl">📄</span>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900">PDF Brochure</h2>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Visitors can download this from the model page.
+                      </p>
+                    </div>
+                  </div>
+                  {editedData.brochureFile ? (
+                    <p className="text-sm text-gray-700 mb-3">
+                      Current file:{' '}
+                      <a
+                        href={resolveBrochureUrl(editedData.brochureFile, editedData.name)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline break-all"
+                      >
+                        {decodeURIComponent(String(editedData.brochureFile).split('/').pop() || editedData.brochureFile)}
+                      </a>
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-500 mb-3">No brochure uploaded yet.</p>
+                  )}
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <label className="block flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer text-center font-medium transition-all shadow-sm hover:shadow-md">
+                      <input
+                        type="file"
+                        accept="application/pdf,.pdf"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+                          if (!editedData.name) {
+                            setMessage({ type: 'error', text: 'Please select a model first' });
+                            e.target.value = '';
+                            return;
+                          }
+                          if (!file.name.toLowerCase().endsWith('.pdf')) {
+                            setMessage({ type: 'error', text: 'Please upload a PDF file' });
+                            e.target.value = '';
+                            return;
+                          }
+                          try {
+                            const result = await api.uploadFile(file, 'images', editedData.name, null, 'Brochure');
+                            const url = extractUploadUrl(result);
+                            handleInputChange('brochureFile', url);
+                            setMessage({ type: 'success', text: 'Brochure uploaded. Click Save Changes to publish it.' });
+                          } catch (error) {
+                            setMessage({ type: 'error', text: 'Failed to upload brochure: ' + error.message });
+                          }
+                          e.target.value = '';
+                        }}
+                      />
+                      {editedData.brochureFile ? '📤 Replace PDF' : '📤 Upload PDF'}
+                    </label>
+                    {editedData.brochureFile ? (
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange('brochureFile', '')}
+                        className="px-4 py-2.5 border-2 border-red-200 text-red-600 rounded-lg hover:bg-red-50 font-medium"
+                      >
+                        Remove
+                      </button>
+                    ) : null}
                   </div>
                 </div>
 
