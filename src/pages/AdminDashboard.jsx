@@ -44,6 +44,7 @@ const AdminDashboard = () => {
   const [isLoadingDealers, setIsLoadingDealers] = useState(false);
   const [editedData, setEditedData] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [brochureMessage, setBrochureMessage] = useState({ type: '', text: '' });
   const [isSaving, setIsSaving] = useState(false);
   const [isLoadingModel, setIsLoadingModel] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -248,6 +249,7 @@ const AdminDashboard = () => {
   const loadModelData = async (id) => {
     setIsLoadingModel(true);
     setMessage({ type: '', text: '' });
+    setBrochureMessage({ type: '', text: '' });
     try {
       console.log('[AdminDashboard] Attempting to load model with ID:', id);
       const modelData = await api.getModelById(id);
@@ -1339,6 +1341,20 @@ const AdminDashboard = () => {
                   ) : (
                     <p className="text-sm text-gray-500 mb-3">No brochure uploaded yet.</p>
                   )}
+                  {brochureMessage.text && (
+                    <div
+                      className={`mb-3 p-3 rounded-lg text-sm font-medium ${
+                        brochureMessage.type === 'success'
+                          ? 'bg-green-50 text-green-800 border border-green-200'
+                          : brochureMessage.type === 'info'
+                            ? 'bg-blue-50 text-blue-800 border border-blue-200'
+                            : 'bg-red-50 text-red-800 border border-red-200'
+                      }`}
+                    >
+                      {brochureMessage.type === 'success' ? '✅ ' : brochureMessage.type === 'info' ? '⏳ ' : '❌ '}
+                      {brochureMessage.text}
+                    </div>
+                  )}
                   <div className="flex flex-col sm:flex-row gap-3">
                     <label className="block flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer text-center font-medium transition-all shadow-sm hover:shadow-md">
                       <input
@@ -1349,22 +1365,23 @@ const AdminDashboard = () => {
                           const file = e.target.files[0];
                           if (!file) return;
                           if (!editedData.name) {
-                            setMessage({ type: 'error', text: 'Please select a model first' });
+                            setBrochureMessage({ type: 'error', text: 'Please select a model first' });
                             e.target.value = '';
                             return;
                           }
                           if (!file.name.toLowerCase().endsWith('.pdf')) {
-                            setMessage({ type: 'error', text: 'Please upload a PDF file' });
+                            setBrochureMessage({ type: 'error', text: 'Please upload a PDF file' });
                             e.target.value = '';
                             return;
                           }
                           try {
+                            setBrochureMessage({ type: 'info', text: 'Uploading…' });
                             const result = await api.uploadFile(file, 'images', editedData.name, null, 'Brochure');
                             const url = extractUploadUrl(result);
                             handleInputChange('brochureFile', url);
-                            setMessage({ type: 'success', text: 'Brochure uploaded. Click Save Changes to publish it.' });
+                            setBrochureMessage({ type: 'success', text: 'Brochure uploaded. Click Save Changes to publish it.' });
                           } catch (error) {
-                            setMessage({ type: 'error', text: 'Failed to upload brochure: ' + error.message });
+                            setBrochureMessage({ type: 'error', text: 'Failed to upload brochure: ' + error.message });
                           }
                           e.target.value = '';
                         }}
@@ -1374,7 +1391,10 @@ const AdminDashboard = () => {
                     {editedData.brochureFile ? (
                       <button
                         type="button"
-                        onClick={() => handleInputChange('brochureFile', '')}
+                        onClick={() => {
+                          handleInputChange('brochureFile', '');
+                          setBrochureMessage({ type: 'success', text: 'Brochure removed. Click Save Changes to apply.' });
+                        }}
                         className="px-4 py-2.5 border-2 border-red-200 text-red-600 rounded-lg hover:bg-red-50 font-medium"
                       >
                         Remove
