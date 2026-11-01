@@ -9,8 +9,14 @@ import { getColorHex } from '../data/customizerColorMap';
 import { getModelDisplayName } from '../utils/modelNameUtils';
 import { useModels } from '../context/ModelsContext';
 import { isHiddenModel } from '../utils/modelVisibility';
+import CustomizerOrbitHud from '../components/CustomizerOrbitHud';
+import CustomizerCategoryRail from '../components/CustomizerCategoryRail';
+import CustomizerCategoryPanel from '../components/CustomizerCategoryPanel';
+import CustomizerSummary from '../components/CustomizerSummary';
+import CustomizerStudioBackground, { CustomizerStudioGroundShadow } from '../components/CustomizerStudioBackground';
 
-const ModelCustomizer = () => {
+const ModelCustomizer = ({ variant = 'studio' } = {}) => {
+  const isOrbit = variant === 'orbit';
   const { id } = useParams();
   const navigate = useNavigate();
   const { models: contextModels, loading: modelsLoading } = useModels();
@@ -94,6 +100,12 @@ const ModelCustomizer = () => {
   const [tilt, setTilt] = useState({ x: -0.15, y: -0.25 }); // initial gentle angle
   const targetTiltRef = useRef({ x: -0.15, y: -0.25 });
   const [poppedPart, setPoppedPart] = useState(null);
+  const [orbitPart, setOrbitPart] = useState(null);
+  const [orbitCategory, setOrbitCategory] = useState('exterior');
+  const [orbitExtras, setOrbitExtras] = useState([]);
+  const [orbitSummaryOpen, setOrbitSummaryOpen] = useState(false);
+  const [orbitSaved, setOrbitSaved] = useState(false);
+  const [orbitNotice, setOrbitNotice] = useState('');
   const scrollParallaxRef = useRef(0);
 
   // 2.5D depth map per layer (higher means closer to viewer)
@@ -135,15 +147,23 @@ const ModelCustomizer = () => {
     const colors = {};
     const initialSelections = {};
 
-    // Default colors for each part
-    const defaultColors = {
-      deckFloor: 'Beige',
-      sideFender: 'Gray',
-      tubeDecoration: 'Black',
-      fiberglass: 'White',
-      tube: 'White',
-      upholestry: 'Beige'
-    };
+    const defaultColors = isOrbit
+      ? {
+          deckFloor: 'Black',
+          sideFender: 'Gray',
+          tubeDecoration: 'Black',
+          fiberglass: 'White',
+          tube: 'Light Gray',
+          upholestry: 'Dark Red',
+        }
+      : {
+          deckFloor: 'Beige',
+          sideFender: 'Gray',
+          tubeDecoration: 'Black',
+          fiberglass: 'White',
+          tube: 'White',
+          upholestry: 'Beige',
+        };
 
     customizerParts.forEach(part => {
       if (part.key === 'base') {
@@ -165,7 +185,22 @@ const ModelCustomizer = () => {
     });
 
     setAvailableColors(colors);
-    setSelectedColors(initialSelections);
+    if (isOrbit) {
+      try {
+        const raw = window.localStorage.getItem('tiger-marine-orbit-draft');
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (parsed?.selections) {
+          setSelectedColors({ ...initialSelections, ...parsed.selections });
+        } else {
+          setSelectedColors(initialSelections);
+        }
+        if (Array.isArray(parsed?.extras)) setOrbitExtras(parsed.extras);
+      } catch {
+        setSelectedColors(initialSelections);
+      }
+    } else {
+      setSelectedColors(initialSelections);
+    }
     
     // Open all sections by default
     const allPartKeys = customizerParts
@@ -174,7 +209,7 @@ const ModelCustomizer = () => {
     setOpenSections(new Set(allPartKeys));
     
     setLoading(false);
-  }, [finalModel, navigate]);
+  }, [finalModel, navigate, isOrbit]);
 
   // Update part images when colors change
   useEffect(() => {
@@ -212,9 +247,47 @@ const ModelCustomizer = () => {
       ...prev,
       [partKey]: color
     }));
+    setOrbitSaved(false);
     // Micro pop effect on changed part
     setPoppedPart(partKey);
     setTimeout(() => setPoppedPart(null), 220);
+  };
+
+  const flashOrbitNotice = (text) => {
+    setOrbitNotice(text);
+    window.setTimeout(() => setOrbitNotice(''), 2000);
+  };
+
+  const handleOrbitExtra = (id, single) => {
+    setOrbitExtras((current) => {
+      if (single) {
+        const group = ['suzuki-single', 'suzuki-twin', 'mercury-twin'];
+        return [...current.filter((item) => !group.includes(item)), id];
+      }
+      return current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
+    });
+    setOrbitSaved(false);
+  };
+
+  const handleOrbitSave = () => {
+    window.localStorage.setItem(
+      'tiger-marine-orbit-draft',
+      JSON.stringify({ selections: selectedColors, extras: orbitExtras, modelId: finalModel?.id })
+    );
+    setOrbitSaved(true);
+    flashOrbitNotice('Draft saved to this device');
+  };
+
+  const handleOrbitQuote = () => {
+    const materials = Object.entries(selectedColors)
+      .map(([key, color]) => `${key}: ${color}`)
+      .join('\n');
+    const equipment = orbitExtras.length ? orbitExtras.join('\n') : 'No optional equipment selected';
+    const subject = encodeURIComponent(`${fullModelName} configuration quote`);
+    const body = encodeURIComponent(
+      `Hello Tiger Marine,\n\nI would like a quote for this ${fullModelName} configuration:\n\n${materials}\n\nEquipment:\n${equipment}\n`
+    );
+    window.location.href = `mailto:info@tigermarine.com?subject=${subject}&body=${body}`;
   };
 
   const toggleSection = (partKey) => {
@@ -239,15 +312,23 @@ const ModelCustomizer = () => {
   };
 
   const handleReset = () => {
-    // Default colors for each part
-    const defaultColors = {
-      deckFloor: 'Beige',
-      sideFender: 'Gray',
-      tubeDecoration: 'Black',
-      fiberglass: 'White',
-      tube: 'White',
-      upholestry: 'Beige'
-    };
+    const defaultColors = isOrbit
+      ? {
+          deckFloor: 'Black',
+          sideFender: 'Gray',
+          tubeDecoration: 'Black',
+          fiberglass: 'White',
+          tube: 'Light Gray',
+          upholestry: 'Dark Red',
+        }
+      : {
+          deckFloor: 'Beige',
+          sideFender: 'Gray',
+          tubeDecoration: 'Black',
+          fiberglass: 'White',
+          tube: 'White',
+          upholestry: 'Beige',
+        };
 
     const initialSelections = {};
     customizerParts.forEach(part => {
@@ -263,6 +344,12 @@ const ModelCustomizer = () => {
       }
     });
     setSelectedColors(initialSelections);
+    if (isOrbit) {
+      setOrbitExtras([]);
+      setOrbitCategory('exterior');
+      setOrbitSaved(false);
+      flashOrbitNotice('Configuration reset');
+    }
   };
 
 
@@ -312,14 +399,14 @@ const ModelCustomizer = () => {
   };
 
   return (
-    <div className="pt-20 min-h-screen bg-[#0f1419] text-aged-bone">
+    <div className={`${isOrbit ? 'h-[100dvh] overflow-x-auto overflow-y-hidden pt-20 bg-[#ECEDEF] text-midnight-slate' : 'pt-20 min-h-screen bg-[#0f1419] text-aged-bone'}`}>
       {/* Top bar */}
-      <header className="sticky top-20 z-30 border-b border-white/[0.08] bg-[#0f1419]/90 backdrop-blur-md">
-        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 h-14 flex items-center justify-between gap-4">
+      <header className={`${isOrbit ? 'absolute top-20 left-0 right-0 z-30 bg-transparent border-transparent pointer-events-none' : 'sticky top-20 z-30 border-b border-white/[0.08] bg-[#0f1419]/90 backdrop-blur-md'}`}>
+        <div className={`${isOrbit ? 'px-5 h-[3.4rem]' : 'max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 h-14'} flex items-center justify-between gap-4`}>
           <div className="flex items-center gap-3 min-w-0">
             <Link
               to={`/models/${finalModel.id}`}
-              className="shrink-0 flex items-center justify-center w-9 h-9 rounded-lg border border-white/10 text-aged-bone/80 hover:text-smoked-saffron hover:border-smoked-saffron/40 transition-colors"
+              className={`shrink-0 flex items-center justify-center transition-colors pointer-events-auto ${isOrbit ? 'w-[2.1rem] h-[2.1rem] border border-black/12 text-midnight-slate hover:border-smoked-saffron hover:text-smoked-saffron bg-white/70' : 'w-9 h-9 rounded-lg border border-white/10 text-aged-bone/80 hover:text-smoked-saffron hover:border-smoked-saffron/40'}`}
               aria-label="Back to model"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -327,26 +414,55 @@ const ModelCustomizer = () => {
               </svg>
             </Link>
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-smoked-saffron/90 font-medium">Studio configurator</p>
-              <h1 className="text-base sm:text-lg font-light text-aged-bone truncate">{fullModelName}</h1>
+              {isOrbit ? (
+                <div className="min-w-0">
+                  <h1
+                    className="text-[1.35rem] font-medium tracking-[0.28em] uppercase truncate"
+                    style={{ color: '#C4A36A' }}
+                  >
+                    {fullModelName}
+                  </h1>
+                  <p className="mt-0.5 text-[10px] uppercase tracking-[0.28em] text-[#071333]/38">
+                    Configure your boat
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-smoked-saffron/90 font-medium">Studio configurator</p>
+                  <h1 className="text-base sm:text-lg font-light truncate text-aged-bone">{fullModelName}</h1>
+                </>
+              )}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="shrink-0 text-xs sm:text-sm font-medium text-aged-bone/70 hover:text-smoked-saffron border border-white/10 hover:border-smoked-saffron/35 rounded-lg px-3 py-2 transition-colors"
-          >
-            Reset build
-          </button>
+          <div className="shrink-0 flex items-center gap-3 pointer-events-auto">
+            <button
+              type="button"
+              onClick={handleReset}
+              className={`text-xs sm:text-sm font-medium rounded-lg px-3 py-2 transition-colors ${isOrbit ? 'text-[#85898f] hover:text-smoked-saffron px-1' : 'text-aged-bone/70 hover:text-smoked-saffron border border-white/10 hover:border-smoked-saffron/35'}`}
+            >
+              {isOrbit ? 'Reset' : 'Reset build'}
+            </button>
+            {isOrbit && (
+              <button
+                type="button"
+                onClick={() => setOrbitSummaryOpen(true)}
+                className={`min-w-[5.5rem] px-3 py-2 rounded-md text-[10px] font-semibold uppercase tracking-[0.08em] text-white shadow-md ${
+                  orbitSaved ? 'bg-[#64705d]' : 'bg-[#ed560e]'
+                }`}
+              >
+                {orbitSaved ? 'Saved' : 'Draft'}
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
-      <div className="py-6 sm:py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(300px,400px)] gap-6 lg:gap-8 xl:gap-10 lg:items-start max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10">
+      <div className={isOrbit ? 'h-[calc(100dvh-5rem)] min-w-[72rem]' : 'py-6 sm:py-10'}>
+        <div className={isOrbit ? 'h-full w-full min-w-[72rem]' : 'grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(300px,400px)] gap-6 lg:gap-8 xl:gap-10 lg:items-start max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10'}>
           {/* Hero: preview + build strip (wide column on desktop, first on mobile) */}
-          <main className="flex flex-col gap-0 min-w-0">
-            <div className="rounded-2xl overflow-hidden border border-white/[0.07] shadow-2xl shadow-black/40 bg-gradient-to-b from-[#1a222c] to-[#12181f] flex flex-col">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 sm:px-5 py-3 border-b border-white/[0.06]">
+          <main className={`flex flex-col gap-0 min-w-0 ${isOrbit ? 'h-full' : ''}`}>
+            <div className={`flex flex-col ${isOrbit ? 'h-full rounded-none border-0 shadow-none bg-transparent overflow-visible' : 'rounded-2xl overflow-hidden border border-white/[0.07] shadow-2xl shadow-black/40 bg-gradient-to-b from-[#1a222c] to-[#12181f]'}`}>
+              <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 sm:px-5 py-3 border-b border-white/[0.06] ${isOrbit ? 'hidden' : ''}`}>
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-widest text-aged-bone/45">Live composite</p>
                   <p className="text-sm text-aged-bone/90">Move the pointer over the hull for parallax</p>
@@ -357,14 +473,16 @@ const ModelCustomizer = () => {
               </div>
               <div
                 ref={previewRef}
-                className="relative overflow-hidden"
+                className={`relative ${isOrbit ? 'overflow-hidden' : 'overflow-hidden'}`}
                 style={{
-                  height: 'min(58vh, 720px)',
-                  minHeight: '420px',
-                  perspective: '1200px',
-                  background: 'radial-gradient(ellipse 85% 65% at 50% 55%, #2a3544 0%, #151b24 45%, #0e1218 100%)',
+                  height: isOrbit ? '100%' : 'min(58vh, 720px)',
+                  minHeight: isOrbit ? '100%' : '420px',
+                  perspective: isOrbit ? '1400px' : '1200px',
+                  background: isOrbit
+                    ? '#ECEDEF'
+                    : 'radial-gradient(ellipse 85% 65% at 50% 55%, #2a3544 0%, #151b24 45%, #0e1218 100%)',
                 }}
-                onMouseMove={(e) => {
+                onMouseMove={isOrbit ? undefined : (e) => {
                   const rect = previewRef.current?.getBoundingClientRect();
                   if (!rect) return;
                   const nx = (e.clientX - rect.left) / rect.width;   // 0..1
@@ -385,80 +503,140 @@ const ModelCustomizer = () => {
                     rafRef.current = requestAnimationFrame(step);
                   }
                 }}
-                onMouseLeave={() => {
+                onMouseLeave={isOrbit ? undefined : () => {
                   targetTiltRef.current = { x: -0.12, y: -0.18 };
                 }}
               >
-                {/* Background parallax — subtle depth on dark stage */}
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    background: `
-                      linear-gradient(180deg, rgba(90,110,130,0.12) 0%, rgba(40,50,62,0.06) 42%, rgba(20,26,34,0.2) 58%, rgba(10,14,18,0.35) 100%)
-                    `,
-                    transform: `translate(${-(tilt.y * 12)}px, ${(tilt.x * 8) + scrollParallaxRef.current * 0.06}px)`,
-                    transition: 'transform 80ms linear'
-                  }}
-                />
-                <div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    background: `
-                      radial-gradient(ellipse at 30% 38%, rgba(168, 121, 50, 0.12) 0%, transparent 52%),
-                      radial-gradient(ellipse at 72% 62%, rgba(255, 255, 255, 0.04) 0%, transparent 45%),
-                      radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.25) 100%)
-                    `
-                  }}
-                />
-                
-                {/* Floor shadow (moves slightly with tilt) */}
-                <div
-                  className="absolute left-1/2 -translate-x-1/2"
-                  style={{
-                    bottom: '28px',
-                    width: '75%',
-                    height: '18%',
-                    background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.08) 45%, rgba(0,0,0,0) 70%)',
-                    filter: 'blur(6px)',
-                    transform: `translate(${tilt.y * 18}px, ${-tilt.x * 12}px)`,
-                    opacity: 0.6
-                  }}
-                />
+                {!isOrbit && (
+                  <>
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: `
+                          linear-gradient(180deg, rgba(90,110,130,0.12) 0%, rgba(40,50,62,0.06) 42%, rgba(20,26,34,0.2) 58%, rgba(10,14,18,0.35) 100%)
+                        `,
+                        transform: `translate(${-(tilt.y * 12)}px, ${(tilt.x * 8) + scrollParallaxRef.current * 0.06}px)`,
+                        transition: 'transform 80ms linear'
+                      }}
+                    />
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: `
+                          radial-gradient(ellipse at 30% 38%, rgba(168, 121, 50, 0.12) 0%, transparent 52%),
+                          radial-gradient(ellipse at 72% 62%, rgba(255, 255, 255, 0.04) 0%, transparent 45%),
+                          radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.25) 100%)
+                        `
+                      }}
+                    />
+                    <div
+                      className="absolute left-1/2 -translate-x-1/2"
+                      style={{
+                        bottom: '28px',
+                        width: '75%',
+                        height: '18%',
+                        background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.08) 45%, rgba(0,0,0,0) 70%)',
+                        filter: 'blur(6px)',
+                        transform: `translate(${tilt.y * 18}px, ${-tilt.x * 12}px)`,
+                        opacity: 0.6
+                      }}
+                    />
+                  </>
+                )}
+                {isOrbit && (
+                  <>
+                    <CustomizerStudioBackground />
+                    <CustomizerCategoryRail
+                      active={orbitCategory === 'engine' ? 'exterior' : orbitCategory}
+                      onChange={setOrbitCategory}
+                    />
+                    {orbitCategory === 'interior' || orbitCategory === 'accessories' ? (
+                      <CustomizerCategoryPanel
+                        category={orbitCategory}
+                        extras={orbitExtras}
+                        onToggle={handleOrbitExtra}
+                        onBack={() => setOrbitCategory('exterior')}
+                      />
+                    ) : (
+                      <CustomizerOrbitHud
+                        parts={customizerParts}
+                        selectedColors={selectedColors}
+                        availableColors={availableColors}
+                        selectedPart={orbitPart}
+                        onSelectPart={setOrbitPart}
+                        onColorChange={handleColorChange}
+                        partLabels={partLabels}
+                      />
+                    )}
+                  </>
+                )}
                 {/* Boat composite */}
                 <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 1 }}>
                   <div
-                    className="relative"
-                    style={{
-                      filter: `
-                        drop-shadow(0 22px 42px rgba(0, 0, 0, 0.28)) 
-                        drop-shadow(0 12px 22px rgba(0, 0, 0, 0.22))
-                      `,
-                      transform: `rotateX(${tilt.x * 57.3 + 5}deg) rotateY(${tilt.y * 57.3 - 3}deg) translateY(${scrollParallaxRef.current * -0.04}px)`,
-                      width: '85%',
-                      height: '85%',
-                      transformStyle: 'preserve-3d',
-                    }}
+                    className={`relative ${isOrbit ? '' : 'w-full h-full flex items-center justify-center'}`}
+                    style={isOrbit
+                      ? {
+                          position: 'absolute',
+                          left: '18%',
+                          right: '12%',
+                          top: '8%',
+                          bottom: '8%',
+                          overflow: 'visible',
+                          perspective: '1400px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }
+                      : {
+                          width: '100%',
+                          height: '100%',
+                        }}
                   >
-                    {/* Floating Glow Effect */}
-                    <div 
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        background: 'radial-gradient(ellipse at center, rgba(168, 121, 50, 0.15) 0%, transparent 60%)',
-                        filter: 'blur(30px)',
-                        zIndex: -1,
-                        transform: 'translateY(10%)'
-                      }}
-                    />
+                    <div
+                      className="relative"
+                      style={isOrbit
+                        ? {
+                            width: 'min(100%, 56vw)',
+                            aspectRatio: '5184 / 3456',
+                            maxHeight: '100%',
+                            position: 'relative',
+                            zIndex: 1,
+                            overflow: 'visible',
+                          }
+                        : {
+                            filter: 'drop-shadow(0 22px 42px rgba(0, 0, 0, 0.28)) drop-shadow(0 12px 22px rgba(0, 0, 0, 0.22))',
+                            transform: `rotateX(${tilt.x * 57.3 + 5}deg) rotateY(${tilt.y * 57.3 - 3}deg) translateY(${scrollParallaxRef.current * -0.04}px)`,
+                            width: '85%',
+                            height: '85%',
+                            transformStyle: 'preserve-3d',
+                            margin: 'auto',
+                          }}
+                    >
+                    {isOrbit && (
+                      <CustomizerStudioGroundShadow
+                        images={[baseImage, ...Object.values(partImages || {})]}
+                      />
+                    )}
+                    {!isOrbit && (
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          background: 'radial-gradient(ellipse at center, rgba(168, 121, 50, 0.15) 0%, transparent 60%)',
+                          filter: 'blur(30px)',
+                          zIndex: -1,
+                          transform: 'translateY(10%)'
+                        }}
+                      />
+                    )}
                     {baseImage && (
                       <img
                         src={baseImage}
                         alt="Boat Base"
                         className="absolute inset-0 w-full h-full object-contain"
-                        style={{
+                        style={isOrbit ? { zIndex: 1 } : {
                           filter: 'brightness(1.08) contrast(1.15) saturate(1.12)',
                           transform: `translateZ(${(depthWeights.base || 1) * 12}px) translate(${tilt.y * 6}px, ${-tilt.x * 6}px)`,
-                          // small depth-of-field cue
                           willChange: 'transform, filter'
                         }}
                       />
@@ -501,11 +679,12 @@ const ModelCustomizer = () => {
                           src={imagePath}
                           alt={part.label}
                           className="absolute inset-0 w-full h-full object-contain"
-                          style={{
+                          style={isOrbit
+                            ? { zIndex: customizerParts.indexOf(part) + 2 }
+                            : {
                             zIndex: customizerParts.indexOf(part) + 2,
                             filter: 'brightness(1.03) saturate(1.05)',
                             transform: `translateZ(${(depthWeights[part.key] || 2) * 12}px) translate(${tilt.y * (3 + (depthWeights[part.key] || 2))}px, ${-tilt.x * (3 + (depthWeights[part.key] || 2))}px) scale(${poppedPart === part.key ? 1.02 : 1})`,
-                            // keep crisp edges; remove depth blur for clarity
                             transition: poppedPart === part.key ? 'transform 220ms ease-out' : 'transform 120ms ease-out',
                             willChange: 'transform'
                           }}
@@ -514,32 +693,34 @@ const ModelCustomizer = () => {
                       );
                     })}
                     
-                    {/* Specular sheen overlay */}
-                    <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        background: 'radial-gradient(ellipse at 30% 25%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 18%, rgba(255,255,255,0) 55%)',
-                        mixBlendMode: 'screen',
-                        transform: `translate(${-(tilt.y * 10)}px, ${(tilt.x * 10)}px)`,
-                        willChange: 'transform'
-                      }}
-                    />
-                    
-                    {/* AO seam vignette */}
-                    <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.04) 35%, rgba(0,0,0,0) 60%)',
-                        filter: 'blur(1px)',
-                        opacity: 0.35
-                      }}
-                    />
+                    {!isOrbit && (
+                      <>
+                        <div
+                          className="absolute inset-0 pointer-events-none"
+                          style={{
+                            background: 'radial-gradient(ellipse at 30% 25%, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 18%, rgba(255,255,255,0) 55%)',
+                            mixBlendMode: 'screen',
+                            transform: `translate(${-(tilt.y * 10)}px, ${(tilt.x * 10)}px)`,
+                            willChange: 'transform'
+                          }}
+                        />
+                        <div
+                          className="absolute inset-0 pointer-events-none"
+                          style={{
+                            background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.04) 35%, rgba(0,0,0,0) 60%)',
+                            filter: 'blur(1px)',
+                            opacity: 0.35
+                          }}
+                        />
+                      </>
+                    )}
                   </div>
+                </div>
                 </div>
               </div>
 
               {/* Build summary — part of the preview card so the hero reads as one unit */}
-              <div className="border-t border-white/[0.08] bg-[#0c1016]/85 px-3 sm:px-4 py-3">
+              <div className={`border-t border-white/[0.08] bg-[#0c1016]/85 px-3 sm:px-4 py-3 ${isOrbit ? 'hidden' : ''}`}>
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <h3 className="text-[9px] uppercase tracking-[0.14em] text-aged-bone/45 font-medium">Current build</h3>
                   <p className="text-[9px] text-aged-bone/35 hidden sm:block">Tap a layer to edit</p>
@@ -574,7 +755,7 @@ const ModelCustomizer = () => {
           </main>
 
           {/* Materials rail (second column desktop, below hero on mobile) */}
-          <aside className="w-full min-w-0 lg:sticky lg:top-[7.25rem] lg:self-start lg:h-[calc(100vh-7.25rem)]">
+          <aside className={`w-full min-w-0 lg:sticky lg:top-[7.25rem] lg:self-start lg:h-[calc(100vh-7.25rem)] ${isOrbit ? 'hidden' : ''}`}>
             <div className="rounded-2xl border border-white/[0.08] bg-[#151b24]/95 backdrop-blur-sm shadow-xl shadow-black/30 p-5 sm:p-6 h-full max-h-full flex flex-col min-h-0 overflow-hidden">
               <div className="mb-5 pb-4 border-b border-white/[0.08]">
                 <h2 className="text-lg font-light text-aged-bone tracking-tight">Materials &amp; finish</h2>
@@ -695,6 +876,30 @@ const ModelCustomizer = () => {
           </aside>
         </div>
       </div>
+
+      {isOrbit && orbitSummaryOpen && (
+        <CustomizerSummary
+          modelName={fullModelName}
+          modelImage={finalModel.image || finalModel.heroImage || baseImage}
+          selectedColors={selectedColors}
+          extras={orbitExtras}
+          saved={orbitSaved}
+          onClose={() => setOrbitSummaryOpen(false)}
+          onJump={(key) => {
+            setOrbitSummaryOpen(false);
+            setOrbitCategory('exterior');
+            setOrbitPart(key);
+          }}
+          onSave={handleOrbitSave}
+          onQuote={handleOrbitQuote}
+        />
+      )}
+      {isOrbit && orbitNotice && (
+        <div className="fixed z-[70] left-1/2 bottom-5 -translate-x-1/2 flex items-center gap-2 px-4 py-2.5 bg-[#071333]/94 text-white text-xs shadow-lg">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#C4A36A]" />
+          {orbitNotice}
+        </div>
+      )}
 
     </div>
   );

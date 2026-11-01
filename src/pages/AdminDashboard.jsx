@@ -1320,9 +1320,9 @@ const AdminDashboard = () => {
                   <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-200">
                     <span className="text-2xl">📄</span>
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900">PDF Brochure</h2>
+                      <h2 className="text-xl font-bold text-gray-900">User Manual</h2>
                       <p className="text-xs text-gray-500 mt-1">
-                        Visitors can download this from the model page.
+                        Shown at the bottom of the model page, after specifications.
                       </p>
                     </div>
                   </div>
@@ -1339,7 +1339,7 @@ const AdminDashboard = () => {
                       </a>
                     </p>
                   ) : (
-                    <p className="text-sm text-gray-500 mb-3">No brochure uploaded yet.</p>
+                    <p className="text-sm text-gray-500 mb-3">No user manual uploaded yet.</p>
                   )}
                   {brochureMessage.text && (
                     <div
@@ -1379,9 +1379,9 @@ const AdminDashboard = () => {
                             const result = await api.uploadFile(file, 'images', editedData.name, null, 'Brochure');
                             const url = extractUploadUrl(result);
                             handleInputChange('brochureFile', url);
-                            setBrochureMessage({ type: 'success', text: 'Brochure uploaded. Click Save Changes to publish it.' });
+                            setBrochureMessage({ type: 'success', text: 'User manual uploaded. Click Save Changes to publish it.' });
                           } catch (error) {
-                            setBrochureMessage({ type: 'error', text: 'Failed to upload brochure: ' + error.message });
+                            setBrochureMessage({ type: 'error', text: 'Failed to upload user manual: ' + error.message });
                           }
                           e.target.value = '';
                         }}
@@ -1393,7 +1393,7 @@ const AdminDashboard = () => {
                         type="button"
                         onClick={() => {
                           handleInputChange('brochureFile', '');
-                          setBrochureMessage({ type: 'success', text: 'Brochure removed. Click Save Changes to apply.' });
+                          setBrochureMessage({ type: 'success', text: 'User manual removed. Click Save Changes to apply.' });
                         }}
                         className="px-4 py-2.5 border-2 border-red-200 text-red-600 rounded-lg hover:bg-red-50 font-medium"
                       >

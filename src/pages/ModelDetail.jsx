@@ -331,6 +331,8 @@ const ModelDetail = () => {
     );
   }
 
+  const userManualUrl = model.brochureUrl || resolveBrochureUrl(model.brochureFile, model.name);
+
   return (
     <div className="pt-20">
       {/* 1) Hero Section - Title and description top-left */}
@@ -354,20 +356,6 @@ const ModelDetail = () => {
             <p className="text-lg md:text-xl text-gray-200 leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] mb-6">
               {model.shortDescription}
             </p>
-          )}
-          {(model.brochureUrl || resolveBrochureUrl(model.brochureFile, model.name)) && (
-            <a
-              href={model.brochureUrl || resolveBrochureUrl(model.brochureFile, model.name)}
-              target="_blank"
-              rel="noopener noreferrer"
-              download
-              className="inline-flex items-center gap-2 rounded-lg bg-smoked-saffron px-5 py-2.5 text-base font-semibold text-white shadow-lg transition-all hover:bg-smoked-saffron/90"
-            >
-              <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Download brochure
-            </a>
           )}
         </motion.div>
       </section>
@@ -468,20 +456,6 @@ const ModelDetail = () => {
                 </button>
               )}
             </div>
-            {(model.brochureUrl || resolveBrochureUrl(model.brochureFile, model.name)) && (
-              <a
-                href={model.brochureUrl || resolveBrochureUrl(model.brochureFile, model.name)}
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-                className="inline-flex shrink-0 items-center gap-2 self-center rounded-lg border-2 border-smoked-saffron/40 bg-smoked-saffron/10 px-4 py-2.5 text-base font-semibold whitespace-nowrap text-smoked-saffron transition-all hover:border-smoked-saffron hover:bg-smoked-saffron hover:text-white"
-              >
-                <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Brochure
-              </a>
-            )}
             {getCustomizerFolder(model.name) && (
               <Link
                 to={`/models/${model.id}/customize`}
@@ -1284,8 +1258,39 @@ const ModelDetail = () => {
         </div>
       </section>
 
+      {userManualUrl && (
+        <section id="user-manual" className="section-padding bg-gray-50">
+          <div className="container-custom">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+              className="mx-auto max-w-2xl text-center"
+            >
+              <h2 className="text-4xl md:text-5xl font-light text-midnight-slate mb-4">User Manual</h2>
+              <p className="text-xl text-gray-600 mb-8">
+                Download the user manual for {fullModelName}.
+              </p>
+              <a
+                href={userManualUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="inline-flex items-center gap-2 rounded-lg bg-smoked-saffron px-6 py-3 text-base font-semibold text-white shadow-lg transition-all hover:bg-smoked-saffron/90"
+              >
+                <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download user manual
+              </a>
+            </motion.div>
+          </div>
+        </section>
+      )}
+
       {/* Navigation */}
-      <section className="section-padding bg-gray-50">
+      <section className="section-padding bg-white">
         <div className="container-custom">
           <div className="flex flex-col sm:flex-row justify-between items-center">
             {category ? (
