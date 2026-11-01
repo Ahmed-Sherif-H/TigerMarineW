@@ -53,37 +53,8 @@ const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
   // Use API model if available, otherwise use static model
   const finalModel = apiModel || model;
 
-  // Get full model name (e.g., "TopLine 850" instead of "TL850")
-  // Title should match the graphics folder being used, not the model name
   const fullModelName = useMemo(() => {
     if (!finalModel) return '';
-    
-    // Get the graphics folder being used
-    const graphicsFolder = getCustomizerFolder(finalModel.name);
-    
-    if (graphicsFolder) {
-      // Derive title from graphics folder for swapped models
-      // PL620 uses ProLine550 graphics → show "ProLine 550"
-      if (graphicsFolder.includes('ProLine550')) {
-        return 'ProLine 550';
-      }
-      // PL550 uses ProLine620 graphics → show "ProLine 620"
-      if (graphicsFolder.includes('ProLine620')) {
-        return 'ProLine 620';
-      }
-      // For other models, check folder name and derive title
-      if (graphicsFolder.includes('TopLine950')) return 'TopLine 950';
-      if (graphicsFolder.includes('TopLine850')) return 'TopLine 850';
-      if (graphicsFolder.includes('TopLine750')) return 'TopLine 750';
-      if (graphicsFolder.includes('TopLine650')) return 'TopLine 650';
-      if (graphicsFolder.includes('Open850')) return 'Open 850';
-      if (graphicsFolder.includes('Open750')) return 'Open 750';
-      if (graphicsFolder.includes('Open650')) return 'Open 650';
-      if (graphicsFolder.includes('SportLine520')) return 'SportLine 520';
-      if (graphicsFolder.includes('SportLine480')) return 'SportLine 480';
-    }
-    
-    // Fallback to standard display name
     return getModelDisplayName(finalModel, category);
   }, [finalModel, category]);
 
@@ -105,7 +76,17 @@ const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
   const [orbitSummaryOpen, setOrbitSummaryOpen] = useState(false);
   const [orbitSaved, setOrbitSaved] = useState(false);
   const [orbitNotice, setOrbitNotice] = useState('');
+  const [orbitCompact, setOrbitCompact] = useState(false);
   const scrollParallaxRef = useRef(0);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1099px)');
+    const apply = () => setOrbitCompact(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+  const compact = isOrbit && orbitCompact;
 
   // 2.5D depth map per layer (higher means closer to viewer)
   // Base ~ 1, parts increase by their index with some custom weight
@@ -398,10 +379,10 @@ const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
   };
 
   return (
-    <div className={`${isOrbit ? 'h-[100dvh] overflow-x-auto overflow-y-hidden pt-20 bg-[#ECEDEF] text-midnight-slate' : 'pt-20 min-h-screen bg-[#0f1419] text-aged-bone'}`}>
+    <div className={`${isOrbit ? (compact ? 'min-h-[100dvh] overflow-x-hidden overflow-y-auto pt-20 bg-[#ECEDEF] text-midnight-slate' : 'h-[100dvh] overflow-x-auto overflow-y-hidden pt-20 bg-[#ECEDEF] text-midnight-slate') : 'pt-20 min-h-screen bg-[#0f1419] text-aged-bone'}`}>
       {/* Top bar */}
-      <header className={`${isOrbit ? 'absolute top-20 left-0 right-0 z-30 bg-transparent border-transparent pointer-events-none' : 'sticky top-20 z-30 border-b border-white/[0.08] bg-[#0f1419]/90 backdrop-blur-md'}`}>
-        <div className={`${isOrbit ? 'px-5 h-[3.4rem]' : 'max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 h-14'} flex items-center justify-between gap-4`}>
+      <header className={`${isOrbit ? (compact ? 'relative z-30 bg-transparent border-transparent' : 'absolute top-20 left-0 right-0 z-30 bg-transparent border-transparent pointer-events-none') : 'sticky top-20 z-30 border-b border-white/[0.08] bg-[#0f1419]/90 backdrop-blur-md'}`}>
+        <div className={`${isOrbit ? (compact ? 'px-3 h-14 gap-2' : 'px-5 h-[3.4rem] gap-4') : 'max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 h-14 gap-4'} flex items-center justify-between min-w-0`}>
           <div className="flex items-center gap-3 min-w-0">
             <Link
               to={`/models/${finalModel.id}`}
@@ -416,12 +397,12 @@ const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
               {isOrbit ? (
                 <div className="min-w-0">
                   <h1
-                    className="text-[1.35rem] font-medium tracking-[0.28em] uppercase truncate"
+                    className={`${compact ? 'text-base tracking-[0.14em]' : 'text-[1.35rem] tracking-[0.28em]'} font-medium uppercase truncate`}
                     style={{ color: '#C4A36A' }}
                   >
                     {fullModelName}
                   </h1>
-                  <p className="mt-0.5 text-[10px] uppercase tracking-[0.28em] text-[#071333]/38">
+                  <p className={`mt-0.5 uppercase text-[#071333]/38 ${compact ? 'text-[9px] tracking-[0.16em]' : 'text-[10px] tracking-[0.28em]'}`}>
                     Configure your boat
                   </p>
                 </div>
@@ -437,7 +418,7 @@ const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
             <button
               type="button"
               onClick={handleReset}
-              className={`text-xs sm:text-sm font-medium rounded-lg px-3 py-2 transition-colors ${isOrbit ? 'text-[#85898f] hover:text-smoked-saffron px-1' : 'text-aged-bone/70 hover:text-smoked-saffron border border-white/10 hover:border-smoked-saffron/35'}`}
+              className={`text-xs sm:text-sm font-medium rounded-lg px-3 py-2 transition-colors ${isOrbit ? (compact ? 'text-[#85898f] hover:text-smoked-saffron px-1 text-[11px]' : 'text-[#85898f] hover:text-smoked-saffron px-1') : 'text-aged-bone/70 hover:text-smoked-saffron border border-white/10 hover:border-smoked-saffron/35'}`}
             >
               {isOrbit ? 'Reset' : 'Reset build'}
             </button>
@@ -445,7 +426,7 @@ const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
               <button
                 type="button"
                 onClick={() => setOrbitSummaryOpen(true)}
-                className={`min-w-[5.5rem] px-3 py-2 rounded-md text-[10px] font-semibold uppercase tracking-[0.08em] text-white shadow-md ${
+                className={`${compact ? 'min-w-[4.4rem] px-2 py-1.5' : 'min-w-[5.5rem] px-3 py-2'} rounded-md text-[10px] font-semibold uppercase tracking-[0.08em] text-white shadow-md ${
                   orbitSaved ? 'bg-[#64705d]' : 'bg-[#ed560e]'
                 }`}
               >
@@ -456,8 +437,8 @@ const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
         </div>
       </header>
 
-      <div className={isOrbit ? 'h-[calc(100dvh-5rem)] min-w-[72rem]' : 'py-6 sm:py-10'}>
-        <div className={isOrbit ? 'h-full w-full min-w-[72rem]' : 'grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(300px,400px)] gap-6 lg:gap-8 xl:gap-10 lg:items-start max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10'}>
+      <div className={isOrbit ? (compact ? 'w-full' : 'h-[calc(100dvh-5rem)] min-w-[72rem]') : 'py-6 sm:py-10'}>
+        <div className={isOrbit ? (compact ? 'flex w-full flex-col' : 'h-full w-full min-w-[72rem]') : 'grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(300px,400px)] gap-6 lg:gap-8 xl:gap-10 lg:items-start max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10'}>
           {/* Hero: preview + build strip (wide column on desktop, first on mobile) */}
           <main className={`flex flex-col gap-0 min-w-0 ${isOrbit ? 'h-full' : ''}`}>
             <div className={`flex flex-col ${isOrbit ? 'h-full rounded-none border-0 shadow-none bg-transparent overflow-visible' : 'rounded-2xl overflow-hidden border border-white/[0.07] shadow-2xl shadow-black/40 bg-gradient-to-b from-[#1a222c] to-[#12181f]'}`}>
@@ -474,8 +455,10 @@ const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
                 ref={previewRef}
                 className={`relative ${isOrbit ? 'overflow-hidden' : 'overflow-hidden'}`}
                 style={{
-                  height: isOrbit ? '100%' : 'min(58vh, 720px)',
-                  minHeight: isOrbit ? '100%' : '420px',
+                  height: compact ? 'auto' : isOrbit ? '100%' : 'min(58vh, 720px)',
+                  minHeight: compact ? '200px' : isOrbit ? '100%' : '420px',
+                  maxHeight: compact ? '42dvh' : undefined,
+                  aspectRatio: compact ? '3 / 2' : undefined,
                   perspective: isOrbit ? '1400px' : '1200px',
                   background: isOrbit
                     ? '#ECEDEF'
@@ -546,19 +529,24 @@ const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
                 {isOrbit && (
                   <>
                     <CustomizerStudioBackground />
-                    <CustomizerCategoryRail
-                      active="exterior"
-                      onChange={() => {}}
-                    />
-                    <CustomizerOrbitHud
-                      parts={customizerParts}
-                      selectedColors={selectedColors}
-                      availableColors={availableColors}
-                      selectedPart={orbitPart}
-                      onSelectPart={setOrbitPart}
-                      onColorChange={handleColorChange}
-                      partLabels={partLabels}
-                    />
+                    {!compact && (
+                      <CustomizerCategoryRail
+                        active="exterior"
+                        onChange={() => {}}
+                      />
+                    )}
+                    {!compact && (
+                      <CustomizerOrbitHud
+                        parts={customizerParts}
+                        selectedColors={selectedColors}
+                        availableColors={availableColors}
+                        selectedPart={orbitPart}
+                        onSelectPart={setOrbitPart}
+                        onColorChange={handleColorChange}
+                        partLabels={partLabels}
+                        hullSrc={partImages.tube || baseImage}
+                      />
+                    )}
                   </>
                 )}
                 {/* Boat composite */}
@@ -568,10 +556,10 @@ const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
                     style={isOrbit
                       ? {
                           position: 'absolute',
-                          left: '18%',
-                          right: '12%',
-                          top: '8%',
-                          bottom: '8%',
+                          left: compact ? '4%' : '18%',
+                          right: compact ? '4%' : '12%',
+                          top: compact ? '6%' : '8%',
+                          bottom: compact ? '4%' : '8%',
                           overflow: 'visible',
                           perspective: '1400px',
                           display: 'flex',
@@ -587,7 +575,7 @@ const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
                       className="relative"
                       style={isOrbit
                         ? {
-                            width: 'min(100%, 56vw)',
+                            width: compact ? 'min(100%, 96vw)' : 'min(100%, 56vw)',
                             aspectRatio: '5184 / 3456',
                             maxHeight: '100%',
                             position: 'relative',
@@ -708,6 +696,19 @@ const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
                 </div>
                 </div>
               </div>
+
+              {compact && (
+                <CustomizerOrbitHud
+                  compact
+                  parts={customizerParts}
+                  selectedColors={selectedColors}
+                  availableColors={availableColors}
+                  selectedPart={orbitPart}
+                  onSelectPart={setOrbitPart}
+                  onColorChange={handleColorChange}
+                  partLabels={partLabels}
+                />
+              )}
 
               {/* Build summary — part of the preview card so the hero reads as one unit */}
               <div className={`border-t border-white/[0.08] bg-[#0c1016]/85 px-3 sm:px-4 py-3 ${isOrbit ? 'hidden' : ''}`}>

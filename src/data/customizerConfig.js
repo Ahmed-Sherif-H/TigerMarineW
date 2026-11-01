@@ -3,32 +3,74 @@
  * Maps model names to their customizer folder names
  */
 
-// Map model names to their customizer folder names
-export const customizerFolders = {
-  // TopLine
-  'TL950': 'TopLine950',
-  'TL850': 'TopLine850',
-  'TL750': 'TopLine750',
-  'TL650': 'TopLine650',
-  
-  // ProLine - SWAPPED
-  'PL620': 'ProLine550',  // PL620 uses ProLine550 graphics
-  'PL550': 'ProLine620',  // PL550 uses ProLine620 graphics
-  
-  // SportLine
-  'SL520': 'SportLine520',
-  'SL480': 'SportLine480',
-  
-  // Open - SWAPPED
-  'OP850': 'Open650',  // OP850 uses Open650 graphics
-  'OP750': 'Open750',
-  'OP650': 'Open850',  // OP650 uses Open850 graphics
-  
-  // Add more models as needed
+const FOLDER_BY_KEY = {
+  TL950: 'TopLine950',
+  TL850: 'TopLine850',
+  TL750: 'TopLine850',
+  TL650: 'TopLine650',
+  PL620: 'ProLine550',
+  PL550: 'ProLine620',
+  SL520: 'SportLine520',
+  SL480: 'SportLine480',
+  OP850: 'Open650',
+  OP750: 'Open750',
+  OP650: 'Open850',
+  ML38: 'TopLine950',
 };
 
-// Customizer part names (matching folder names)
-// Note: Folder names may vary (e.g., "Deck Floor" vs "Deck floor", "Upholestry" vs "Upholstery")
+const NAME_TO_KEY = {
+  TL950: 'TL950',
+  'TopLine 950': 'TL950',
+  TopLine950: 'TL950',
+  TL850: 'TL850',
+  'TopLine 850': 'TL850',
+  TopLine850: 'TL850',
+  TL750: 'TL750',
+  'TopLine 750': 'TL750',
+  TopLine750: 'TL750',
+  TL650: 'TL650',
+  'TopLine 650': 'TL650',
+  TopLine650: 'TL650',
+  PL620: 'PL620',
+  'ProLine 620': 'PL620',
+  ProLine620: 'PL620',
+  PL550: 'PL550',
+  'ProLine 550': 'PL550',
+  ProLine550: 'PL550',
+  SL520: 'SL520',
+  'SportLine 520': 'SL520',
+  SportLine520: 'SL520',
+  SL480: 'SL480',
+  'SportLine 480': 'SL480',
+  SportLine480: 'SL480',
+  OP850: 'OP850',
+  'Open 850': 'OP850',
+  Open850: 'OP850',
+  OP750: 'OP750',
+  'Open 750': 'OP750',
+  Open750: 'OP750',
+  OP650: 'OP650',
+  'Open 650': 'OP650',
+  Open650: 'OP650',
+  ML38: 'ML38',
+  'MaxLine 38': 'ML38',
+};
+
+export const customizerFolders = {
+  TL950: 'TopLine950',
+  TL850: 'TopLine850',
+  TL750: 'TopLine850',
+  TL650: 'TopLine650',
+  PL620: 'ProLine550',
+  PL550: 'ProLine620',
+  SL520: 'SportLine520',
+  SL480: 'SportLine480',
+  OP850: 'Open650',
+  OP750: 'Open750',
+  OP650: 'Open850',
+  ML38: 'TopLine950',
+};
+
 export const customizerParts = [
   { key: 'base', label: 'Base', folder: 'Base', folderVariants: ['Base'] },
   { key: 'deckFloor', label: 'Deck Floor', folder: 'Deck Floor', folderVariants: ['Deck Floor', 'Deck floor'] },
@@ -39,66 +81,48 @@ export const customizerParts = [
   { key: 'upholestry', label: 'Upholstery', folder: 'Upholestry', folderVariants: ['Upholestry', 'Upholstery'] }
 ];
 
-/**
- * Get customizer folder path for a model
- * Uses placeholder graphics for models that don't have custom graphics yet
- * Returns null for models that don't support customization (e.g., Infinity)
- */
+export function resolveCustomizerKey(modelName) {
+  const raw = String(modelName || '').trim();
+  if (!raw) return '';
+  if (NAME_TO_KEY[raw]) return NAME_TO_KEY[raw];
+  const collapsed = raw.replace(/\s+/g, '').toLowerCase();
+  const match = Object.keys(NAME_TO_KEY).find((key) => key.replace(/\s+/g, '').toLowerCase() === collapsed);
+  if (match) return NAME_TO_KEY[match];
+  return raw;
+}
+
 export const getCustomizerFolder = (modelName) => {
-  // Models that don't support customization
   const disabledModels = ['Infinity 280'];
-  if (disabledModels.includes(modelName)) {
-    return null;
-  }
-  
-  // Map models without graphics to placeholder models
-  const placeholderMap = {
-    'TL750': 'TopLine850',  // 750TL uses 850TL graphics
-    'ML38': 'TopLine950',   // MaxLine uses 950TL graphics
-  };
-  
-  // Check if this model should use a placeholder
-  if (placeholderMap[modelName]) {
-    return `/Customizer-images/${placeholderMap[modelName]}`;
-  }
-  
-  // Otherwise, use the model's own folder if it exists
-  const folder = customizerFolders[modelName];
+  if (disabledModels.includes(modelName)) return null;
+
+  const key = resolveCustomizerKey(modelName);
+  if (disabledModels.includes(key)) return null;
+
+  const folder = FOLDER_BY_KEY[key] || customizerFolders[key];
   if (!folder) return null;
   return `/Customizer-images/${folder}`;
 };
 
-/**
- * Get base image path for a model
- */
 export const getBaseImage = (modelName) => {
   const folder = getCustomizerFolder(modelName);
   if (!folder) return null;
   return `${folder}/Base/Boat - Base.webp`;
 };
 
-/**
- * Get image path for a specific part and color
- * Handles naming inconsistencies (Beige/Baige, Gray/Grey, etc.)
- */
 export const getPartImage = (modelName, partKey, colorName) => {
   const folder = getCustomizerFolder(modelName);
   if (!folder) return null;
-  
-  const part = customizerParts.find(p => p.key === partKey);
+
+  const part = customizerParts.find((p) => p.key === partKey);
   if (!part) return null;
-  
-  // Handle color name variations
-  // For Baige (typo), try both Baige and Beige
-  // For Gray, files use "Gray" (not "Grey")
+
   let filename = '';
-  
+
   if (partKey === 'base') {
     filename = 'Boat - Base.webp';
   } else if (partKey === 'deckFloor') {
     filename = `deck floor - ${colorName}.webp`;
   } else if (partKey === 'fiberglass') {
-    // Files use "Gray" not "Grey"
     filename = `Fiberglass - ${colorName}.webp`;
   } else if (partKey === 'sideFender') {
     filename = `Fender - ${colorName}.webp`;
@@ -107,17 +131,12 @@ export const getPartImage = (modelName, partKey, colorName) => {
   } else if (partKey === 'tubeDecoration') {
     filename = `Tube decoration - ${colorName}.webp`;
   } else if (partKey === 'upholestry') {
-    // Folder is "Upholestry" (typo), files use "Upholestry - [Color].webp"
-    // Handle Baige typo - try both Baige and Beige
     if (colorName === 'Baige') {
-      // Try Baige first (as it appears in some folders)
       filename = `Upholestry - Baige.webp`;
     } else {
       filename = `Upholestry - ${colorName}.webp`;
     }
   }
-  
-  // Use the folder name from config (which is "Upholestry" for upholstery)
+
   return `${folder}/${part.folder}/${filename}`;
 };
-
