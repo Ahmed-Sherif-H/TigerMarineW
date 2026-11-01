@@ -11,11 +11,10 @@ import { useModels } from '../context/ModelsContext';
 import { isHiddenModel } from '../utils/modelVisibility';
 import CustomizerOrbitHud from '../components/CustomizerOrbitHud';
 import CustomizerCategoryRail from '../components/CustomizerCategoryRail';
-import CustomizerCategoryPanel from '../components/CustomizerCategoryPanel';
 import CustomizerSummary from '../components/CustomizerSummary';
 import CustomizerStudioBackground, { CustomizerStudioGroundShadow } from '../components/CustomizerStudioBackground';
 
-const ModelCustomizer = ({ variant = 'studio' } = {}) => {
+const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
   const isOrbit = variant === 'orbit';
   const { id } = useParams();
   const navigate = useNavigate();
@@ -450,7 +449,7 @@ const ModelCustomizer = ({ variant = 'studio' } = {}) => {
                   orbitSaved ? 'bg-[#64705d]' : 'bg-[#ed560e]'
                 }`}
               >
-                {orbitSaved ? 'Saved' : 'Draft'}
+                {orbitSaved ? 'Saved' : draft ? 'Draft' : 'Summary'}
               </button>
             )}
           </div>
@@ -548,27 +547,18 @@ const ModelCustomizer = ({ variant = 'studio' } = {}) => {
                   <>
                     <CustomizerStudioBackground />
                     <CustomizerCategoryRail
-                      active={orbitCategory === 'engine' ? 'exterior' : orbitCategory}
-                      onChange={setOrbitCategory}
+                      active="exterior"
+                      onChange={() => {}}
                     />
-                    {orbitCategory === 'interior' || orbitCategory === 'accessories' ? (
-                      <CustomizerCategoryPanel
-                        category={orbitCategory}
-                        extras={orbitExtras}
-                        onToggle={handleOrbitExtra}
-                        onBack={() => setOrbitCategory('exterior')}
-                      />
-                    ) : (
-                      <CustomizerOrbitHud
-                        parts={customizerParts}
-                        selectedColors={selectedColors}
-                        availableColors={availableColors}
-                        selectedPart={orbitPart}
-                        onSelectPart={setOrbitPart}
-                        onColorChange={handleColorChange}
-                        partLabels={partLabels}
-                      />
-                    )}
+                    <CustomizerOrbitHud
+                      parts={customizerParts}
+                      selectedColors={selectedColors}
+                      availableColors={availableColors}
+                      selectedPart={orbitPart}
+                      onSelectPart={setOrbitPart}
+                      onColorChange={handleColorChange}
+                      partLabels={partLabels}
+                    />
                   </>
                 )}
                 {/* Boat composite */}

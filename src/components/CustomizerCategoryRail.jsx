@@ -2,8 +2,6 @@ const GOLD = '#C4A36A';
 
 const CATEGORIES = [
   { id: 'exterior', label: 'Exterior' },
-  { id: 'interior', label: 'Interior' },
-  { id: 'accessories', label: 'Accessories' },
 ];
 
 function BoatIcon() {
@@ -16,31 +14,8 @@ function BoatIcon() {
   );
 }
 
-function SofaIcon() {
-  return (
-    <svg viewBox="0 0 64 40" className="w-[70%] h-auto" fill="none" aria-hidden="true">
-      <rect x="8" y="16" width="48" height="14" rx="4" fill="#B8BDC4" />
-      <rect x="12" y="10" width="18" height="10" rx="3" fill="#9AA0A8" />
-      <rect x="34" y="10" width="18" height="10" rx="3" fill="#9AA0A8" />
-      <path d="M10 30h8M46 30h8" stroke="#8A9098" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function AccessoriesIcon() {
-  return (
-    <svg viewBox="0 0 64 40" className="w-[58%] h-auto" fill="none" aria-hidden="true">
-      <rect x="14" y="12" width="16" height="16" rx="3" fill="#B0B5BC" />
-      <circle cx="42" cy="20" r="9" fill="#9AA0A8" />
-      <path d="M20 16h4M20 20h6" stroke="#7C828A" strokeWidth="1.4" />
-    </svg>
-  );
-}
-
 const ICONS = {
   exterior: BoatIcon,
-  interior: SofaIcon,
-  accessories: AccessoriesIcon,
 };
 
 export default function CustomizerCategoryRail({
@@ -82,7 +57,7 @@ export default function CustomizerCategoryRail({
               aria-label={cat.label}
               aria-pressed={selected}
             />
-            {selected && (
+            {selected && CATEGORIES.length > 1 && (
               <>
                 <button
                   type="button"

@@ -41,7 +41,7 @@ function AppShell() {
             <Route path="/categories/:id" element={<CategoryDetail />} />
             <Route path="/models/upcoming" element={<UpcomingModels />} />
             <Route path="/models/:id" element={<ModelDetail />} />
-            <Route path="/models/:id/customize" element={<ModelCustomizer />} />
+            <Route path="/models/:id/customize" element={<ModelCustomizer variant="orbit" />} />
             <Route path="/customizer-draft/:id" element={<DraftCustomizer />} />
             <Route path="/professional" element={<Professional />} />
             <Route path="/dealers" element={<Dealers />} />
