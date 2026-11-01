@@ -871,7 +871,6 @@ const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
       {isOrbit && orbitSummaryOpen && (
         <CustomizerSummary
           modelName={fullModelName}
-          modelImage={finalModel.image || finalModel.heroImage || baseImage}
           selectedColors={selectedColors}
           extras={orbitExtras}
           saved={orbitSaved}

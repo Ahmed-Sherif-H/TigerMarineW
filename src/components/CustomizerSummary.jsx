@@ -22,7 +22,6 @@ function extraLabel(id) {
 
 export default function CustomizerSummary({
   modelName,
-  modelImage,
   selectedColors,
   extras,
   saved,
@@ -55,16 +54,6 @@ export default function CustomizerSummary({
           >
             ×
           </button>
-        </div>
-
-        <div className="grid grid-cols-[1.25fr_1fr] items-center min-h-[9rem] my-4 bg-[#e8ebed] overflow-hidden">
-          {modelImage && <img src={modelImage} alt="" className="w-[120%] mix-blend-multiply object-contain" />}
-          <div className="pr-4">
-            <p className="text-[10px] uppercase tracking-[0.12em] font-semibold mb-2" style={{ color: GOLD }}>
-              Current build
-            </p>
-            <p className="text-sm font-medium text-[#071333] leading-snug max-w-[8rem]">Built for your horizon.</p>
-          </div>
         </div>
 
         <div className="overflow-y-auto border-t border-black/10 flex-1">
