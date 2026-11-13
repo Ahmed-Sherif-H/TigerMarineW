@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ModelsProvider } from './context/ModelsContext';
@@ -19,6 +20,8 @@ import UpcomingModels from './pages/UpcomingModels';
 import ModelCustomizer from './pages/ModelCustomizer';
 import DraftCustomizer from './pages/DraftCustomizer';
 import AdminDashboard from './pages/AdminDashboard';
+
+const Customizer3DTest = lazy(() => import('./pages/Customizer3DTest'));
 import './styles/index.css';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -27,7 +30,10 @@ import Login from './pages/Login';
 function AppShell() {
   const { pathname } = useLocation();
   const hideFooter =
-    /\/models\/[^/]+\/customize$/.test(pathname) || /^\/customizer-draft\//.test(pathname);
+    /\/models\/[^/]+\/customize$/.test(pathname) ||
+    /^\/customizer-draft\//.test(pathname) ||
+    pathname === '/customizer-draft-3d' ||
+    pathname === '/customizer-3d-test';
 
   return (
     <>
@@ -43,6 +49,22 @@ function AppShell() {
             <Route path="/models/:id" element={<ModelDetail />} />
             <Route path="/models/:id/customize" element={<ModelCustomizer variant="orbit" />} />
             <Route path="/customizer-draft/:id" element={<DraftCustomizer />} />
+            <Route
+              path="/customizer-draft-3d"
+              element={
+                <Suspense fallback={null}>
+                  <Customizer3DTest />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/customizer-3d-test"
+              element={
+                <Suspense fallback={null}>
+                  <Customizer3DTest />
+                </Suspense>
+              }
+            />
             <Route path="/professional" element={<Professional />} />
             <Route path="/dealers" element={<Dealers />} />
             <Route path="/boat-shows" element={<BoatShows />} />

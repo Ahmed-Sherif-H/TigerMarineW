@@ -34,5 +34,7 @@ Thumbs.db
 
 # Large media files (excluded from Git)
 # Added automatically by exclude-large-files.ps1
+public/glb-test/*
+!public/glb-test/test-web.glb
 
 
