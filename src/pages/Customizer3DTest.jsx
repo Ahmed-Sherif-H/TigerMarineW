@@ -6,6 +6,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import Customizer3DHud from '../components/Customizer3DHud';
+import StudioLookPanel from '../components/StudioLookPanel';
 import {
   STUDIO_BACKGROUND,
   addReferenceGround,
@@ -14,6 +15,7 @@ import {
   loadStudioHdri,
   markShadowReady,
 } from '../lib/referenceStudio';
+import { DEFAULT_STUDIO_LOOK, applyStudioLook, loadStudioLook, saveStudioLook } from '../lib/studioLook';
 import { customizerParts, is3DCustomizerModel } from '../data/customizerConfig';
 import { getColorHex } from '../data/customizerColorMap';
 import { getAvailableColors } from '../data/customizerColors';
@@ -100,8 +102,8 @@ function frameCamera(camera, controls, object) {
   const vFov = THREE.MathUtils.degToRad(camera.fov);
   const hFov = 2 * Math.atan(Math.tan(vFov * 0.5) * Math.max(camera.aspect, 0.35));
   const dist = Math.max(
-    (size.y * 0.9) / Math.tan(vFov * 0.5),
-    (Math.max(size.x, size.z) * 0.72) / Math.tan(hFov * 0.5),
+    (size.y * 1.08) / Math.tan(vFov * 0.5),
+    (Math.max(size.x, size.z) * 0.88) / Math.tan(hFov * 0.5),
     0.8
   );
   const dir = new THREE.Vector3(0.78, 0.16, 1).normalize();
@@ -132,6 +134,20 @@ export default function Customizer3DTest() {
   const [selectedColors, setSelectedColors] = useState(DEFAULT_COLORS);
   const [hint, setHint] = useState(true);
   const [grabbing, setGrabbing] = useState(false);
+  const [tuneOpen, setTuneOpen] = useState(false);
+  const [look, setLook] = useState(() => (typeof window === 'undefined' ? DEFAULT_STUDIO_LOOK : loadStudioLook()));
+  const lookRef = useRef(look);
+  const studioRef = useRef(null);
+
+  lookRef.current = look;
+
+  function updateLook(patch) {
+    const next = { ...lookRef.current, ...patch };
+    lookRef.current = next;
+    setLook(next);
+    saveStudioLook(next);
+    applyStudioLook(studioRef.current, next);
+  }
 
   const hudParts = useMemo(
     () => customizerParts.filter((part) => part.key !== 'base'),
@@ -206,12 +222,18 @@ export default function Customizer3DTest() {
     controls.maxPolarAngle = Math.PI * 0.48;
     controls.autoRotate = false;
 
-    addReferenceLights(scene);
+    const lights = addReferenceLights(scene);
+    const studio = { renderer, scene, ...lights, floor: null, bands: null };
+    studioRef.current = studio;
+    applyStudioLook(studio, lookRef.current);
     loadStudioHdri(renderer, scene, {
       onLoad: (env) => {
-        if (!disposed) return;
-        env.dispose();
-        scene.environment = null;
+        if (disposed) {
+          env.dispose();
+          scene.environment = null;
+          return;
+        }
+        applyStudioLook(studioRef.current, lookRef.current);
       },
     });
 
@@ -428,7 +450,12 @@ export default function Customizer3DTest() {
         model.position.y -= hullBox.min.y;
         model.position.y += 0.48;
         model.updateMatrixWorld(true);
-        addReferenceGround(scene, 0);
+        const ground = addReferenceGround(scene, 0);
+        if (studioRef.current) {
+          studioRef.current.floor = ground.floor;
+          studioRef.current.bands = ground.studioShadows;
+          applyStudioLook(studioRef.current, lookRef.current);
+        }
         markShadowReady(model);
         rig.add(model);
 
@@ -478,6 +505,7 @@ export default function Customizer3DTest() {
       controls.removeEventListener('start', onControlStart);
       controls.removeEventListener('end', onControlEnd);
       tourRef.current = { goTo: () => {} };
+      studioRef.current = null;
       controls.dispose();
       draco.dispose();
       scene.environment?.dispose();
@@ -508,9 +536,18 @@ export default function Customizer3DTest() {
             Customize your boat
           </p>
         </div>
-        <Link to={backTo} className="pointer-events-auto text-xs text-[#85898f] hover:text-smoked-saffron">
-          Back
-        </Link>
+        <div className="pointer-events-auto flex items-center gap-3">
+          <button
+            type="button"
+            className="text-xs text-[#85898f] hover:text-smoked-saffron"
+            onClick={() => setTuneOpen((open) => !open)}
+          >
+            {tuneOpen ? 'Hide tuner' : 'Tune look'}
+          </button>
+          <Link to={backTo} className="text-xs text-[#85898f] hover:text-smoked-saffron">
+            Back
+          </Link>
+        </div>
       </header>
 
       <div className={compact ? 'w-full' : 'h-[calc(100dvh-5rem)]'}>
@@ -520,6 +557,13 @@ export default function Customizer3DTest() {
             className="absolute inset-0 z-10"
             style={{ cursor: grabbing ? 'grabbing' : 'grab' }}
           />
+          {ready && tuneOpen && !compact && (
+            <StudioLookPanel
+              look={look}
+              onChange={updateLook}
+              onReset={() => updateLook({ ...DEFAULT_STUDIO_LOOK })}
+            />
+          )}
           {ready && !compact && (
             <Customizer3DHud
               partKey={selected}
@@ -542,6 +586,14 @@ export default function Customizer3DTest() {
             </div>
           )}
         </div>
+        {ready && tuneOpen && compact && (
+          <StudioLookPanel
+            look={look}
+            compact
+            onChange={updateLook}
+            onReset={() => updateLook({ ...DEFAULT_STUDIO_LOOK })}
+          />
+        )}
         {ready && compact && (
           <Customizer3DHud
             partKey={selected}

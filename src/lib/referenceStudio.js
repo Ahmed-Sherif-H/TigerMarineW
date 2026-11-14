@@ -1,62 +1,17 @@
 import * as THREE from 'three';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { createLuxuryStudioShadows } from './luxuryStudioShadows';
+import { DEFAULT_STUDIO_LOOK, sunPositionFromLook } from './studioLook';
 
 export const STUDIO_HDRI_URL = '/hdri/white_studio_03_2k.hdr';
-export const STUDIO_BACKGROUND = '#f5f3f0';
-
-const BAND_VERTEX = `
-  varying vec2 vUv;
-  void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-const BAND_FRAGMENT = `
-  varying vec2 vUv;
-  void main() {
-    vec2 p = vUv * 2.0 - 1.0;
-    float d = p.x * 0.52 + p.y * 0.86;
-    float light1 = exp(-pow((d - 0.18) / 0.30, 2.0));
-    float light2 = exp(-pow((d - 0.78) / 0.22, 2.0));
-    float shade1 = exp(-pow((d + 0.28) / 0.24, 2.0));
-    float shade2 = exp(-pow((d + 0.72) / 0.34, 2.0));
-    float falloff = 1.0 - smoothstep(0.42, 1.08, length(p * vec2(0.85, 1.0)));
-    float lightA = (light1 * 0.10 + light2 * 0.06) * falloff;
-    float shadeA = (shade1 * 0.11 + shade2 * 0.07) * falloff;
-    float alpha = lightA + shadeA;
-    vec3 lightColor = vec3(1.0, 0.96, 0.88);
-    vec3 shadeColor = vec3(0.42, 0.45, 0.52);
-    vec3 color = (lightColor * lightA + shadeColor * shadeA) / max(alpha, 0.0001);
-    gl_FragColor = vec4(color, alpha);
-  }
-`;
-
-function createSunlightBands(floorY) {
-  const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(36, 36),
-    new THREE.ShaderMaterial({
-      vertexShader: BAND_VERTEX,
-      fragmentShader: BAND_FRAGMENT,
-      transparent: true,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-      toneMapped: false,
-    }),
-  );
-  mesh.rotation.x = -Math.PI / 2;
-  mesh.position.set(0, floorY + 0.01, 0);
-  mesh.renderOrder = 2;
-  mesh.name = 'studio-sunlight-bands';
-  return mesh;
-}
+export const STUDIO_BACKGROUND = '#f5f3ef';
 
 function createFloor(floorY) {
   const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(36, 36),
+    new THREE.PlaneGeometry(48, 48),
     new THREE.ShadowMaterial({
       color: '#3a3d45',
-      opacity: 0.32,
+      opacity: DEFAULT_STUDIO_LOOK.floorShadow,
     }),
   );
   mesh.receiveShadow = true;
@@ -69,18 +24,21 @@ function createFloor(floorY) {
 export function applyReferenceRenderer(renderer) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.15;
+  renderer.toneMappingExposure = DEFAULT_STUDIO_LOOK.exposure;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setClearColor(STUDIO_BACKGROUND, 1);
 }
 
 export function addReferenceLights(scene) {
-  const hemi = new THREE.HemisphereLight(0xffffff, 0xd9d5d0, 0.16);
+  const look = DEFAULT_STUDIO_LOOK;
+  const sunPos = sunPositionFromLook(look);
+
+  const hemi = new THREE.HemisphereLight(0xfff6ee, 0xd0cdc8, look.hemiIntensity);
   scene.add(hemi);
 
-  const sun = new THREE.DirectionalLight(0xfff1d0, 3.15);
-  sun.position.set(12, 16, 4);
+  const sun = new THREE.DirectionalLight(0xfff0dc, look.sunIntensity);
+  sun.position.copy(sunPos);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.camera.left = -10;
@@ -90,24 +48,35 @@ export function addReferenceLights(scene) {
   sun.shadow.camera.near = 0.5;
   sun.shadow.camera.far = 45;
   sun.shadow.bias = -0.00015;
-  sun.shadow.normalBias = 0.03;
-  sun.shadow.radius = 3.5;
+  sun.shadow.normalBias = 0.04;
+  sun.shadow.radius = look.shadowRadius;
   sun.target.position.set(0, 0.7, 0);
   scene.add(sun);
   scene.add(sun.target);
 
-  const fill = new THREE.DirectionalLight(0xe8ebf3, 0.18);
-  fill.position.set(-8, 5, -2);
-  scene.add(fill);
+  const lamp = new THREE.PointLight(0xfff0dc, look.lampIntensity, 36, 2);
+  lamp.position.copy(sunPos);
+  scene.add(lamp);
 
-  return { hemi, sun, fill };
+  return { hemi, sun, lamp, sunPos };
 }
 
 export function addReferenceGround(scene, floorY) {
+  const look = DEFAULT_STUDIO_LOOK;
   const floor = createFloor(floorY);
-  const bands = createSunlightBands(floorY);
-  scene.add(floor, bands);
-  return { floor, bands };
+  const sunPos = sunPositionFromLook(look);
+  const bandAngle = THREE.MathUtils.radToDeg(Math.atan2(sunPos.z, -sunPos.x));
+  const studioShadows = createLuxuryStudioShadows({
+    floorY,
+    size: 80,
+    angle: bandAngle,
+    opacity: look.bandOpacity,
+    offsetX: 0,
+    offsetZ: 0,
+    color: '#8a8680',
+  });
+  scene.add(floor, studioShadows);
+  return { floor, studioShadows };
 }
 
 export function markShadowReady(root) {
@@ -127,9 +96,9 @@ export function loadStudioHdri(renderer, scene, { onLoad, onError } = {}) {
     (texture) => {
       const env = pmrem.fromEquirectangular(texture).texture;
       scene.environment = env;
-      scene.environmentIntensity = 0.85;
+      scene.environmentIntensity = DEFAULT_STUDIO_LOOK.hdri;
       if ('environmentRotation' in scene) {
-        scene.environmentRotation.set(0, Math.PI / 5, 0);
+        scene.environmentRotation.set(0, -Math.PI / 3, 0);
       }
       texture.dispose();
       pmrem.dispose();
