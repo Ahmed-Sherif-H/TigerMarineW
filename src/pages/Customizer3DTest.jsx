@@ -527,7 +527,7 @@ export default function Customizer3DTest() {
 
   return (
     <div className={`${compact ? 'min-h-[100dvh] overflow-x-hidden overflow-y-auto' : 'h-[100dvh] overflow-hidden'} pt-20 bg-[#ECEDEF] text-midnight-slate`}>
-      <header className={`${compact ? 'relative z-30' : 'absolute top-20 left-0 right-0 z-30 pointer-events-none'} px-5 h-[3.4rem] flex items-center justify-between`}>
+      <header className={`${compact ? 'relative z-50' : 'absolute top-20 left-0 right-0 z-50 pointer-events-none'} px-5 h-[3.4rem] flex items-center justify-between`}>
         <div className="min-w-0 pointer-events-auto">
           <h1 className={`${compact ? 'text-base tracking-[0.14em]' : 'text-[1.2rem] tracking-[0.22em]'} font-medium uppercase truncate`} style={{ color: GOLD }}>
             Infinity 280
@@ -562,6 +562,7 @@ export default function Customizer3DTest() {
               look={look}
               onChange={updateLook}
               onReset={() => updateLook({ ...DEFAULT_STUDIO_LOOK })}
+              onClose={() => setTuneOpen(false)}
             />
           )}
           {ready && !compact && (
@@ -592,6 +593,7 @@ export default function Customizer3DTest() {
             compact
             onChange={updateLook}
             onReset={() => updateLook({ ...DEFAULT_STUDIO_LOOK })}
+            onClose={() => setTuneOpen(false)}
           />
         )}
         {ready && compact && (

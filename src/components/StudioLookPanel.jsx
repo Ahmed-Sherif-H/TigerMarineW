@@ -20,7 +20,7 @@ function Slider({ label, min, max, step, value, onChange }) {
   );
 }
 
-export default function StudioLookPanel({ look, onChange, onReset, compact }) {
+export default function StudioLookPanel({ look, onChange, onReset, onClose, compact }) {
   const set = (key) => (value) => onChange({ [key]: value });
 
   async function copySettings() {
@@ -34,20 +34,27 @@ export default function StudioLookPanel({ look, onChange, onReset, compact }) {
 
   return (
     <aside
-      className={`pointer-events-auto z-40 w-[17.5rem] max-h-[min(78dvh,36rem)] overflow-y-auto rounded-2xl border border-black/10 bg-white/92 p-3 shadow-[0_12px_40px_rgba(40,48,58,0.16)] backdrop-blur-md ${
-        compact ? 'relative mx-4 mb-4' : 'absolute right-4 top-4'
+      className={`pointer-events-auto z-40 w-[17.5rem] max-h-[min(72dvh,34rem)] overflow-y-auto rounded-2xl border border-black/10 bg-white/92 p-3 shadow-[0_12px_40px_rgba(40,48,58,0.16)] backdrop-blur-md ${
+        compact ? 'relative mx-4 mb-4' : 'absolute right-4 top-16'
       }`}
     >
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-[10px] font-semibold uppercase tracking-[0.16em]" style={{ color: GOLD }}>
           Tune look
         </p>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <button type="button" className="text-[10px] uppercase tracking-[0.12em] text-[#85898f] hover:text-[#071333]" onClick={() => void copySettings()}>
             Copy
           </button>
           <button type="button" className="text-[10px] uppercase tracking-[0.12em] text-[#85898f] hover:text-[#071333]" onClick={onReset}>
             Reset
+          </button>
+          <button
+            type="button"
+            className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-[#071333] hover:bg-black/5"
+            onClick={onClose}
+          >
+            Close
           </button>
         </div>
       </div>
