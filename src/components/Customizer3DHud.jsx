@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getColorHex } from '../data/customizerColorMap';
 
 const GOLD = '#C4A36A';
+const CIRCLE_MIN = 56;
+const CIRCLE_MAX = 70;
 
 const HUD_LABELS = {
   deckFloor: 'Deck Floor',
@@ -11,6 +13,15 @@ const HUD_LABELS = {
   tubeDecoration: 'Tube Decoration',
   upholestry: 'Upholstery',
 };
+
+const CALL_OUTS = [
+  { key: 'upholestry', side: 'left', left: 0.055, top: 0.22 },
+  { key: 'tubeDecoration', side: 'left', left: 0.045, top: 0.46 },
+  { key: 'tube', side: 'left', left: 0.07, top: 0.72 },
+  { key: 'fiberglass', side: 'right', left: 0.88, top: 0.20 },
+  { key: 'sideFender', side: 'right', left: 0.91, top: 0.46 },
+  { key: 'deckFloor', side: 'right', left: 0.89, top: 0.72 },
+];
 
 function textureFor(key) {
   if (key === 'upholestry') {
@@ -30,151 +41,231 @@ function visibleColors(colors) {
   return colors.filter((c) => !(c === 'Baige' && hasBeige));
 }
 
-function PartDisc({ partKey, color, size, active }) {
+function PartOption({
+  partKey,
+  color,
+  colors,
+  label,
+  active,
+  circle,
+  align = 'left',
+  onSelect,
+  onPick,
+}) {
+  const hex = getColorHex(color);
+  const isRight = align === 'right';
+
   return (
-    <span
-      className="relative shrink-0 rounded-full"
-      style={{
-        width: size,
-        height: size,
-        backgroundColor: getColorHex(color),
-        backgroundImage: textureFor(partKey),
-        border: active ? `1.5px solid ${GOLD}` : '1px solid rgba(7,19,51,0.14)',
-        boxShadow: active
-          ? '0 0 0 3px rgba(196,163,106,0.22), 0 8px 18px rgba(40,48,58,0.12)'
-          : '0 1px 3px rgba(7,19,51,0.1)',
-      }}
-    />
+    <div
+      className={`pointer-events-auto flex items-start gap-2.5 ${isRight ? 'flex-row-reverse text-right' : ''}`}
+    >
+      <button
+        type="button"
+        onClick={() => onSelect(partKey)}
+        className="relative shrink-0 rounded-full"
+        style={{
+          width: circle,
+          height: circle,
+          backgroundColor: hex,
+          backgroundImage: textureFor(partKey),
+          border: `1.5px solid ${GOLD}`,
+          boxShadow: active
+            ? '0 0 0 3px rgba(196,163,106,0.28), 0 5px 12px rgba(40,48,58,0.14)'
+            : '0 4px 10px rgba(40,48,58,0.1)',
+        }}
+        aria-label={label}
+      />
+      <div className="relative z-10 min-w-0" style={{ paddingTop: circle * 0.28 }}>
+        <p
+          className="text-[10px] uppercase tracking-[0.16em] font-semibold leading-none whitespace-nowrap"
+          style={{ color: GOLD }}
+        >
+          {label}
+        </p>
+        <p className="mt-1 text-[11px] text-[#6b7178] leading-none">
+          {color === 'Baige' ? 'Beige' : color}
+        </p>
+        <div className={`flex flex-wrap gap-1.5 mt-1.5 ${isRight ? 'justify-end' : ''}`}>
+          {colors.map((c) => {
+            const selected = c === color || (c === 'Beige' && color === 'Baige');
+            return (
+              <button
+                key={c}
+                type="button"
+                title={c}
+                onClick={() => onPick(c)}
+                className="rounded-full transition-transform hover:scale-110"
+                style={{
+                  width: 12,
+                  height: 12,
+                  backgroundColor: getColorHex(c),
+                  border: selected
+                    ? `1.5px solid ${GOLD}`
+                    : '1px solid rgba(7,19,51,0.14)',
+                  boxShadow: selected ? '0 0 0 2px rgba(196,163,106,0.28)' : '0 1px 3px rgba(7,19,51,0.12)',
+                }}
+              />
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 
 export default function Customizer3DHud({
   partKey,
-  stationKeys,
   selectedColors,
   availableColors,
   onColorChange,
   onGoTo,
   hint,
   stacked = false,
-  onBind,
 }) {
-  const pinRef = useRef(null);
-  const rowRef = useRef(null);
+  const rootRef = useRef(null);
+  const [box, setBox] = useState({ w: 0, h: 0 });
 
   useEffect(() => {
-    if (!onBind) return undefined;
-    const update = ({ pinX, pinY, opacity }) => {
-      const pin = pinRef.current;
-      if (!pin) return;
-      pin.style.opacity = String(opacity);
-      pin.style.transform = `translate(${pinX - 5}px, ${pinY - 5}px)`;
+    if (stacked) return undefined;
+    const el = rootRef.current;
+    if (!el) return undefined;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      setBox({ w: r.width, h: r.height });
     };
-    onBind(update);
-    return () => onBind(null);
-  }, [onBind, partKey]);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [stacked]);
 
-  useEffect(() => {
-    const active = rowRef.current?.querySelector('[data-active="true"]');
-    active?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
-  }, [partKey]);
+  const selectPart = (key) => {
+    if (key) onGoTo(key);
+  };
 
-  return (
-    <div className="absolute inset-0 z-20 pointer-events-none overflow-visible">
-      <span
-        ref={pinRef}
-        className="absolute top-0 left-0 w-2.5 h-2.5 rounded-full"
-        style={{
-          background: GOLD,
-          boxShadow: '0 0 0 4px rgba(196,163,106,0.28)',
-          opacity: 0,
-          willChange: 'transform, opacity',
-        }}
-      />
-
-      <div
-        className={
-          stacked
-            ? 'absolute left-0 right-0 top-full px-4 pt-2 pb-4 flex flex-col items-center gap-2'
-            : 'absolute bottom-0 left-0 right-0 px-4 pb-2.5 pt-1 flex flex-col items-center gap-2'
-        }
-      >
+  if (stacked) {
+    return (
+      <div className="relative z-20 px-4 pb-8 pt-2">
         {hint && (
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[#071333]/45">
+          <p className="mb-3 text-center text-[10px] uppercase tracking-[0.2em] text-[#071333]/45">
             Drag to rotate in 3D
           </p>
         )}
-
-        <div
-          ref={rowRef}
-          className="pointer-events-auto flex items-end justify-start sm:justify-center gap-2 max-w-full overflow-x-auto pb-1 scroll-px-4"
-        >
-          {stationKeys.map((key) => {
-            const active = key === partKey;
-            const color = selectedColors[key];
-            const label = HUD_LABELS[key] || key;
-            const colors = visibleColors(availableColors[key] || []);
+        <div className="grid grid-cols-1 gap-2.5">
+          {CALL_OUTS.map((slot) => {
+            const color = selectedColors[slot.key];
+            const hex = getColorHex(color);
+            const colors = visibleColors(availableColors[slot.key] || []);
+            const label = HUD_LABELS[slot.key];
+            const isActive = partKey === slot.key;
             return (
               <div
-                key={key}
-                data-active={active ? 'true' : 'false'}
-                className="shrink-0 rounded-2xl border bg-white/90 shadow-[0_8px_24px_rgba(40,48,58,0.1)] backdrop-blur-md transition-all duration-500 ease-out"
+                key={slot.key}
+                className="flex items-start gap-3 rounded-2xl px-3 py-3"
                 style={{
-                  borderColor: active ? 'rgba(196,163,106,0.45)' : 'rgba(7,19,51,0.08)',
-                  padding: active ? '10px 14px' : '8px 8px 7px',
+                  background: isActive ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.55)',
+                  border: isActive ? `1px solid ${GOLD}` : '1px solid rgba(0,0,0,0.06)',
                 }}
               >
-                {active ? (
-                  <div className="flex items-center gap-3 min-w-[10.5rem]">
-                    <PartDisc partKey={key} color={color} size={48} active />
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-[0.16em] font-semibold leading-none" style={{ color: GOLD }}>
-                        {label}
-                      </p>
-                      <p className="mt-1.5 text-[13px] text-[#6b7178] leading-none">
-                        {color === 'Baige' ? 'Beige' : color}
-                      </p>
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {colors.map((c) => {
-                          const picked = c === color || (c === 'Beige' && color === 'Baige');
-                          return (
-                            <button
-                              key={c}
-                              type="button"
-                              title={c}
-                              onClick={() => onColorChange(key, c)}
-                              className="rounded-full transition-transform hover:scale-110"
-                              style={{
-                                width: 14,
-                                height: 14,
-                                backgroundColor: getColorHex(c),
-                                border: picked ? `1.5px solid ${GOLD}` : '1px solid rgba(7,19,51,0.14)',
-                                boxShadow: picked ? '0 0 0 2px rgba(196,163,106,0.28)' : '0 1px 3px rgba(7,19,51,0.12)',
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => onGoTo(key)}
-                    className="flex flex-col items-center gap-1.5 min-w-[3.1rem]"
-                    aria-label={label}
+                <button
+                  type="button"
+                  onClick={() => selectPart(slot.key)}
+                  className="relative shrink-0 rounded-full"
+                  style={{
+                    width: 52,
+                    height: 52,
+                    backgroundColor: hex,
+                    backgroundImage: textureFor(slot.key),
+                    border: `1.5px solid ${GOLD}`,
+                    boxShadow: isActive
+                      ? '0 0 0 3px rgba(196,163,106,0.28), 0 5px 12px rgba(40,48,58,0.14)'
+                      : '0 4px 10px rgba(40,48,58,0.1)',
+                  }}
+                  aria-label={label}
+                />
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <p
+                    className="text-[10px] uppercase tracking-[0.16em] font-semibold leading-none"
+                    style={{ color: GOLD }}
                   >
-                    <PartDisc partKey={key} color={color} size={32} active={false} />
-                    <span className="text-[8px] uppercase tracking-[0.12em] text-[#071333]/40 leading-none whitespace-nowrap">
-                      {label}
-                    </span>
-                  </button>
-                )}
+                    {label}
+                  </p>
+                  <p className="mt-1.5 text-[13px] text-[#6b7178] leading-none">
+                    {color === 'Baige' ? 'Beige' : color}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    {colors.map((c) => {
+                      const selected = c === color || (c === 'Beige' && color === 'Baige');
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          title={c}
+                          onClick={() => onColorChange(slot.key, c)}
+                          className="rounded-full transition-transform hover:scale-110"
+                          style={{
+                            width: 14,
+                            height: 14,
+                            backgroundColor: getColorHex(c),
+                            border: selected
+                              ? `1.5px solid ${GOLD}`
+                              : '1px solid rgba(7,19,51,0.14)',
+                            boxShadow: selected
+                              ? '0 0 0 2px rgba(196,163,106,0.28)'
+                              : '0 1px 3px rgba(7,19,51,0.12)',
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             );
           })}
         </div>
       </div>
+    );
+  }
+
+  const { w, h } = box;
+  const circle = Math.round(Math.min(CIRCLE_MAX, Math.max(CIRCLE_MIN, w * 0.036)));
+
+  return (
+    <div ref={rootRef} className="absolute inset-0 z-20 pointer-events-none">
+      {hint && (
+        <p className="absolute bottom-4 left-0 right-0 text-center text-[10px] uppercase tracking-[0.2em] text-[#071333]/45">
+          Drag to rotate in 3D
+        </p>
+      )}
+      {w > 0 &&
+        CALL_OUTS.map((slot) => {
+          const circleX = slot.left * w;
+          const circleY = slot.top * h;
+          const isRight = slot.side === 'right';
+          return (
+            <div
+              key={slot.key}
+              className="absolute"
+              style={{
+                left: isRight ? undefined : circleX - circle / 2,
+                right: isRight ? w - circleX - circle / 2 : undefined,
+                top: circleY - circle / 2,
+              }}
+            >
+              <PartOption
+                partKey={slot.key}
+                color={selectedColors[slot.key]}
+                colors={visibleColors(availableColors[slot.key] || [])}
+                label={HUD_LABELS[slot.key]}
+                active={partKey === slot.key}
+                circle={circle}
+                align={slot.side}
+                onSelect={selectPart}
+                onPick={(c) => onColorChange(slot.key, c)}
+              />
+            </div>
+          );
+        })}
     </div>
   );
 }

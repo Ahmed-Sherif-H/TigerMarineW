@@ -1,14 +1,20 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import * as THREE from 'three';
+import { useModels } from '../context/ModelsContext';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
-import CustomizerStudioBackground from '../components/CustomizerStudioBackground';
 import Customizer3DHud from '../components/Customizer3DHud';
-import { customizerParts } from '../data/customizerConfig';
+import {
+  STUDIO_BACKGROUND,
+  addReferenceGround,
+  addReferenceLights,
+  applyReferenceRenderer,
+  loadStudioHdri,
+  markShadowReady,
+} from '../lib/referenceStudio';
+import { customizerParts, is3DCustomizerModel } from '../data/customizerConfig';
 import { getColorHex } from '../data/customizerColorMap';
 import { getAvailableColors } from '../data/customizerColors';
 
@@ -87,67 +93,43 @@ function attachOnHull(key, box) {
   );
 }
 
-function makeContactShadow() {
-  const size = 256;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  const gradient = ctx.createRadialGradient(size / 2, size / 2, size * 0.06, size / 2, size / 2, size * 0.48);
-  gradient.addColorStop(0, 'rgba(40,48,58,0.34)');
-  gradient.addColorStop(0.42, 'rgba(40,48,58,0.12)');
-  gradient.addColorStop(1, 'rgba(40,48,58,0)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, size, size);
-  const texture = new THREE.CanvasTexture(canvas);
-  const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(1, 1),
-    new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, opacity: 0.9 })
-  );
-  mesh.rotation.x = -Math.PI / 2;
-  mesh.renderOrder = -1;
-  mesh.name = 'ground';
-  return mesh;
-}
-
 function frameCamera(camera, controls, object) {
   const box = new THREE.Box3().setFromObject(object);
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
-  const radius = Math.max(size.length() * 0.5, 0.2);
   const vFov = THREE.MathUtils.degToRad(camera.fov);
   const hFov = 2 * Math.atan(Math.tan(vFov * 0.5) * Math.max(camera.aspect, 0.35));
   const dist = Math.max(
-    (size.y * 0.52) / Math.tan(vFov * 0.5),
-    (Math.max(size.x, size.z) * 0.38) / Math.tan(hFov * 0.5),
+    (size.y * 0.9) / Math.tan(vFov * 0.5),
+    (Math.max(size.x, size.z) * 0.72) / Math.tan(hFov * 0.5),
     0.8
   );
-  const dir = new THREE.Vector3(0.72, 0.38, 1).normalize();
+  const dir = new THREE.Vector3(0.78, 0.16, 1).normalize();
   camera.position.copy(center).addScaledVector(dir, dist);
   camera.near = Math.max(dist / 180, 0.02);
   camera.far = dist * 22;
   camera.updateProjectionMatrix();
   controls.target.copy(center);
-  controls.target.y -= size.y * 0.12;
-  controls.minDistance = dist * 0.68;
-  controls.maxDistance = dist * 2.4;
+  controls.target.y -= size.y * 0.14;
+  controls.minDistance = dist * 0.82;
+  controls.maxDistance = dist * 2.2;
   controls.update();
 }
 
 export default function Customizer3DTest() {
+  const { models } = useModels();
+  const infinityModel = (models || []).find((model) => is3DCustomizerModel(model.name));
+  const backTo = infinityModel ? `/models/${infinityModel.id}` : '/';
   const hostRef = useRef(null);
   const partsRef = useRef({});
-  const hudUpdateRef = useRef(null);
   const tourRef = useRef({ goTo: () => {} });
   const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState('Waiting for optimized model…');
+  const [status, setStatus] = useState('Loading 3D boat…');
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
   const [compact, setCompact] = useState(false);
   const [selected, setSelected] = useState('fiberglass');
   const [selectedColors, setSelectedColors] = useState(DEFAULT_COLORS);
-  const [station, setStation] = useState(0);
-  const [stationKeys, setStationKeys] = useState(() => TOUR.map((step) => step.key));
   const [hint, setHint] = useState(true);
   const [grabbing, setGrabbing] = useState(false);
 
@@ -163,8 +145,12 @@ export default function Customizer3DTest() {
     return next;
   }, [hudParts]);
 
-  const bindHud = useCallback((fn) => {
-    hudUpdateRef.current = fn;
+  useEffect(() => {
+    const previous = document.title;
+    document.title = 'Infinity 280 | Tiger Marine';
+    return () => {
+      document.title = previous;
+    };
   }, []);
 
   useEffect(() => {
@@ -194,14 +180,12 @@ export default function Customizer3DTest() {
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
-      alpha: true,
+      alpha: false,
       powerPreference: 'high-performance',
       logarithmicDepthBuffer: true,
     });
-    renderer.setClearColor(0x000000, 0);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.22;
+    applyReferenceRenderer(renderer);
+    scene.background = new THREE.Color(STUDIO_BACKGROUND);
     renderer.domElement.style.display = 'block';
     renderer.domElement.style.width = '100%';
     renderer.domElement.style.height = '100%';
@@ -218,36 +202,18 @@ export default function Customizer3DTest() {
     controls.enableZoom = true;
     controls.rotateSpeed = 0.68;
     controls.zoomSpeed = 0.85;
-    controls.minPolarAngle = 0.12;
-    controls.maxPolarAngle = Math.PI * 0.58;
+    controls.minPolarAngle = 0.32;
+    controls.maxPolarAngle = Math.PI * 0.48;
     controls.autoRotate = false;
 
-    RectAreaLightUniformsLib.init();
-    const pmrem = new THREE.PMREMGenerator(renderer);
-    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.02).texture;
-    scene.environmentIntensity = 0.28;
-    scene.add(new THREE.HemisphereLight(0xfffdf8, 0xc5c9d0, 0.32));
-    const sun = new THREE.DirectionalLight(0xfff6ea, 2.15);
-    sun.position.set(7.2, 9.4, 4.2);
-    scene.add(sun);
-    scene.add(sun.target);
-    sun.target.position.set(-0.4, 0, -0.6);
-    const keySoft = new THREE.RectAreaLight(0xfffaf4, 14, 11, 6);
-    keySoft.position.set(5.8, 7.6, 3.4);
-    keySoft.lookAt(0, 0.15, 0);
-    scene.add(keySoft);
-    const fill = new THREE.RectAreaLight(0xe7eef6, 5.5, 8, 9);
-    fill.position.set(-6.2, 3.2, 1.2);
-    fill.lookAt(0, 0.1, 0);
-    scene.add(fill);
-    const rim = new THREE.RectAreaLight(0xffffff, 6.5, 7, 3.2);
-    rim.position.set(-1.4, 4.8, -6.4);
-    rim.lookAt(0, 0.2, 0);
-    scene.add(rim);
-    const floorLift = new THREE.RectAreaLight(0xfff8f1, 2.4, 10, 4);
-    floorLift.position.set(0.4, -2.6, 2.2);
-    floorLift.lookAt(0, 0, 0);
-    scene.add(floorLift);
+    addReferenceLights(scene);
+    loadStudioHdri(renderer, scene, {
+      onLoad: (env) => {
+        if (!disposed) return;
+        env.dispose();
+        scene.environment = null;
+      },
+    });
 
     const rig = new THREE.Group();
     scene.add(rig);
@@ -258,8 +224,9 @@ export default function Customizer3DTest() {
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
-      const hud = Math.min(168, Math.round(h * 0.2));
-      camera.setViewOffset(w, h + hud, 0, hud, w, h);
+      const side = w >= 1100 ? Math.round(w * 0.24) : 0;
+      if (side) camera.setViewOffset(w + side * 2, h, side, 0, w, h);
+      else camera.clearViewOffset();
       camera.updateProjectionMatrix();
     };
     fit();
@@ -273,8 +240,6 @@ export default function Customizer3DTest() {
     }));
     let stationIndex = 0;
     let anim = null;
-    const worldPin = new THREE.Vector3();
-    const project = new THREE.Vector3();
     const camOffset = new THREE.Vector3();
     const camSpherical = new THREE.Spherical();
 
@@ -314,7 +279,6 @@ export default function Customizer3DTest() {
       stationIndex = index;
       const key = stations[index].key;
       highlightPart(key);
-      setStation(index);
       setSelected(key);
     };
 
@@ -398,29 +362,6 @@ export default function Customizer3DTest() {
         applyStationState(nearestIndex(cameraTheta()));
       }
       renderer.render(scene, camera);
-
-      const updater = hudUpdateRef.current;
-      const step = stations[stationIndex];
-      if (updater && step?.object) {
-        step.object.getWorldPosition(worldPin);
-        project.copy(worldPin).project(camera);
-        const w = host.clientWidth;
-        const h = host.clientHeight;
-        const pinX = (project.x * 0.5 + 0.5) * w;
-        const pinY = (-project.y * 0.5 + 0.5) * h;
-        const onScreen =
-          project.z > -1 &&
-          project.z < 1 &&
-          pinX > 8 &&
-          pinX < w - 8 &&
-          pinY > 8 &&
-          pinY < h - 96;
-        updater({
-          pinX,
-          pinY,
-          opacity: onScreen ? 1 : 0,
-        });
-      }
       frame = requestAnimationFrame(tick);
     };
     tick();
@@ -447,12 +388,14 @@ export default function Customizer3DTest() {
         model.traverse((obj) => {
           if (!obj.isMesh) return;
           obj.frustumCulled = false;
+          obj.castShadow = true;
+          obj.receiveShadow = true;
           const list = Array.isArray(obj.material) ? obj.material : [obj.material];
           const partsOnMesh = new Set();
           list.forEach((mat) => {
             if (!mat) return;
             mat.side = THREE.DoubleSide;
-            mat.envMapIntensity = 0.42;
+            mat.envMapIntensity = 0.9;
             if ('roughness' in mat) mat.roughness = Math.max(Number(mat.roughness) || 0, 0.32);
             if ('metalness' in mat && Number(mat.metalness) > 0.85) mat.metalness = 0.58;
             if ('transmission' in mat && Number(mat.transmission) > 0 && !/glass|wind|plexy/i.test(mat.name || '')) {
@@ -482,14 +425,11 @@ export default function Customizer3DTest() {
 
         model.updateMatrixWorld(true);
         const hullBox = new THREE.Box3().setFromObject(model);
-        const fitted = hullBox.clone();
-        const fitSize = fitted.getSize(new THREE.Vector3());
-        const fitCenter = fitted.getCenter(new THREE.Vector3());
-        const shadow = makeContactShadow();
-        shadow.position.set(fitCenter.x - fitSize.x * 0.04, fitted.min.y - 0.02, fitCenter.z + fitSize.z * 0.04);
-        shadow.scale.set(fitSize.x * 1.55, fitSize.z * 1.7, 1);
-
-        rig.add(shadow);
+        model.position.y -= hullBox.min.y;
+        model.position.y += 0.48;
+        model.updateMatrixWorld(true);
+        addReferenceGround(scene, 0);
+        markShadowReady(model);
         rig.add(model);
 
         stations.forEach((step) => {
@@ -507,7 +447,6 @@ export default function Customizer3DTest() {
         });
 
         stations.sort((a, b) => a.yaw - b.yaw);
-        setStationKeys(stations.map((step) => step.key));
         fit();
         frameCamera(camera, controls, rig);
         stationIndex = -1;
@@ -525,7 +464,7 @@ export default function Customizer3DTest() {
         const missing = String(err?.message || err).includes('404') || err?.status === 404;
         setError(
           missing
-            ? 'The optimized model is not ready yet. Refresh after test-web.glb is available.'
+            ? 'The Infinity 280 3D model could not be found. Please refresh and try again.'
             : `Could not load the 3D model. ${err?.message || err}`
         );
         setStatus('');
@@ -541,7 +480,7 @@ export default function Customizer3DTest() {
       tourRef.current = { goTo: () => {} };
       controls.dispose();
       draco.dispose();
-      pmrem.dispose();
+      scene.environment?.dispose();
       renderer.dispose();
       if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
     };
@@ -562,37 +501,33 @@ export default function Customizer3DTest() {
     <div className={`${compact ? 'min-h-[100dvh] overflow-x-hidden overflow-y-auto' : 'h-[100dvh] overflow-hidden'} pt-20 bg-[#ECEDEF] text-midnight-slate`}>
       <header className={`${compact ? 'relative z-30' : 'absolute top-20 left-0 right-0 z-30 pointer-events-none'} px-5 h-[3.4rem] flex items-center justify-between`}>
         <div className="min-w-0 pointer-events-auto">
-          <p className="text-[10px] uppercase tracking-[0.22em] font-semibold" style={{ color: GOLD }}>
-            3D customizer draft · live site unchanged
-          </p>
           <h1 className={`${compact ? 'text-base tracking-[0.14em]' : 'text-[1.2rem] tracking-[0.22em]'} font-medium uppercase truncate`} style={{ color: GOLD }}>
-            TM28 GLB
+            Infinity 280
           </h1>
+          <p className={`mt-0.5 uppercase text-[#071333]/38 ${compact ? 'text-[9px] tracking-[0.16em]' : 'text-[10px] tracking-[0.28em]'}`}>
+            Customize your boat
+          </p>
         </div>
-        <Link to="/" className="pointer-events-auto text-xs text-[#85898f] hover:text-smoked-saffron">
+        <Link to={backTo} className="pointer-events-auto text-xs text-[#85898f] hover:text-smoked-saffron">
           Back
         </Link>
       </header>
 
       <div className={compact ? 'w-full' : 'h-[calc(100dvh-5rem)]'}>
-        <div className={`relative ${compact ? 'h-[52dvh] min-h-[280px]' : 'h-full'}`}>
-          <CustomizerStudioBackground />
+        <div className={`relative ${compact ? 'h-[52dvh] min-h-[280px]' : 'h-full'}`} style={{ background: STUDIO_BACKGROUND }}>
           <div
             ref={hostRef}
             className="absolute inset-0 z-10"
             style={{ cursor: grabbing ? 'grabbing' : 'grab' }}
           />
-          {ready && (
+          {ready && !compact && (
             <Customizer3DHud
               partKey={selected}
-              stationKeys={stationKeys}
               selectedColors={selectedColors}
               availableColors={availableColors}
               onColorChange={handleColorChange}
               onGoTo={(key) => tourRef.current.goTo(key)}
               hint={hint}
-              stacked={compact}
-              onBind={bindHud}
             />
           )}
           {!ready && (
@@ -607,6 +542,17 @@ export default function Customizer3DTest() {
             </div>
           )}
         </div>
+        {ready && compact && (
+          <Customizer3DHud
+            partKey={selected}
+            selectedColors={selectedColors}
+            availableColors={availableColors}
+            onColorChange={handleColorChange}
+            onGoTo={(key) => tourRef.current.goTo(key)}
+            hint={hint}
+            stacked
+          />
+        )}
       </div>
     </div>
   );

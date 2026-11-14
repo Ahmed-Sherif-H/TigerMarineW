@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ModelsProvider } from './context/ModelsContext';
 import { UpcomingModelProvider } from './context/UpcomingModelContext';
@@ -33,7 +33,8 @@ function AppShell() {
     /\/models\/[^/]+\/customize$/.test(pathname) ||
     /^\/customizer-draft\//.test(pathname) ||
     pathname === '/customizer-draft-3d' ||
-    pathname === '/customizer-3d-test';
+    pathname === '/customizer-3d-test' ||
+    pathname === '/customizer/infinity-280';
 
   return (
     <>
@@ -50,21 +51,15 @@ function AppShell() {
             <Route path="/models/:id/customize" element={<ModelCustomizer variant="orbit" />} />
             <Route path="/customizer-draft/:id" element={<DraftCustomizer />} />
             <Route
-              path="/customizer-draft-3d"
+              path="/customizer/infinity-280"
               element={
                 <Suspense fallback={null}>
                   <Customizer3DTest />
                 </Suspense>
               }
             />
-            <Route
-              path="/customizer-3d-test"
-              element={
-                <Suspense fallback={null}>
-                  <Customizer3DTest />
-                </Suspense>
-              }
-            />
+            <Route path="/customizer-draft-3d" element={<Navigate to="/customizer/infinity-280" replace />} />
+            <Route path="/customizer-3d-test" element={<Navigate to="/customizer/infinity-280" replace />} />
             <Route path="/professional" element={<Professional />} />
             <Route path="/dealers" element={<Dealers />} />
             <Route path="/boat-shows" element={<BoatShows />} />

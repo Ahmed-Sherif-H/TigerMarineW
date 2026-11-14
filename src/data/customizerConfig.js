@@ -91,12 +91,28 @@ export function resolveCustomizerKey(modelName) {
   return raw;
 }
 
+export const INFINITY_280_CUSTOMIZER_PATH = '/customizer/infinity-280';
+
+export function is3DCustomizerModel(modelName) {
+  return String(modelName || '').replace(/\s+/g, '').toLowerCase() === 'infinity280';
+}
+
+export function hasCustomizer(modelName) {
+  return Boolean(getCustomizerFolder(modelName)) || is3DCustomizerModel(modelName);
+}
+
+export function getCustomizerPath(model) {
+  if (!model) return null;
+  if (is3DCustomizerModel(model.name)) return INFINITY_280_CUSTOMIZER_PATH;
+  if (getCustomizerFolder(model.name)) return `/models/${model.id}/customize`;
+  return null;
+}
+
 export const getCustomizerFolder = (modelName) => {
-  const disabledModels = ['Infinity 280'];
-  if (disabledModels.includes(modelName)) return null;
+  if (is3DCustomizerModel(modelName)) return null;
 
   const key = resolveCustomizerKey(modelName);
-  if (disabledModels.includes(key)) return null;
+  if (is3DCustomizerModel(key)) return null;
 
   const folder = FOLDER_BY_KEY[key] || customizerFolders[key];
   if (!folder) return null;

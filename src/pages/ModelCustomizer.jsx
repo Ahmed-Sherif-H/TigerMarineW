@@ -1,9 +1,11 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { lazy, Suspense, useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { allCategories } from '../data/models';
-import { getCustomizerFolder, getBaseImage, getPartImage, customizerParts } from '../data/customizerConfig';
+import { getCustomizerFolder, getBaseImage, getPartImage, customizerParts, is3DCustomizerModel } from '../data/customizerConfig';
+
+const Customizer3DTest = lazy(() => import('./Customizer3DTest'));
 import { getAvailableColors } from '../data/customizerColors';
 import { getColorHex } from '../data/customizerColorMap';
 import { getModelDisplayName } from '../utils/modelNameUtils';
@@ -109,6 +111,11 @@ const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
     const currentModel = finalModel;
     if (!currentModel) {
       navigate('/models');
+      return;
+    }
+
+    if (is3DCustomizerModel(currentModel.name)) {
+      setLoading(false);
       return;
     }
 
@@ -341,6 +348,14 @@ const ModelCustomizer = ({ variant = 'studio', draft = false } = {}) => {
           <p className="text-aged-bone/80 text-sm tracking-wide">Loading configurator…</p>
         </div>
       </div>
+    );
+  }
+
+  if (finalModel && is3DCustomizerModel(finalModel.name)) {
+    return (
+      <Suspense fallback={null}>
+        <Customizer3DTest />
+      </Suspense>
     );
   }
 

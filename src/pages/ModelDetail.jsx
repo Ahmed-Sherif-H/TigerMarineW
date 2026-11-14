@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useModels } from '../context/ModelsContext';
 import api from '../services/api';
 import { getModelImageFolder, encodeFilename } from '../data/imageHelpers';
-import { getCustomizerFolder } from '../data/customizerConfig';
+import { getCustomizerFolder, getCustomizerPath } from '../data/customizerConfig';
 import { getModelDisplayName } from '../utils/modelNameUtils';
 import { isYouTubeUrl, getYouTubeEmbedUrl, extractYouTubeId } from '../utils/youtubeUtils';
 import { getFullImagePath, getModelImagePath } from '../utils/imagePathUtils';
@@ -456,9 +456,9 @@ const ModelDetail = () => {
                 </button>
               )}
             </div>
-            {getCustomizerFolder(model.name) && (
+            {getCustomizerPath(model) && (
               <Link
-                to={`/models/${model.id}/customize`}
+                to={getCustomizerPath(model)}
                 className="inline-flex shrink-0 items-center gap-2 self-center rounded-lg border-2 border-smoked-saffron/40 bg-smoked-saffron/10 px-4 py-2.5 text-base font-semibold whitespace-nowrap text-smoked-saffron transition-all hover:border-smoked-saffron hover:bg-smoked-saffron hover:text-white"
               >
                 <svg className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
