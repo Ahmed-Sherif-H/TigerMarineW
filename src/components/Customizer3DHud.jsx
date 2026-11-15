@@ -1,26 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
-import { getColorHex } from '../data/customizerColorMap';
+import { getStudioColorHex } from '../data/customizerColorMap';
 
 const GOLD = '#C4A36A';
 const CIRCLE_MIN = 56;
 const CIRCLE_MAX = 70;
 
 const HUD_LABELS = {
-  deckFloor: 'Deck Floor',
+  deckFloor: 'Floor',
   fiberglass: 'Fiberglass',
-  sideFender: 'Side Fender',
-  tube: 'Tube',
-  tubeDecoration: 'Tube Decoration',
   upholestry: 'Upholstery',
 };
 
 const CALL_OUTS = [
-  { key: 'upholestry', side: 'left', left: 0.055, top: 0.22 },
-  { key: 'tubeDecoration', side: 'left', left: 0.045, top: 0.46 },
-  { key: 'tube', side: 'left', left: 0.07, top: 0.72 },
-  { key: 'fiberglass', side: 'right', left: 0.88, top: 0.20 },
-  { key: 'sideFender', side: 'right', left: 0.91, top: 0.46 },
-  { key: 'deckFloor', side: 'right', left: 0.89, top: 0.72 },
+  { key: 'upholestry', side: 'left', left: 0.055, top: 0.38 },
+  { key: 'fiberglass', side: 'right', left: 0.88, top: 0.26 },
+  { key: 'deckFloor', side: 'right', left: 0.89, top: 0.62 },
 ];
 
 function textureFor(key) {
@@ -52,7 +46,7 @@ function PartOption({
   onSelect,
   onPick,
 }) {
-  const hex = getColorHex(color);
+  const hex = getStudioColorHex(color);
   const isRight = align === 'right';
 
   return (
@@ -98,7 +92,7 @@ function PartOption({
                 style={{
                   width: 12,
                   height: 12,
-                  backgroundColor: getColorHex(c),
+                  backgroundColor: getStudioColorHex(c),
                   border: selected
                     ? `1.5px solid ${GOLD}`
                     : '1px solid rgba(7,19,51,0.14)',
@@ -154,7 +148,7 @@ export default function Customizer3DHud({
         <div className="grid grid-cols-1 gap-2.5">
           {CALL_OUTS.map((slot) => {
             const color = selectedColors[slot.key];
-            const hex = getColorHex(color);
+            const hex = getStudioColorHex(color);
             const colors = visibleColors(availableColors[slot.key] || []);
             const label = HUD_LABELS[slot.key];
             const isActive = partKey === slot.key;
@@ -206,7 +200,7 @@ export default function Customizer3DHud({
                           style={{
                             width: 14,
                             height: 14,
-                            backgroundColor: getColorHex(c),
+                            backgroundColor: getStudioColorHex(c),
                             border: selected
                               ? `1.5px solid ${GOLD}`
                               : '1px solid rgba(7,19,51,0.14)',

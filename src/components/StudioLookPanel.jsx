@@ -62,9 +62,10 @@ export default function StudioLookPanel({ look, onChange, onReset, onClose, comp
       <div className="space-y-3">
         <p className="text-[9px] uppercase tracking-[0.16em] text-[#071333]/35">Light</p>
         <Slider label="Exposure" min={0.7} max={1.6} step={0.01} value={look.exposure} onChange={set('exposure')} />
-        <Slider label="Sun intensity" min={0.4} max={6} step={0.05} value={look.sunIntensity} onChange={set('sunIntensity')} />
+        <Slider label="Sun intensity" min={0.2} max={6} step={0.05} value={look.sunIntensity} onChange={set('sunIntensity')} />
         <Slider label="Lamp intensity" min={0} max={4} step={0.05} value={look.lampIntensity} onChange={set('lampIntensity')} />
-        <Slider label="Ambient" min={0} max={0.5} step={0.01} value={look.hemiIntensity} onChange={set('hemiIntensity')} />
+        <Slider label="Fill light" min={0} max={2} step={0.05} value={look.fillIntensity} onChange={set('fillIntensity')} />
+        <Slider label="Ambient" min={0} max={1.2} step={0.01} value={look.hemiIntensity} onChange={set('hemiIntensity')} />
         <Slider label="HDRI" min={0} max={1.6} step={0.01} value={look.hdri} onChange={set('hdri')} />
         <Slider label="Warmth" min={0} max={1} step={0.01} value={look.warmth} onChange={set('warmth')} />
         <Slider label="Sun around" min={-180} max={180} step={1} value={look.sunAzimuth} onChange={set('sunAzimuth')} />

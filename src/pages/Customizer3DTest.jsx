@@ -17,7 +17,7 @@ import {
 } from '../lib/referenceStudio';
 import { DEFAULT_STUDIO_LOOK, applyStudioLook, loadStudioLook, saveStudioLook } from '../lib/studioLook';
 import { customizerParts, is3DCustomizerModel } from '../data/customizerConfig';
-import { getColorHex } from '../data/customizerColorMap';
+import { getStudioColorHex } from '../data/customizerColorMap';
 import { getAvailableColors } from '../data/customizerColors';
 
 const GOLD = '#C4A36A';
@@ -41,12 +41,16 @@ const DEFAULT_COLORS = {
   deckFloor: 'Beige',
 };
 
+const INFINITY_PARTS = ['fiberglass', 'deckFloor', 'upholestry'];
+const INFINITY_COLORS = {
+  fiberglass: ['White', 'Dark Gray', 'Black'],
+  deckFloor: ['Beige', 'Black', 'Brown', 'Gray'],
+  upholestry: ['Beige', 'Black', 'Brown', 'Dark Red', 'Gray', 'White'],
+};
+
 const TOUR = [
   { key: 'fiberglass', label: 'Fiberglass' },
-  { key: 'sideFender', label: 'Side Fender' },
-  { key: 'deckFloor', label: 'Deck Floor' },
-  { key: 'tube', label: 'Tube' },
-  { key: 'tubeDecoration', label: 'Tube Decoration' },
+  { key: 'deckFloor', label: 'Floor' },
   { key: 'upholestry', label: 'Upholstery' },
 ];
 
@@ -150,13 +154,13 @@ export default function Customizer3DTest() {
   }
 
   const hudParts = useMemo(
-    () => customizerParts.filter((part) => part.key !== 'base'),
+    () => customizerParts.filter((part) => INFINITY_PARTS.includes(part.key)),
     []
   );
   const availableColors = useMemo(() => {
     const next = {};
     hudParts.forEach((part) => {
-      next[part.key] = getAvailableColors(part.key);
+      next[part.key] = INFINITY_COLORS[part.key] || getAvailableColors(part.key);
     });
     return next;
   }, [hudParts]);
@@ -226,16 +230,6 @@ export default function Customizer3DTest() {
     const studio = { renderer, scene, ...lights, floor: null, bands: null };
     studioRef.current = studio;
     applyStudioLook(studio, lookRef.current);
-    loadStudioHdri(renderer, scene, {
-      onLoad: (env) => {
-        if (disposed) {
-          env.dispose();
-          scene.environment = null;
-          return;
-        }
-        applyStudioLook(studioRef.current, lookRef.current);
-      },
-    });
 
     const rig = new THREE.Group();
     scene.add(rig);
@@ -243,7 +237,7 @@ export default function Customizer3DTest() {
     const fit = () => {
       const w = Math.max(1, host.clientWidth);
       const h = Math.max(1, host.clientHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, w < 1100 ? 1.25 : 1.6));
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       const side = w >= 1100 ? Math.round(w * 0.24) : 0;
@@ -417,8 +411,8 @@ export default function Customizer3DTest() {
           list.forEach((mat) => {
             if (!mat) return;
             mat.side = THREE.DoubleSide;
-            mat.envMapIntensity = 0.9;
-            if ('roughness' in mat) mat.roughness = Math.max(Number(mat.roughness) || 0, 0.32);
+            mat.envMapIntensity = 0.42;
+            if ('roughness' in mat) mat.roughness = Math.max(Number(mat.roughness) || 0, 0.38);
             if ('metalness' in mat && Number(mat.metalness) > 0.85) mat.metalness = 0.58;
             if ('transmission' in mat && Number(mat.transmission) > 0 && !/glass|wind|plexy/i.test(mat.name || '')) {
               mat.transmission = 0;
@@ -434,10 +428,15 @@ export default function Customizer3DTest() {
         });
 
         Object.entries(DEFAULT_COLORS).forEach(([key, name]) => {
-          const hex = getColorHex(name);
+          const hex = getStudioColorHex(name);
           (mapped[key]?.mats || []).forEach((mat) => {
             if (!mat?.color) return;
             mat.color.set(hex);
+            if (INFINITY_PARTS.includes(key)) {
+              if ('roughness' in mat) mat.roughness = Math.max(Number(mat.roughness) || 0, 0.58);
+              if ('metalness' in mat) mat.metalness = Math.min(Number(mat.metalness) || 0, 0.08);
+              mat.envMapIntensity = 0.28;
+            }
             mat.needsUpdate = true;
           });
         });
@@ -481,6 +480,16 @@ export default function Customizer3DTest() {
         applyStationState(0);
         setReady(true);
         setStatus('');
+        loadStudioHdri(renderer, scene, {
+          onLoad: (env) => {
+            if (disposed) {
+              env.dispose();
+              scene.environment = null;
+              return;
+            }
+            applyStudioLook(studioRef.current, lookRef.current);
+          },
+        });
       },
       (event) => {
         if (!event.total) return;
@@ -515,10 +524,15 @@ export default function Customizer3DTest() {
   }, []);
 
   const handleColorChange = (partKey, name) => {
-    const hex = getColorHex(name);
+    const hex = getStudioColorHex(name);
     (partsRef.current[partKey] || []).forEach((mat) => {
       if (!mat?.color) return;
       mat.color.set(hex);
+      if (INFINITY_PARTS.includes(partKey)) {
+        if ('roughness' in mat) mat.roughness = Math.max(Number(mat.roughness) || 0, 0.58);
+        if ('metalness' in mat) mat.metalness = Math.min(Number(mat.metalness) || 0, 0.08);
+        mat.envMapIntensity = 0.28;
+      }
       mat.needsUpdate = true;
     });
     setSelectedColors((prev) => ({ ...prev, [partKey]: name }));

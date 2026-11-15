@@ -16,10 +16,20 @@ export const colorNameToHex = {
   'Baige': '#F5F5DC' // Typo variant
 };
 
+const studioColorNameToHex = {
+  ...colorNameToHex,
+  Beige: '#C9AE7E',
+  Baige: '#C9AE7E',
+};
+
 /**
  * Get hex color for a color name
  */
 export const getColorHex = (colorName) => {
   return colorNameToHex[colorName] || '#CCCCCC'; // Default gray if not found
+};
+
+export const getStudioColorHex = (colorName) => {
+  return studioColorNameToHex[colorName] || getColorHex(colorName);
 };
 

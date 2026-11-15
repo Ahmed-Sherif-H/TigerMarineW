@@ -3,7 +3,7 @@ import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { createLuxuryStudioShadows } from './luxuryStudioShadows';
 import { DEFAULT_STUDIO_LOOK, sunPositionFromLook } from './studioLook';
 
-export const STUDIO_HDRI_URL = '/hdri/white_studio_03_2k.hdr';
+export const STUDIO_HDRI_URL = '/hdri/white_studio_03_1k.hdr';
 export const STUDIO_BACKGROUND = '#f5f3ef';
 
 function createFloor(floorY) {
@@ -34,13 +34,13 @@ export function addReferenceLights(scene) {
   const look = DEFAULT_STUDIO_LOOK;
   const sunPos = sunPositionFromLook(look);
 
-  const hemi = new THREE.HemisphereLight(0xfff6ee, 0xd0cdc8, look.hemiIntensity);
+  const hemi = new THREE.HemisphereLight(0xf4f5f6, 0xc9c8c4, look.hemiIntensity);
   scene.add(hemi);
 
-  const sun = new THREE.DirectionalLight(0xfff0dc, look.sunIntensity);
+  const sun = new THREE.DirectionalLight(0xf4f5f6, look.sunIntensity);
   sun.position.copy(sunPos);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.mapSize.set(1024, 1024);
   sun.shadow.camera.left = -10;
   sun.shadow.camera.right = 10;
   sun.shadow.camera.top = 10;
@@ -54,11 +54,16 @@ export function addReferenceLights(scene) {
   scene.add(sun);
   scene.add(sun.target);
 
-  const lamp = new THREE.PointLight(0xfff0dc, look.lampIntensity, 36, 2);
+  const lamp = new THREE.PointLight(0xf4f5f6, look.lampIntensity, 36, 2);
   lamp.position.copy(sunPos);
   scene.add(lamp);
 
-  return { hemi, sun, lamp, sunPos };
+  const fill = new THREE.DirectionalLight(0xf4f5f6, look.fillIntensity);
+  fill.position.set(-sunPos.x * 0.85, sunPos.y * 0.72, -sunPos.z * 0.85);
+  fill.castShadow = false;
+  scene.add(fill);
+
+  return { hemi, sun, lamp, fill, sunPos };
 }
 
 export function addReferenceGround(scene, floorY) {
